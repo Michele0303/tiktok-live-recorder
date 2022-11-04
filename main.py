@@ -14,7 +14,7 @@ def banner() -> None:
 
 """)
 
-
+# some countries need to login. I use this service to bypass
 def get_room_id(user: str) -> str:
     tiktok_url = f"https://www.tiktok.com/@{user}/live"
     url = "https://base64.guru:443/tools/http-request-online"
