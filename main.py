@@ -46,7 +46,9 @@ def get_live_url(room_id: str) -> str:
 def start_recording(live_url: str, output: str) -> None:
     print("\n[*] RECORDING... ")
     stream = req.get(live_url, stream=True, verify=False, timeout=15)
-    open(output, "wb").write(stream.content)
+    with open(output, "wb") as f:
+        for chunk in stream.iter_content():
+            f.write(chunk)
 
     print(f"[*] FINISH {output}")
 
