@@ -78,7 +78,7 @@ def main():
                         action='store')
     parser.add_argument("-mode",
                         dest="mode",
-                        help="recording mode: (manual,automatic) [Default: manual]\n[manual] => manual live recording\n[automatic] => automatic live recording when the user is live).",
+                        help="recording mode: (manual,automatic) [Default: manual]\n[manual] => manual live recording\n[automatic] => automatic live recording when the user is in live).",
                         default="manual",
                         action='store')
     args = parser.parse_args()
