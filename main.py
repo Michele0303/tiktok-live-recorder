@@ -18,15 +18,18 @@ def banner() -> None:
 
 """)
 
-# some countries need to login. I use this service to bypass
 def get_room_id(user: str) -> str:
     tiktok_url = f"https://www.tiktok.com/@{user}/live"
     try:
-        content = req.get(tiktok_url).text    
+        response = req.get(tiktok_url)
+        response.raise_for_status()
+        content = response.text
         return re.search("room_id=(.*?)\"/>", content).group(1)
+    except req.HTTPError:
+        print("[*] Captcha require or country blocked. Use a vpn")
     except AttributeError:
         print("[*] Error: Username not found")
-        exit(1)
+    exit(1)
 
 
 def is_user_in_live(room_id: str) -> bool:
