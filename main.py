@@ -21,13 +21,9 @@ def banner() -> None:
 # some countries need to login. I use this service to bypass
 def get_room_id(user: str) -> str:
     tiktok_url = f"https://www.tiktok.com/@{user}/live"
-    url = "https://base64.guru:443/tools/http-request-online"
-    data = {"form_is_submited": "base64-tools-http-request-online", "form_action_url": "/tools/http-request-online",
-            "url": tiktok_url, "http_method": "GET", "http_version": "1_0",
-            "http_headers": '', "http_body": '', "execute_http_request": "1"}
     try:
-        content = req.post(url, data=data).text
-        return re.search("room_id=(.*?)&", content).group(1)
+        content = req.get(tiktok_url).text    
+        return re.search("room_id=(.*?)\"/>", content).group(1)
     except AttributeError:
         print("[*] Error: Username not found")
         exit(1)
