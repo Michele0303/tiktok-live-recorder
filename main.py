@@ -31,6 +31,15 @@ def get_room_id(user: str) -> str:
         print("[*] Error: Username not found")
     exit(1)
 
+def get_user_from_room_id(room_id: str) -> str:
+    url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={room_id}"
+    content = req.get(url).text
+
+    if "LiveRoomInfo" not in content:
+        raise Exception("[*] Incorrect Room_Id")
+
+    return re.search('uniqueId":"(.*?)",', content).group(1)
+
 
 def is_user_in_live(room_id: str) -> bool:
     url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={room_id}"
@@ -69,11 +78,16 @@ def main():
 
     user: str
     mode: str
+    room_id: str
 
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument("-user",
                         dest="user",
                         help="record a live from the username.",
+                        action='store')
+    parser.add_argument("-room_id",
+                        dest="room_id",
+                        help="record a live from the room_id.",
                         action='store')
     parser.add_argument("-mode",
                         dest="mode",
@@ -82,32 +96,44 @@ def main():
                         action='store')
     args = parser.parse_args()
 
-    if not args.user:
-        raise Exception("[*] Missing user value")
-    if args.mode and args.mode != "manual" and args.mode != "automatic":
-        raise Exception("[*] Incorrect -mode value")
-    user = args.user
-    mode = args.mode
+    try:
+        if not args.user and not args.room_id:
+            raise Exception("[*] Missing user/room_id value")
+        if args.mode and args.mode != "manual" and args.mode != "automatic":
+            raise Exception("[*] Incorrect -mode value")
+        if args.user and args.room_id:
+            raise Exception("[*] Enter the username or room_id, not both.")
 
-    room_id = get_room_id(user)
-    print("[*] ROOM_ID:", room_id)
+        if args.user:
+            user = args.user
+            room_id = get_room_id(user)
+        else:
+            room_id = args.room_id
+            user = get_user_from_room_id(room_id)
+            
+        mode = args.mode
 
-    if mode == "manual":
-        if not is_user_in_live(room_id):
-            print(f"\n[*] {user} is offline")
-            exit(0)
+        print("[*] ROOM_ID:", room_id)
+        print("[*] USERNAME:", user)
 
-        start_recording(user, room_id)
-
-    if mode == "automatic":
-        while True:
+        if mode == "manual":
             if not is_user_in_live(room_id):
                 print(f"\n[*] {user} is offline")
-                print("waiting 5 minutes before recheck")
-                time.sleep(TIMEOUT * 60)
-                continue
-            
+                exit(0)
+
             start_recording(user, room_id)
+
+        if mode == "automatic":
+            while True:
+                if not is_user_in_live(room_id):
+                    print(f"\n[*] {user} is offline")
+                    print("waiting 5 minutes before recheck")
+                    time.sleep(TIMEOUT * 60)
+                    continue
+                
+                start_recording(user, room_id)
+    except Exception as ex:
+        print(ex)
 
 if __name__ == '__main__':
     main()
