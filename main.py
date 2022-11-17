@@ -26,7 +26,7 @@ def get_room_id(user: str) -> str:
         content = response.text
         return re.search("room_id=(.*?)\"/>", content).group(1)
     except req.HTTPError:
-        print("[*] Captcha require or country blocked. Use a vpn")
+        print("[*] Captcha require or country blocked. Use a vpn or room_id")
     except AttributeError:
         print("[*] Error: Username not found")
     exit(1)
