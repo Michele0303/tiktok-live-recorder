@@ -25,7 +25,7 @@ $ python3 main.py -h
 
 ## To-Do List
 - [x] Automatic Recording
-- [ ] Recording by room_id
+- [x] Recording by room_id
 - [ ] Recoding by tiktok live url
 - [ ] Using proxy to bypass login restriction in some country. (only to get the room_id)
   
