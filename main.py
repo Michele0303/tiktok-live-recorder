@@ -64,7 +64,7 @@ def start_recording(user: str, room_id: str) -> None:
     print("[*] URL FLV", live_url_flv)
 
     current_date = strftime("%Y.%m.%d_%H-%M-%S", gmtime())
-    output = f"TK_{user}_{current_date}.flv"
+    output = f"TK_{user}_{current_date}.mp4"
 
     print("\n[*] RECORDING... ")
     stream = req.get(live_url_flv, stream=True, verify=False, timeout=15)
