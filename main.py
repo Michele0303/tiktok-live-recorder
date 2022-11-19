@@ -26,7 +26,9 @@ def get_room_id(user: str) -> str:
         content = response.text
         return re.search("room_id=(.*?)\"/>", content).group(1)
     except req.HTTPError:
-        print("[*] Captcha require or country blocked. Use a vpn or room_id")
+        print("[*] Captcha require or country blocked. Use a vpn or room_id.\n")
+        print("[+] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id")
+        print("[+] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country")
     except AttributeError:
         print("[*] Error: Username not found")
     exit(1)
