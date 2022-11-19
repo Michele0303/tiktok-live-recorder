@@ -130,7 +130,7 @@ def main():
             while True:
                 if not is_user_in_live(room_id):
                     print(f"\n[*] {user} is offline")
-                    print("waiting 5 minutes before recheck")
+                    print(f"waiting {TIMEOUT} minutes before recheck")
                     time.sleep(TIMEOUT * 60)
                     continue
                 
