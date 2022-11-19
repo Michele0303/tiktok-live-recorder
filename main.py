@@ -54,14 +54,15 @@ def get_live_url(room_id: str) -> str:
     url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={room_id}"
     content = req.get(url).text
 
-    return re.search('"liveUrl":"(.*?)"', content).group(1).replace("https", "http")
-
-
-def start_recording(user: str, room_id: str) -> None:
-    live_url_m3u8 = get_live_url(room_id)
+    live_url_m3u8 = re.search('"liveUrl":"(.*?)"', content).group(1).replace("https", "http")
     live_url_flv = live_url_m3u8.replace("pull-hls", "pull-flv").replace("/playlist.m3u8", ".flv").replace("https", "http").replace(".m3u8", ".flv")
     print("[*] URL M3U8", live_url_m3u8)
     print("[*] URL FLV", live_url_flv)
+    return live_url_flv
+
+
+def start_recording(user: str, room_id: str) -> None:
+    live_url_flv = get_live_url(room_id)
 
     current_date = strftime("%Y.%m.%d_%H-%M-%S", gmtime())
     output = f"TK_{user}_{current_date}.mp4"
@@ -115,8 +116,8 @@ def main():
             
         mode = args.mode
 
-        print("[*] ROOM_ID:", room_id)
         print("[*] USERNAME:", user)
+        print("[*] ROOM_ID:", room_id)
 
         if mode == "manual":
             if not is_user_in_live(room_id):
