@@ -38,7 +38,7 @@ def get_user_from_room_id(room_id: str) -> str:
     content = req.get(url).text
 
     if "LiveRoomInfo" not in content:
-        raise Exception("[*] Incorrect Room_Id")
+        raise Exception("[*] Incorrect Room_Id or the user has never been in live")
 
     return re.search('uniqueId":"(.*?)",', content).group(1)
 
