@@ -30,7 +30,7 @@ def get_room_id(user: str) -> str:
         print("[+] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id")
         print("[+] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country")
     except AttributeError:
-        print("[*] Error: Username not found")
+        print("[*] Error: Username not found or the user has never been in live")
     exit(1)
 
 def get_user_from_room_id(room_id: str) -> str:
