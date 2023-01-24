@@ -4,6 +4,7 @@ import requests as req
 import re
 import argparse
 from argparse import RawTextHelpFormatter
+import os
 
 TIMEOUT = 5
 
@@ -55,23 +56,19 @@ def get_live_url(room_id: str) -> str:
     content = req.get(url).text
 
     live_url_m3u8 = re.search('"liveUrl":"(.*?)"', content).group(1).replace("https", "http")
-    live_url_flv = live_url_m3u8.replace("pull-hls", "pull-flv").replace("/playlist.m3u8", ".flv").replace("https", "http").replace(".m3u8", ".flv")
     print("[*] URL M3U8", live_url_m3u8)
-    print("[*] URL FLV", live_url_flv)
-    return live_url_flv
+    return live_url_m3u8
 
 
 def start_recording(user: str, room_id: str) -> None:
-    live_url_flv = get_live_url(room_id)
+    live_url = get_live_url(room_id)
 
     current_date = strftime("%Y.%m.%d_%H-%M-%S", gmtime())
     output = f"TK_{user}_{current_date}.mp4"
 
     print("\n[*] RECORDING... ")
-    stream = req.get(live_url_flv, stream=True, verify=False, timeout=15)
-    with open(output, "wb") as f:
-        for chunk in stream.iter_content():
-            f.write(chunk)
+    
+    os.system(f"youtube-dl.exe --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}")
 
     print(f"[*] FINISH {output}")
 
