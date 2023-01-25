@@ -68,7 +68,7 @@ def start_recording(user: str, room_id: str) -> None:
 
     print("\n[*] RECORDING... ")
     
-    os.system(f"youtube-dl.exe --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}")
+    os.system(f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}")
 
     print(f"[*] FINISH {output}")
 
