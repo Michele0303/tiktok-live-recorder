@@ -5,10 +5,12 @@
 TikTok Live Recorder is a simple **tiktok live streaming recorder**.
 
 <img src="/assets/sample.png" width="450px">
+</div>
 
+## Requirements
+<a href="https://phoenixnap.com/kb/ffmpeg-windows">Install FFmpeg on Windows</a>
 
 ## How To Use
-</div>
   
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) installed on your computer. From your command line:
 
