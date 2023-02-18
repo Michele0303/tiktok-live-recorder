@@ -44,11 +44,12 @@ def get_user_from_room_id(room_id: str) -> str:
     return re.search('uniqueId":"(.*?)",', content).group(1)
 
 
-def is_user_in_live(room_id: str) -> bool:
+def is_user_in_live(user: str) -> bool:
+    room_id = get_room_id(user)
     url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={room_id}"
     content = req.get(url).text
 
-    return '"status":2' in content
+    return '"status":4' not in content
 
 
 def get_live_url(room_id: str) -> str:
@@ -117,7 +118,7 @@ def main():
         print("[*] ROOM_ID:", room_id)
 
         if mode == "manual":
-            if not is_user_in_live(room_id):
+            if not is_user_in_live(user):
                 print(f"\n[*] {user} is offline")
                 exit(0)
 
@@ -125,12 +126,13 @@ def main():
 
         if mode == "automatic":
             while True:
-                if not is_user_in_live(room_id):
+                if not is_user_in_live(user):
                     print(f"\n[*] {user} is offline")
                     print(f"waiting {TIMEOUT} minutes before recheck")
                     time.sleep(TIMEOUT * 60)
                     continue
                 
+                room_id = get_room_id(user)
                 start_recording(user, room_id)
     except Exception as ex:
         print(ex)
