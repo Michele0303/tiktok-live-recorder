@@ -25,6 +25,8 @@ $ pip install -r requirements.txt
 $ python main.py -h
 ```
 
+To stop the recording: press ctrl + c once time and wait a few seconds.
+
 ## To-Do List
 - [x] Automatic Recording
 - [x] Recording by room_id
