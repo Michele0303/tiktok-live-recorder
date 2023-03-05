@@ -6,7 +6,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 import os
 
-TIMEOUT = 5
+TIMEOUT = 8
 
 def banner() -> None:
     print("""
@@ -19,19 +19,25 @@ def banner() -> None:
 
 """)
 
+def is_country_blacklisted(user: str) -> bool:
+    response = req.get(f"https://www.tiktok.com/@{user}/live", allow_redirects=False)
+    return response.status_code == 302
+
 def get_room_id(user: str) -> str:
     tiktok_url = f"https://www.tiktok.com/@{user}/live"
     try:
-        response = req.get(tiktok_url)
-        response.raise_for_status()
+        response = req.get(tiktok_url, allow_redirects=False)
+        if response.status_code == 302:
+            raise req.HTTPError()
+
         content = response.text
         return re.search("room_id=(.*?)\"/>", content).group(1)
     except req.HTTPError:
-        print("[*] Captcha require or country blocked. Use a vpn or room_id.\n")
+        print("\n[*] Captcha require or country blocked. Use a vpn or room_id.")
         print("[+] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id")
         print("[+] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country")
     except AttributeError:
-        print("[*] Error: Username not found or the user has never been in live")
+        print("\n[*] Error: Username not found or the user has never been in live")
     exit(1)
 
 def get_user_from_room_id(room_id: str) -> str:
@@ -44,8 +50,7 @@ def get_user_from_room_id(room_id: str) -> str:
     return re.search('uniqueId":"(.*?)",', content).group(1)
 
 
-def is_user_in_live(user: str) -> bool:
-    room_id = get_room_id(user)
+def is_user_in_live(room_id: str) -> bool:
     url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={room_id}"
     content = req.get(url).text
 
@@ -117,16 +122,15 @@ def main():
         print("[*] USERNAME:", user)
         print("[*] ROOM_ID:", room_id)
 
-        if mode == "manual":
-            if not is_user_in_live(user):
-                print(f"\n[*] {user} is offline")
-                exit(0)
-
-            start_recording(user, room_id)
-
         if mode == "automatic":
+            if is_country_blacklisted(user):
+                print("\n[*] Automatic mode can be used only in unblacklisted country. Use a VPN")
+                print("[*] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country")
+                return
+            
             while True:
-                if not is_user_in_live(user):
+                room_id = get_room_id(user)
+                if not is_user_in_live(room_id):
                     print(f"\n[*] {user} is offline")
                     print(f"waiting {TIMEOUT} minutes before recheck")
                     time.sleep(TIMEOUT * 60)
@@ -134,6 +138,15 @@ def main():
                 
                 room_id = get_room_id(user)
                 start_recording(user, room_id)
+            
+        if mode == "manual":
+            if not is_user_in_live(room_id):
+                print(f"\n[*] {user} is offline")
+                exit(0)
+
+            start_recording(user, room_id)
+
+
     except Exception as ex:
         print(ex)
 
