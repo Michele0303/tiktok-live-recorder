@@ -1,7 +1,8 @@
-import os
 import time
 import requests as req
 import re
+import os
+import subprocess
 from enums import Mode, Error, StatusCode, TimeOut
 
 
@@ -41,18 +42,21 @@ class TikTok:
                     time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
                     continue
 
-                self.room_id = self.get_room_id_from_user()
                 self.start_recording()
 
     def start_recording(self):
+
         live_url = self.get_live_url()
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
         output = f"TK_{self.user}_{current_date}.mp4"
 
-        print("\n[*] RECORDING... ")
+        print("\n[*] RECORDING... [PRESS *ONLY ONCE* CTRL + C TO STOP]")
 
-        os.system(f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}")
+        cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
+        with open(os.devnull, 'w') as tempf:
+            p = subprocess.Popen(cmd, stderr=tempf, stdout=tempf)
+            p.communicate()
 
         print(f"[*] FINISH {output}")
 
@@ -85,11 +89,21 @@ class TikTok:
                 raise req.HTTPError()
 
             content = response.text
+            if "room_id" not in content:
+                raise ValueError()
+
             return re.search("room_id=(.*?)\"/>", content).group(1)
         except req.HTTPError:
             raise req.HTTPError(Error.HTTP_ERROR)
+        except ValueError:
+            print(
+                f"[-] Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE} minutes")
+            time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+            return self.get_room_id_from_user()
         except AttributeError:
-            raise AttributeError(Error.USERNAME_ERROR)
+            if self.mode != Mode.AUTOMATIC:
+                raise AttributeError(Error.USERNAME_ERROR)
+            time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def get_user_from_room_id(self) -> str:
         url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"

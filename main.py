@@ -58,6 +58,7 @@ def main():
 
     try:
         bot = TikTok(mode, user, room_id)
+
         bot.run()
     except Exception as ex:
         print(ex)
