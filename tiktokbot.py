@@ -55,7 +55,7 @@ class TikTok:
 
         cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
         with open(os.devnull, 'w') as tempf:
-            p = subprocess.Popen(cmd, stderr=tempf, stdout=tempf)
+            p = subprocess.Popen(cmd, stderr=tempf, stdout=tempf, shell=True)
             p.communicate()
 
         print(f"[*] FINISH {output}")
