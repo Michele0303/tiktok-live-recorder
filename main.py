@@ -19,10 +19,10 @@ def check_requires():
         if err != b'':
             raise Exception("[-] Ffmpeg not installed. https://phoenixnap.com/kb/ffmpeg-windows")
         # check youtube-dl
-        p = subprocess.Popen("youtube-dl --version", stderr=subprocess.PIPE, stdout=devnull, shell=True)
-        _, err = p.communicate()
-        if err != b'':
-            raise Exception("[-] Youtube-dl not installed. Run: pip install youtube-dl")
+        p = subprocess.Popen("youtube-dl --version", stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        out, err = p.communicate()
+        if out == b'':
+            raise Exception("[-] youtube-dl not installed. Run: pip install youtube-dl")
 
 
 
