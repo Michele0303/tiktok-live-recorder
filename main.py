@@ -1,4 +1,6 @@
 import argparse
+import os
+import subprocess
 
 from enums import Mode, Info
 from tiktokbot import TikTok
@@ -6,6 +8,22 @@ from tiktokbot import TikTok
 
 def banner() -> None:
     print(Info.BANNER)
+
+
+def check_requires():
+
+    with open(os.devnull) as devnull:
+        # check ffmpeg
+        p = subprocess.Popen("ffmpeg -version", stderr=subprocess.PIPE, stdout=devnull, shell=True)
+        _, err = p.communicate()
+        if err != b'':
+            raise Exception("[-] Ffmpeg not installed. https://phoenixnap.com/kb/ffmpeg-windows")
+        # check youtube-dl
+        p = subprocess.Popen("youtube-dl --version", stderr=subprocess.PIPE, stdout=devnull, shell=True)
+        _, err = p.communicate()
+        if err != b'':
+            raise Exception("[-] Youtube-dl not installed. Run: pip install youtube-dl")
+
 
 
 def parse_args():
@@ -46,8 +64,11 @@ def main():
 
         if args.user and args.room_id:
             raise Exception("[*] Enter the username or room_id, not both.")
+
+        check_requires()
     except Exception as ex:
         print(ex)
+        exit(1)
 
     user = args.user
     room_id = args.room_id
@@ -58,7 +79,6 @@ def main():
 
     try:
         bot = TikTok(mode, user, room_id)
-
         bot.run()
     except Exception as ex:
         print(ex)
