@@ -55,15 +55,15 @@ def main():
     args = parse_args()
     try:
         if not args.user and not args.room_id:
-            raise Exception("[*] Missing user/room_id value")
+            raise Exception("[-] Missing user/room_id value")
 
         if not args.mode:
-            raise Exception("[*] Missing mode value")
+            raise Exception("[-] Missing mode value")
         if args.mode and args.mode != "manual" and args.mode != "automatic":
-            raise Exception("[*] Incorrect -mode value")
+            raise Exception("[-] Incorrect -mode value")
 
         if args.user and args.room_id:
-            raise Exception("[*] Enter the username or room_id, not both.")
+            raise Exception("[-] Enter the username or room_id, not both.")
 
         check_requires()
     except Exception as ex:

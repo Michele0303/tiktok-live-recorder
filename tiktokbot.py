@@ -1,3 +1,5 @@
+import signal
+import sys
 import time
 import requests as req
 import re
@@ -51,11 +53,12 @@ class TikTok:
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
         output = f"TK_{self.user}_{current_date}.mp4"
 
-        print("\n[*] RECORDING... [PRESS *ONLY ONCE* CTRL + C TO STOP]")
+        print("\n[*] STARTED RECORDING... [PRESS ONLY ONCE CTRL + C TO STOP]")
 
         cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
-        with open(os.devnull) as devnull:
-            p = subprocess.Popen(cmd, stderr=devnull, stdout=devnull, shell=True)
+        with open("error.log", "w") as error_log, open(os.devnull, "w") as devnull:
+            p = subprocess.Popen(cmd, stderr=error_log, stdout=devnull, shell=True)
+            signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))
             p.communicate()
 
         print(f"[*] FINISH {output}")
