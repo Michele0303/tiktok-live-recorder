@@ -9,20 +9,20 @@ from tiktokbot import TikTok
 def banner() -> None:
     print(Info.BANNER)
 
-
 def check_requires():
 
     with open(os.devnull) as devnull:
         # check ffmpeg
-        p = subprocess.Popen("ffmpeg -version", stderr=subprocess.PIPE, stdout=devnull, shell=True)
-        _, err = p.communicate()
-        if err != b'':
-            raise Exception("[-] Ffmpeg not installed. https://phoenixnap.com/kb/ffmpeg-windows")
+        try:
+            subprocess.call(["ffmpeg", "-version"], stdout=devnull, stderr=devnull)
+        except FileNotFoundError as ex:
+            raise FileNotFoundError("[-] Ffmpeg not installed. https://phoenixnap.com/kb/ffmpeg-windows")
+
         # check youtube-dl
-        p = subprocess.Popen("youtube-dl --version", stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        out, err = p.communicate()
-        if out == b'':
-            raise Exception("[-] youtube-dl not installed. Run: pip install youtube-dl")
+        try:
+            subprocess.call(["youtube-dl", "--version"], stdout=devnull, stderr=devnull)
+        except FileNotFoundError as ex:
+            raise FileNotFoundError("[-] youtube-dl not installed. Run: pip install youtube-dl or https://github.com/ytdl-org/youtube-dl#installation\n")
 
 
 
