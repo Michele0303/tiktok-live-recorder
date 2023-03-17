@@ -49,6 +49,8 @@ class TikTok:
     def start_recording(self):
 
         live_url = self.get_live_url()
+        if not live_url:
+            raise ValueError(Error.URL_NOT_FOUND)
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
         output = f"TK_{self.user}_{current_date}.mp4"

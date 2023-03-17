@@ -39,12 +39,14 @@ class Error(Enum):
     CONNECTION_CLOSED = "[-] Connection broken by the server."
     CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after Delay of {TimeOut.CONNECTION_CLOSED} minutes"
 
+    URL_NOT_FOUND = "[-] Unable to find stream url."
+
 
 class Info(Enum):
     def __str__(self):
         return str(self.value)
 
-    VERSION = 2.5
+    VERSION = 2.6
 
     BANNER = f"""
 
