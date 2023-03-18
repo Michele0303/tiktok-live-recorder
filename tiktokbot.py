@@ -3,7 +3,6 @@ import sys
 import time
 import requests as req
 import re
-import os
 import subprocess
 from enums import Mode, Error, StatusCode, TimeOut
 
@@ -58,20 +57,24 @@ class TikTok:
         print("\n[*] STARTED RECORDING... [PRESS ONLY ONCE CTRL + C TO STOP]")
 
         cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
-        with open("error.log", "w") as error_log, open(os.devnull, "w") as devnull:
-            p = subprocess.Popen(cmd, stderr=error_log, stdout=devnull, shell=True)
+        with open("error.log", "w") as error_log, open("info.log", "w") as info:
+            p = subprocess.Popen(cmd, stderr=error_log, stdout=info, shell=True)
             signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))
             p.communicate()
 
         print(f"[*] FINISH {output}")
 
     def get_live_url(self) -> str:
-        url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
-        content = req.get(url).text
+        try:
 
-        live_url_m3u8 = re.search('"liveUrl":"(.*?)"', content).group(1).replace("https", "http")
-        print("[*] URL M3U8", live_url_m3u8)
-        return live_url_m3u8
+            url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
+            content = req.get(url).text
+
+            live_url_m3u8 = re.search('"liveUrl":"(.*?)"', content).group(1).replace("https", "http")
+            print("[*] URL M3U8", live_url_m3u8)
+            return live_url_m3u8
+        except Exception as ex:
+            print(ex)
 
     def is_user_in_live(self) -> bool:
         try:
@@ -86,6 +89,8 @@ class TikTok:
                 print(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
             return False
+        except Exception as ex:
+            print(ex)
 
     def get_room_id_from_user(self) -> str:
         try:
@@ -109,16 +114,24 @@ class TikTok:
             if self.mode != Mode.AUTOMATIC:
                 raise AttributeError(Error.USERNAME_ERROR)
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+        except Exception as ex:
+            print(ex)
 
     def get_user_from_room_id(self) -> str:
-        url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
-        content = req.get(url).text
+        try:
+            url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
+            content = req.get(url).text
 
-        if "LiveRoomInfo" not in content:
-            raise AttributeError(Error.USERNAME_ERROR)
+            if "LiveRoomInfo" not in content:
+                raise AttributeError(Error.USERNAME_ERROR)
 
-        return re.search('uniqueId":"(.*?)",', content).group(1)
+            return re.search('uniqueId":"(.*?)",', content).group(1)
+        except Exception as ex:
+            print(ex)
 
     def is_country_blacklisted(self) -> bool:
-        response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
-        return response.status_code == StatusCode.REDIRECT
+        try:
+            response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
+            return response.status_code == StatusCode.REDIRECT
+        except Exception as ex:
+            print(ex)
