@@ -8,7 +8,7 @@ TikTok Live Recorder is a simple **tiktok live streaming recorder**.
 </div>
 
 ## Requirements
-<a href="https://phoenixnap.com/kb/ffmpeg-windows">Install FFmpeg on Windows</a>
+<a href="https://streamlink.github.io/install.html">Install StreamLink</a>
 
 ## How To Use
   
