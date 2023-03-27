@@ -46,8 +46,6 @@ def main():
 
         if args.user and args.room_id:
             raise Exception("[-] Enter the username or room_id, not both.")
-
-        check_requires()
     except Exception as ex:
         print(ex)
         exit(1)
