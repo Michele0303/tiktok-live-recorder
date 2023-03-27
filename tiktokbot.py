@@ -56,7 +56,8 @@ class TikTok:
 
         print("\n[*] STARTED RECORDING... [PRESS ONLY ONCE CTRL + C TO STOP]")
 
-        cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
+        cmd = f"streamlink {live_url} best -o {output}"
+        #cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
         with open("error.log", "w") as error_log, open("info.log", "w") as info:
             p = subprocess.Popen(cmd, stderr=error_log, stdout=info, shell=True)
             signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))

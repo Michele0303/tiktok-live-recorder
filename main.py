@@ -1,6 +1,4 @@
 import argparse
-import os
-import subprocess
 
 from enums import Mode, Info
 from tiktokbot import TikTok
@@ -8,22 +6,6 @@ from tiktokbot import TikTok
 
 def banner() -> None:
     print(Info.BANNER)
-
-def check_requires():
-
-    with open(os.devnull) as devnull:
-        # check ffmpeg
-        try:
-            subprocess.call(["ffmpeg", "-version"], stdout=devnull, stderr=devnull)
-        except FileNotFoundError as ex:
-            raise FileNotFoundError("[-] Ffmpeg not installed. https://phoenixnap.com/kb/ffmpeg-windows")
-
-        # check youtube-dl
-        try:
-            subprocess.call(["youtube-dl", "--version"], stdout=devnull, stderr=devnull)
-        except FileNotFoundError as ex:
-            raise FileNotFoundError("[-] youtube-dl not installed. Run: pip install youtube-dl or https://github.com/ytdl-org/youtube-dl#installation\n")
-
 
 
 def parse_args():
