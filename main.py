@@ -23,6 +23,10 @@ def parse_args():
                         help="recording mode: (manual,automatic) [Default: manual]\n[manual] => manual live recording\n[automatic] => automatic live recording when the user is in live).",
                         default="manual",
                         action='store')
+    parser.add_argument("-output",
+                        dest="output",
+                        help="output dir",
+                        action='store')
     args = parser.parse_args()
     return args
 
@@ -58,7 +62,7 @@ def main():
         mode = Mode.AUTOMATIC
 
     try:
-        bot = TikTok(mode, user, room_id)
+        bot = TikTok(args.output, mode, user, room_id)
         bot.run()
     except Exception as ex:
         print(ex)

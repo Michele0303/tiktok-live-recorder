@@ -4,12 +4,14 @@ import time
 import requests as req
 import re
 import subprocess
+import os
 from enums import Mode, Error, StatusCode, TimeOut
 
 
 class TikTok:
 
-    def __init__(self, mode, user=None, room_id=None):
+    def __init__(self, output, mode, user=None, room_id=None):
+        self.output = output
         self.user = user
         self.mode = mode
         self.room_id = room_id
@@ -52,7 +54,14 @@ class TikTok:
             raise ValueError(Error.URL_NOT_FOUND)
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
-        output = f"TK_{self.user}_{current_date}.mp4"
+
+        if self.output != "" and not ( self.output.endswith('/') or self.output.endswith('\\') ):
+            if os.name == 'nt':
+                self.output = self.output + "\\"
+            else:
+                self.output = self.output + "/"
+
+        output = f"{self.output}TK_{self.user}_{current_date}.mp4"
 
         print("\n[*] STARTED RECORDING... [PRESS ONLY ONCE CTRL + C TO STOP]")
 
