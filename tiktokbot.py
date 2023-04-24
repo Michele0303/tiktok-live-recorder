@@ -55,7 +55,7 @@ class TikTok:
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
 
-        if self.output != "" and not ( self.output.endswith('/') or self.output.endswith('\\') ):
+        if self.output != "" and isinstance(self.output, str) and not ( self.output.endswith('/') or self.output.endswith('\\') ):
             if os.name == 'nt':
                 self.output = self.output + "\\"
             else:
