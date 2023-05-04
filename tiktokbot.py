@@ -80,7 +80,7 @@ class TikTok:
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
             json = req.get(url).json()
 
-            live_url_m3u8 = json['data']['stream_url']['rtmp_pull_url']
+            live_url_m3u8 = json['data']['stream_url']['hls_pull_url']
             print("[*] URL M3U8", live_url_m3u8)
 
             return live_url_m3u8
