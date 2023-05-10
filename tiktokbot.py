@@ -1,12 +1,9 @@
-import signal
-import sys
 import time
 import requests as req
 import re
-import subprocess
 import os
 from enums import Mode, Error, StatusCode, TimeOut
-
+import shutil
 
 class TikTok:
 
@@ -65,14 +62,23 @@ class TikTok:
 
         print("\n[*] STARTED RECORDING... [PRESS ONLY ONCE CTRL + C TO STOP]")
 
-        cmd = f"streamlink {live_url} best -o {output}"
+        try:
+            response = req.get(live_url, stream=True)
+            with open(output, "wb") as out_file:
+                shutil.copyfileobj(response.raw, out_file)
+        except KeyboardInterrupt:
+            pass
+
+        print("FINISH", output)
+        
+        #cmd = f"streamlink {live_url} best -o {output}"
         #cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
+        '''
         with open("error.log", "w") as error_log, open("info.log", "w") as info:
             p = subprocess.Popen(cmd, stderr=error_log, stdout=info, shell=True)
             signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))
             p.communicate()
-
-        print(f"[*] FINISH {output}")
+        '''
 
     def get_live_url(self) -> str:
         try:
@@ -81,9 +87,10 @@ class TikTok:
             json = req.get(url).json()
 
             live_url_m3u8 = json['data']['stream_url']['hls_pull_url']
-            print("[*] URL M3U8", live_url_m3u8)
+            live_url_flv = json['data']['stream_url']['rtmp_pull_url']
+            print("[*] URL FLV", live_url_flv)
 
-            return live_url_m3u8
+            return live_url_flv
         except Exception as ex:
             print(ex)
 
