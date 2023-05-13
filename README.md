@@ -7,8 +7,10 @@ TikTok Live Recorder is a simple **tiktok live streaming recorder**.
 <img src="/assets/sample.png" width="450px">
 </div>
 
+<!--
 ## Requirements
 <a href="https://streamlink.github.io/install.html">Install StreamLink</a>
+-->
 
 ## How To Use
   
