@@ -27,6 +27,17 @@ def parse_args():
                         dest="output",
                         help="output dir",
                         action='store')
+    # store_const is on purpose
+    parser.add_argument("-y", 
+                        dest="yes",
+                        help="always yes",
+                        action="store_const",
+                        const=True)
+    parser.add_argument("-n",
+                        dest="yes",
+                        help="always no",
+                        action="store_const",
+                        const=False)
     args = parser.parse_args()
     return args
 
@@ -37,6 +48,7 @@ def main():
     user = None
     mode = None
     room_id = None
+    yes = None
 
     args = parse_args()
     try:
@@ -56,13 +68,14 @@ def main():
 
     user = args.user
     room_id = args.room_id
+    yes = args.yes
     if args.mode == "manual":
         mode = Mode.MANUAL
     else:
         mode = Mode.AUTOMATIC
 
     try:
-        bot = TikTok(args.output, mode, user, room_id)
+        bot = TikTok(args.output, mode, user, room_id, yes)
         bot.run()
     except Exception as ex:
         print(ex)

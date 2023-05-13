@@ -8,17 +8,18 @@ import ffmpeg
 
 class TikTok:
 
-    def __init__(self, output, mode, user=None, room_id=None):
+    def __init__(self, output, mode, user=None, room_id=None, yes=None):
         self.output = output
         self.user = user
         self.mode = mode
         self.room_id = room_id
+        self.yes = yes
 
         if self.user is None:
             self.user = self.get_user_from_room_id()
         if self.room_id is None:
             self.room_id = self.get_room_id_from_user()
-
+        
         print(f"[*] USERNAME {self.user}")
         print(f"[*] ROOM_ID {self.room_id}\n")
 
@@ -85,9 +86,12 @@ class TikTok:
 
         print(f"FINISH: {output}\n")
 
-        print("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
-        print("Y/N -> ", end="")
-        if input() == "Y" or "y":
+        if self.yes == None:
+            print("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
+            print("Y/N -> ", end="")
+            if input() == "Y" or "y":
+                self.convertion_mp4(output)
+        elif self.yes:
             self.convertion_mp4(output)
 
         #cmd = f"streamlink {live_url} best -o {output}"
