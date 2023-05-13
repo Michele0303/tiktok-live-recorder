@@ -4,6 +4,7 @@ import re
 import os
 from enums import Mode, Error, StatusCode, TimeOut
 import shutil
+import ffmpeg
 
 class TikTok:
 
@@ -44,8 +45,21 @@ class TikTok:
 
                 self.start_recording()
 
-    def start_recording(self):
+    def convertion_mp4(self, file):
+        """
+        Convert the video from flv format to mp4 format
+        """
+        try:
+            ffmpeg.input(file).output(file.replace('_flv.mp4', '.mp4'), y='-y').run()
+            os.remove(file)
+            print("Finished converting {}".format(file))
+        except FileNotFoundError:
+            print("[-] FFmpeg is not installed.")
 
+    def start_recording(self):
+        """
+        Start recording live
+        """
         live_url = self.get_live_url()
         if not live_url:
             raise ValueError(Error.URL_NOT_FOUND)
@@ -58,7 +72,7 @@ class TikTok:
             else:
                 self.output = self.output + "/"
 
-        output = f"{self.output}TK_{self.user}_{current_date}.mp4"
+        output = f"{self.output}TK_{self.user}_{current_date}_flv.mp4"
 
         print("\n[*] STARTED RECORDING... [PRESS ONLY ONCE CTRL + C TO STOP]")
 
@@ -69,8 +83,13 @@ class TikTok:
         except KeyboardInterrupt:
             pass
 
-        print("FINISH", output)
-        
+        print(f"FINISH: {output}\n")
+
+        print("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
+        print("Y/N -> ", end="")
+        if input() == "Y" or "y":
+            self.convertion_mp4(output)
+
         #cmd = f"streamlink {live_url} best -o {output}"
         #cmd = f"youtube-dl --hls-prefer-ffmpeg --no-continue --no-part -o {output} {live_url}"
         '''
@@ -81,6 +100,9 @@ class TikTok:
         '''
 
     def get_live_url(self) -> str:
+        """
+        I get the cdn (flv or m3u8) of the streaming
+        """
         try:
 
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
@@ -95,6 +117,9 @@ class TikTok:
             print(ex)
 
     def is_user_in_live(self) -> bool:
+        """
+        Checking whether the user is live
+        """
         try:
             url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
             content = req.get(url).text
@@ -111,6 +136,9 @@ class TikTok:
             print(ex)
 
     def get_room_id_from_user(self) -> str:
+        """
+        Given a username, I get the room_id
+        """
         try:
             response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             if response.status_code == StatusCode.REDIRECT:
@@ -125,7 +153,7 @@ class TikTok:
             raise req.HTTPError(Error.HTTP_ERROR)
         except ValueError:
             print(
-                f"[-] Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE} minutes")
+                f"[-] Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED} minutes")
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
             return self.get_room_id_from_user()
         except AttributeError:
@@ -136,6 +164,9 @@ class TikTok:
             print(ex)
 
     def get_user_from_room_id(self) -> str:
+        """
+        Given a room_id, I get the username
+        """
         try:
             url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
             content = req.get(url).text
@@ -148,6 +179,9 @@ class TikTok:
             print(ex)
 
     def is_country_blacklisted(self) -> bool:
+        """
+        Checks if the user is in a blacklisted country that requires login
+        """
         try:
             response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             return response.status_code == StatusCode.REDIRECT
