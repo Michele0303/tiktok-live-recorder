@@ -4,7 +4,7 @@
 
 TikTok Live Recorder is a simple **tiktok live streaming recorder**.
 
-<img src="/assets/sample.png" width="450px">
+<img src="/assets/sample.png" width="650px">
 </div>
 
 <!--
