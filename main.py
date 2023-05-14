@@ -5,10 +5,15 @@ from tiktokbot import TikTok
 
 
 def banner() -> None:
+    """
+    Prints a banner with the name of the tool and its version number.
+    """
     print(Info.BANNER)
 
-
 def parse_args():
+    """
+    Parse command line arguments.
+    """
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-user",
                         dest="user",
@@ -27,17 +32,11 @@ def parse_args():
                         dest="output",
                         help="output dir",
                         action='store')
-    # store_const is on purpose
-    parser.add_argument("-y", 
-                        dest="yes",
-                        help="always yes",
+    parser.add_argument("-ffmpeg", 
+                        dest="ffmpeg",
+                        help="recording via ffmpeg, allows real-time conversion to mp4",
                         action="store_const",
                         const=True)
-    parser.add_argument("-n",
-                        dest="yes",
-                        help="always no",
-                        action="store_const",
-                        const=False)
     args = parser.parse_args()
     return args
 
@@ -48,7 +47,7 @@ def main():
     user = None
     mode = None
     room_id = None
-    yes = None
+    use_ffmpeg = None
 
     args = parse_args()
     try:
@@ -62,20 +61,24 @@ def main():
 
         if args.user and args.room_id:
             raise Exception("[-] Enter the username or room_id, not both.")
+        
+        user = args.user
+        room_id = args.room_id
+        if args.mode == "manual":
+            mode = Mode.MANUAL
+        else:
+            mode = Mode.AUTOMATIC
+
+        if args.ffmpeg:
+            use_ffmpeg = True
+        elif mode == Mode.AUTOMATIC:
+            raise Exception("[-] To use automatic mode, add -ffmpeg flag.")
     except Exception as ex:
         print(ex)
         exit(1)
 
-    user = args.user
-    room_id = args.room_id
-    yes = args.yes
-    if args.mode == "manual":
-        mode = Mode.MANUAL
-    else:
-        mode = Mode.AUTOMATIC
-
     try:
-        bot = TikTok(args.output, mode, user, room_id, yes)
+        bot = TikTok(args.output, mode, user, room_id, use_ffmpeg)
         bot.run()
     except Exception as ex:
         print(ex)

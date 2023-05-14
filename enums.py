@@ -2,6 +2,9 @@ from enum import Enum, IntEnum
 
 
 class TimeOut(IntEnum):
+    """ 
+    Enumeration that defines timeout values. 
+    """
     def __mul__(self, operator):
         return self.value * operator
 
@@ -16,11 +19,17 @@ class StatusCode(IntEnum):
 
 
 class Mode(IntEnum):
+    """
+    Enumeration that represents the recording modes.
+    """
     MANUAL = 0
     AUTOMATIC = 1
 
 
 class Error(Enum):
+    """
+    Enumeration that contains possible errors while using TikTok-Live-Recorder.
+    """
     def __str__(self):
         return str(self.value)
 
@@ -43,10 +52,13 @@ class Error(Enum):
 
 
 class Info(Enum):
+    """
+    Enumeration that defines the version number and the banner message.
+    """
     def __str__(self):
         return str(self.value)
 
-    VERSION = 3.5
+    VERSION = 3.6
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         
