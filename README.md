@@ -36,3 +36,6 @@ To stop the recording: press ctrl + c once time and wait a few seconds.
 - [ ] Using proxy to bypass login restriction in some country. (only to get the room_id)
 - [ ] Improve the graphical user interface
 
+## Legal
+This code is in no way affiliated with, authorized, maintained, sponsored or endorsed by TikTok or any of its affiliates or subsidiaries. Use at your own risk.
+
