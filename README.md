@@ -1,6 +1,6 @@
 <div align="center">
 
-# TikTok Live Recorder
+# TikTok Live Recorder🎥
 
 TikTok Live Recorder is a simple **tiktok live streaming recorder**.
 
@@ -26,8 +26,6 @@ $ pip install -r requirements.txt
 # Run the app
 $ python main.py -h
 ```
-
-To stop the recording: press ctrl + c once time and wait a few seconds.
 
 ## To-Do List
 - [x] Automatic Recording
