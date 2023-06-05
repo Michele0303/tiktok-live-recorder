@@ -33,6 +33,7 @@ $ python main.py -h
 - [ ] Recoding by tiktok live url
 - [ ] Using proxy to bypass login restriction in some country. (only to get the room_id)
 - [ ] Improve the graphical user interface
+- [ ] Add feature to send recorded live streams to Telegram via Telegram bot
 
 ## Legal
 This code is in no way affiliated with, authorized, maintained, sponsored or endorsed by TikTok or any of its affiliates or subsidiaries. Use at your own risk.
