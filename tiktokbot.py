@@ -121,8 +121,12 @@ class TikTok:
         I get the cdn (flv or m3u8) of the streaming
         """
         try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Referer": "https://www.tiktok.com/",
+            }
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
-            json = req.get(url).json()
+            json = req.get(url, headers=headers).json()
 
             #live_url_m3u8 = json['data']['stream_url']['hls_pull_url']
             live_url_flv = json['data']['stream_url']['rtmp_pull_url']
