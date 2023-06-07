@@ -37,6 +37,12 @@ def parse_args():
                         help="recording via ffmpeg, allows real-time conversion to mp4",
                         action="store_const",
                         const=True)
+    parser.add_argument("-duration",
+                        dest="duration",
+                        help="duration in seconds to record the live [Default: None]",
+                        type=int,
+                        default=None,
+                        action='store')
     args = parser.parse_args()
     return args
 
@@ -50,6 +56,7 @@ def main():
     use_ffmpeg = None
 
     args = parse_args()
+
     try:
         if not args.user and not args.room_id:
             raise Exception("[-] Missing user/room_id value")
@@ -78,7 +85,14 @@ def main():
         exit(1)
 
     try:
-        bot = TikTok(args.output, mode, user, room_id, use_ffmpeg)
+        bot = TikTok(
+            output=args.output,
+            mode=mode,
+            user=user,
+            room_id=room_id,
+            use_ffmpeg=use_ffmpeg,
+            duration=args.duration
+        )
         bot.run()
     except Exception as ex:
         print(ex)
