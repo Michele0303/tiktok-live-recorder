@@ -183,7 +183,7 @@ class TikTok:
             if "room_id" not in content:
                 raise ValueError()
 
-            return re.search("room_id=(.*?)\"/>", content).group(1)
+            return re.findall("room_id=(.*?)\"/>", content)[0]
         except req.HTTPError:
             raise req.HTTPError(Error.HTTP_ERROR)
         except ValueError:
