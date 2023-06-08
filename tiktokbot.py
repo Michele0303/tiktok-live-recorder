@@ -4,17 +4,19 @@ import re
 import os
 import shutil
 import ffmpeg
+import sys
 
 from enums import Mode, Error, StatusCode, TimeOut
 
 class TikTok:
 
-    def __init__(self, output, mode, user=None, room_id=None, use_ffmpeg=None):
+    def __init__(self, output, mode, user=None, room_id=None, use_ffmpeg=None, duration=None):
         self.output = output
         self.user = user
         self.mode = mode
         self.room_id = room_id
         self.use_ffmpeg = use_ffmpeg
+        self.duration = duration
 
         if self.user is None:
             self.user = self.get_user_from_room_id()
@@ -83,27 +85,40 @@ class TikTok:
             else:
                 self.output = self.output + "/"
 
-        output = f"{self.output}TK_{self.user}_{current_date}_flv.mp4"
+        output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
-        print("\n[*] STARTED RECORDING...", end="")
+        print("\n[*] STARTED RECORDING", "" if self.duration is None else f"FOR {self.duration} SECONDS", end="")
 
         try:
             if self.use_ffmpeg:
-                print(" [PRESS 'q' TO STOP RECORDING]")
-                stream = ffmpeg.input(live_url)
-                stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"))
-                ffmpeg.run(stream, quiet=True)
+                    print(" [PRESS 'q' TO STOP RECORDING]")
+                    stream = ffmpeg.input(live_url)
+                    if self.duration is not None:
+                        stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), t=self.duration)
+                    else:
+                        stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"))
+                    stream = ffmpeg.run(stream, quiet=True)
             else:
                 print(" [PRESS ONLY ONCE CTRL + C TO STOP]")
-                response = req.get(live_url, stream=True)
-                with open(output, "wb") as out_file:
-                    shutil.copyfileobj(response.raw, out_file)
+                if self.duration is None:
+                    response = req.get(live_url, stream=True)
+                    with open(output, "wb") as out_file:
+                        shutil.copyfileobj(response.raw, out_file)
+                else: 
+                    response = req.get(live_url, stream=True)
+                    with open(output, "wb") as out_file:
+                        start_time = time.time()
+                        for chunk in response.iter_content(chunk_size=4096):
+                            out_file.write(chunk)
+                            elapsed_time = time.time() - start_time
+                            remaining_time = max(0, self.duration - elapsed_time)
+                            if remaining_time <= 0:
+                                break
         except FileNotFoundError:
             print("[-] FFmpeg is not installed.")
-            exit(1)
+            sys.exit(1)
         except KeyboardInterrupt:
             pass
-        
 
         print(f"FINISH: {output}\n")
 
