@@ -114,6 +114,9 @@ class TikTok:
                             remaining_time = max(0, self.duration - elapsed_time)
                             if remaining_time <= 0:
                                 break
+        except ffmpeg.Error as e:
+            print('[-] FFmpeg Error:')
+            print(e.stderr.decode('utf-8'))
         except FileNotFoundError:
             print("[-] FFmpeg is not installed.")
             sys.exit(1)
