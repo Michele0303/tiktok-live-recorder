@@ -112,6 +112,10 @@ class TikTok:
                         elapsed_time = time.time() - start_time
                         if self.duration is not None and elapsed_time >= self.duration:
                             break
+                        
+        except ffmpeg.Error as e:
+            print('[-] FFmpeg Error:')
+            print(e.stderr.decode('utf-8'))
 
         except FileNotFoundError:
             print("[-] FFmpeg is not installed.")
@@ -182,7 +186,7 @@ class TikTok:
             if "room_id" not in content:
                 raise ValueError()
 
-            return re.search("room_id=(.*?)\"/>", content).group(1)
+            return re.findall("room_id=(.*?)\"/>", content)[0]
         except req.HTTPError:
             raise req.HTTPError(Error.HTTP_ERROR)
         except ValueError:
