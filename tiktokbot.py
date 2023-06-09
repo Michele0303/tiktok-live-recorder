@@ -10,13 +10,14 @@ from enums import Mode, Error, StatusCode, TimeOut
 
 class TikTok:
 
-    def __init__(self, output, mode, user=None, room_id=None, use_ffmpeg=None, duration=None):
+    def __init__(self, output, mode, user=None, room_id=None, use_ffmpeg=None, duration=None, convert=False):
         self.output = output
         self.user = user
         self.mode = mode
         self.room_id = room_id
         self.use_ffmpeg = use_ffmpeg
         self.duration = duration
+        self.convert = convert
 
         if self.user is None:
             self.user = self.get_user_from_room_id()
@@ -128,10 +129,12 @@ class TikTok:
         if self.use_ffmpeg:
             return
         
-        print("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
-        print("Y/N -> ", end="")
-        choice = input()
-        if choice == "Y" or choice == "y":
+        if not self.convert:
+            print("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
+            choice = input("Y/N -> ")
+            if choice.lower() == "y":
+                self.convertion_mp4(output)
+        else:
             self.convertion_mp4(output)
 
     def get_live_url(self) -> str:

@@ -43,6 +43,11 @@ def parse_args():
                         type=int,
                         default=None,
                         action='store')
+    parser.add_argument("--auto-convert",
+                    dest="auto_convert",
+                    help="enable auto video conversion [Default: False]",
+                    action='store_true')
+
     args = parser.parse_args()
     return args
 
@@ -91,7 +96,8 @@ def main():
             user=user,
             room_id=room_id,
             use_ffmpeg=use_ffmpeg,
-            duration=args.duration
+            duration=args.duration,
+            convert=args.auto_convert
         )
         bot.run()
     except Exception as ex:
