@@ -99,9 +99,9 @@ class TikTok:
                 stream = ffmpeg.input(live_url)
                 
                 if self.duration is not None:
-                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), t=self.duration)
+                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), c='copy', t=self.duration)
                 else:
-                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"))
+                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), c='copy')
 
                 ffmpeg.run(stream, quiet=True)
             else:
