@@ -88,9 +88,10 @@ class TikTok:
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
         (
-            print(f"\n[*] START RECORDING FOR {self.duration} SECONDS ") 
-            if self.duration else print("\n[*] STARTED RECORDING...")
+            print(f"\n[*] START RECORDING FOR {self.duration} SECONDS ", end="") 
+            if self.duration else print("\n[*] STARTED RECORDING...", end="")
         )
+        
         try:
             if self.use_ffmpeg:
                 print(" [PRESS 'q' TO STOP RECORDING]")
@@ -103,7 +104,7 @@ class TikTok:
 
                 ffmpeg.run(stream, quiet=True)
             else:
-                
+                print(" [PRESS ONLY ONCE CTRL + C TO STOP]")
                 response = req.get(live_url, stream=True)
                 with open(output, "wb") as out_file:
                     start_time = time.time()
