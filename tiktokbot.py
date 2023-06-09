@@ -87,47 +87,32 @@ class TikTok:
 
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
-        print("\n[*] STARTED RECORDING...", end="")
-
+        (
+            print(f"\n[*] START RECORDING FOR {self.duration} SECONDS ") 
+            if self.duration else print("\n[*] STARTED RECORDING...")
+        )
         try:
-            if self.duration is not None:
-                print(f" [RECORDING FOR {self.duration} SECONDS]")
-                # Run the recording for the specified duration
-                if self.use_ffmpeg:
-                    stream = ffmpeg.input(live_url)
-                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"))
-                    stream = ffmpeg.run_async(stream, pipe_stdin=True, pipe_stdout=True, quiet=True)
-                    start_time = time.time()
-                    while True:
-                        elapsed_time = time.time() - start_time
-                        remaining_time = max(0, self.duration - elapsed_time)
-                        if remaining_time <= 0:
-                            # Stop the recording by sending 'q' to ffmpeg process
-                            stream.communicate(input=b"q")  
-                            break
-                        # Sleep for remaining time or 1 second, whichever is smaller
-                        time.sleep(min(remaining_time, 1))  
+            if self.use_ffmpeg:
+                print(" [PRESS 'q' TO STOP RECORDING]")
+                stream = ffmpeg.input(live_url)
+                
+                if self.duration is not None:
+                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), t=self.duration)
                 else:
-                    response = req.get(live_url, stream=True)
-                    with open(output, "wb") as out_file:
-                        start_time = time.time()
-                        for chunk in response.iter_content(chunk_size=4096):
-                            out_file.write(chunk)
-                            elapsed_time = time.time() - start_time
-                            remaining_time = max(0, self.duration - elapsed_time)
-                            if remaining_time <= 0:
-                                break
+                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"))
+
+                ffmpeg.run(stream, quiet=True)
             else:
-                if self.use_ffmpeg:
-                    print(" [PRESS 'q' TO STOP RECORDING]")
-                    stream = ffmpeg.input(live_url)
-                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"))
-                    ffmpeg.run(stream, quiet=True)
-                else:
-                    print(" [PRESS ONLY ONCE CTRL + C TO STOP]")
-                    response = req.get(live_url, stream=True)
-                    with open(output, "wb") as out_file:
-                        shutil.copyfileobj(response.raw, out_file)
+                
+                response = req.get(live_url, stream=True)
+                with open(output, "wb") as out_file:
+                    start_time = time.time()
+                    for chunk in response.iter_content(chunk_size=4096):
+                        out_file.write(chunk)
+                        elapsed_time = time.time() - start_time
+                        if self.duration is not None and elapsed_time >= self.duration:
+                            break
+
         except FileNotFoundError:
             print("[-] FFmpeg is not installed.")
             sys.exit(1)
