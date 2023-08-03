@@ -2,7 +2,7 @@
 
 # TikTok Live Recorder🎥
 
-TikTok Live Recorder is a simple **tiktok live streaming recorder**.
+TikTok Live Recorder is a tool for recording live streaming tiktok.
 
 <img src="/assets/sample.png" width="650px">
 </div>
