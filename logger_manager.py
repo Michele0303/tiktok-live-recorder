@@ -11,7 +11,7 @@ class LoggerManager:
         """
         Set up logging handlers with the specified log level.
         """
-        # Create an instance of Logger with the name 'logger' (you can choose a meaningful name)
+        # Create an instance of Logger with the name 'logger'
         self.logger = logging.getLogger('logger')
         self.logger.setLevel(logging.INFO)  # Set the log level of the Logger to INFO
 
@@ -35,12 +35,6 @@ class LoggerManager:
         if self.logger.handlers:
             self.logger.addHandler(info_handler)
             self.logger.addHandler(error_handler)
-
-    def debug(self, message):
-        """
-        Log a debug message.
-        """
-        self.logger.debug(message)
 
     def info(self, message):
         """
