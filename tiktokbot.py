@@ -192,25 +192,26 @@ class TikTok:
         try:
             response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             if response.status_code == StatusCode.REDIRECT:
-                raise req.HTTPError()
+                raise errors.Blacklisted('Redirect')
 
             content = response.text
             if "room_id" not in content:
                 raise ValueError()
 
             return re.findall("room_id=(.*?)\"/>", content)[0]
-        except req.HTTPError:
-            raise req.HTTPError(Error.BLACKLIST_ERROR)
+        except (req.HTTPError, errors.Blacklisted) as e:
+            raise errors.Blacklisted(Error.BLACKLIST_ERROR)
         except ValueError:
             self.logger.error(f"Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED} minutes")
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
             return self.get_room_id_from_user()
         except AttributeError:
             if self.mode != Mode.AUTOMATIC:
-                raise AttributeError(Error.USERNAME_ERROR)
+                raise errors.UserNotFound(Error.USERNAME_ERROR)
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
         except Exception as ex:
             self.logger.error(ex)
+            exit(1)
 
     def get_user_from_room_id(self) -> str:
         """

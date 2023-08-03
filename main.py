@@ -72,7 +72,6 @@ def main():
 
     # setup logging
     logger = logger_manager.LoggerManager()
-    logger.setup_logger()
 
     try:
         if not args.user and not args.room_id:
