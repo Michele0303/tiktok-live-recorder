@@ -38,7 +38,7 @@ class Error(Enum):
                                 "https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted" \
                                 "-country"
 
-    HTTP_ERROR = "[-] Captcha require or country blocked. Use a vpn or room_id." \
+    BLACKLIST_ERROR = "[-] Captcha require or country blocked. Use a vpn or room_id." \
                  "\n[-] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id" \
                  "\n[-] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE" \
                  ".md#unrestricted-country"
@@ -58,7 +58,7 @@ class Info(Enum):
     def __str__(self):
         return str(self.value)
 
-    VERSION = 3.9
+    VERSION = 4.0
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         

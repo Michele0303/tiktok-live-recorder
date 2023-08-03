@@ -1,5 +1,12 @@
 import argparse
+import sys
+import datetime
+import os
+import logging
+import logging.handlers
+import traceback
 
+import logger_manager
 from enums import Mode, Info
 from tiktokbot import TikTok
 
@@ -9,6 +16,7 @@ def banner() -> None:
     Prints a banner with the name of the tool and its version number.
     """
     print(Info.BANNER)
+
 
 def parse_args():
     """
@@ -32,7 +40,7 @@ def parse_args():
                         dest="output",
                         help="output dir",
                         action='store')
-    parser.add_argument("-ffmpeg", 
+    parser.add_argument("-ffmpeg",
                         dest="ffmpeg",
                         help="recording via ffmpeg, allows real-time conversion to mp4",
                         action="store_const",
@@ -44,9 +52,9 @@ def parse_args():
                         default=None,
                         action='store')
     parser.add_argument("--auto-convert",
-                    dest="auto_convert",
-                    help="enable auto video conversion [Default: False]",
-                    action='store_true')
+                        dest="auto_convert",
+                        help="enable auto video conversion [Default: False]",
+                        action='store_true')
 
     args = parser.parse_args()
     return args
@@ -62,18 +70,22 @@ def main():
 
     args = parse_args()
 
+    # setup logging
+    logger = logger_manager.LoggerManager()
+    logger.setup_logger()
+
     try:
         if not args.user and not args.room_id:
-            raise Exception("[-] Missing user/room_id value")
+            raise Exception("Missing user/room_id value")
 
         if not args.mode:
-            raise Exception("[-] Missing mode value")
+            raise Exception("Missing mode value")
         if args.mode and args.mode != "manual" and args.mode != "automatic":
-            raise Exception("[-] Incorrect -mode value")
+            raise Exception("Incorrect -mode value")
 
         if args.user and args.room_id:
-            raise Exception("[-] Enter the username or room_id, not both.")
-        
+            raise Exception("Enter the username or room_id, not both.")
+
         user = args.user
         room_id = args.room_id
         if args.mode == "manual":
@@ -84,15 +96,16 @@ def main():
         if args.ffmpeg:
             use_ffmpeg = True
         elif mode == Mode.AUTOMATIC:
-            raise Exception("[-] To use automatic mode, add -ffmpeg flag.")
+            raise Exception("To use automatic mode, add -ffmpeg flag.")
     except Exception as ex:
-        print(ex)
+        logger.error(f"\n{ex}")
         exit(1)
 
     try:
         bot = TikTok(
             output=args.output,
             mode=mode,
+            logger=logger,
             user=user,
             room_id=room_id,
             use_ffmpeg=use_ffmpeg,
@@ -101,7 +114,7 @@ def main():
         )
         bot.run()
     except Exception as ex:
-        print(ex)
+        logger.error(f'Exception caught in main:\n{ex}')
 
 
 if __name__ == '__main__':

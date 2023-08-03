@@ -2,15 +2,15 @@ import time
 import requests as req
 import re
 import os
-import shutil
 import ffmpeg
 import sys
 
 from enums import Mode, Error, StatusCode, TimeOut
 
+
 class TikTok:
 
-    def __init__(self, output, mode, user=None, room_id=None, use_ffmpeg=None, duration=None, convert=False):
+    def __init__(self, output, mode, logger, user=None, room_id=None, use_ffmpeg=None, duration=None, convert=False):
         self.output = output
         self.user = user
         self.mode = mode
@@ -18,14 +18,15 @@ class TikTok:
         self.use_ffmpeg = use_ffmpeg
         self.duration = duration
         self.convert = convert
+        self.logger = logger
 
         if self.user is None:
             self.user = self.get_user_from_room_id()
         if self.room_id is None:
             self.room_id = self.get_room_id_from_user()
-        
-        print(f"[*] USERNAME {self.user}")
-        print(f"[*] ROOM_ID {self.room_id}\n")
+
+        self.logger.info(f"USERNAME: {self.user}")
+        self.logger.info(f"ROOM_ID:  {self.room_id}")
 
         is_blacklisted = self.is_country_blacklisted()
         if mode == Mode.AUTOMATIC and is_blacklisted:
@@ -42,7 +43,7 @@ class TikTok:
         """
         if self.mode == Mode.MANUAL:
             if not self.is_user_in_live():
-                print(f"[*] {self.user} is offline\n")
+                self.logger.info(f"{self.user} is offline\n")
                 exit(0)
 
             self.start_recording()
@@ -51,8 +52,8 @@ class TikTok:
             while True:
                 self.room_id = self.get_room_id_from_user()
                 if not self.is_user_in_live():
-                    print(f"[*] {self.user} is offline")
-                    print(f"waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
+                    self.logger.info(f"{self.user} is offline")
+                    self.logger.info(f"waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
                     time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
                     continue
 
@@ -63,12 +64,12 @@ class TikTok:
         Convert the video from flv format to mp4 format
         """
         try:
-            print("\n[*] Converting {} to MP4 format...".format(file))
+            self.logger.info("Converting {} to MP4 format...".format(file))
             ffmpeg.input(file).output(file.replace('_flv.mp4', '.mp4'), y='-y').run(quiet=True)
             os.remove(file)
-            print("[*] Finished converting {}".format(file))
+            self.logger.info("Finished converting {}".format(file))
         except FileNotFoundError:
-            print("[-] FFmpeg is not installed.")
+            self.logger.error("FFmpeg is not installed.")
 
     def start_recording(self):
         """
@@ -80,7 +81,8 @@ class TikTok:
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
 
-        if self.output != "" and isinstance(self.output, str) and not ( self.output.endswith('/') or self.output.endswith('\\') ):
+        if self.output != "" and isinstance(self.output, str) and not (
+                self.output.endswith('/') or self.output.endswith('\\')):
             if os.name == 'nt':
                 self.output = self.output + "\\"
             else:
@@ -88,16 +90,17 @@ class TikTok:
 
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
+        print("")
         (
-            print(f"\n[*] START RECORDING FOR {self.duration} SECONDS ", end="") 
-            if self.duration else print("\n[*] STARTED RECORDING...", end="")
+            self.logger.info(f"START RECORDING FOR {self.duration} SECONDS ")
+            if self.duration else self.logger.info("STARTED RECORDING...")
         )
-        
+
         try:
             if self.use_ffmpeg:
-                print(" [PRESS 'q' TO STOP RECORDING]")
+                self.logger.info("[PRESS 'q' TO STOP RECORDING]")
                 stream = ffmpeg.input(live_url)
-                
+
                 if self.duration is not None:
                     stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), c='copy', t=self.duration)
                 else:
@@ -105,7 +108,7 @@ class TikTok:
 
                 ffmpeg.run(stream, quiet=True)
             else:
-                print(" [PRESS ONLY ONCE CTRL + C TO STOP]")
+                self.logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
                 response = req.get(live_url, stream=True)
                 with open(output, "wb") as out_file:
                     start_time = time.time()
@@ -114,24 +117,24 @@ class TikTok:
                         elapsed_time = time.time() - start_time
                         if self.duration is not None and elapsed_time >= self.duration:
                             break
-                        
+
         except ffmpeg.Error as e:
-            print('[-] FFmpeg Error:')
-            print(e.stderr.decode('utf-8'))
+            self.logger.error('FFmpeg Error:')
+            self.logger.error(e.stderr.decode('utf-8'))
 
         except FileNotFoundError:
-            print("[-] FFmpeg is not installed.")
+            self.logger.error("FFmpeg is not installed")
             sys.exit(1)
         except KeyboardInterrupt:
             pass
 
-        print(f"FINISH: {output}\n")
+        self.logger.info(f"FINISH: {output}\n")
 
         if self.use_ffmpeg:
             return
-        
+
         if not self.convert:
-            print("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
+            self.logger.info("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
             choice = input("Y/N -> ")
             if choice.lower() == "y":
                 self.convertion_mp4(output)
@@ -150,13 +153,13 @@ class TikTok:
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
             json = req.get(url, headers=headers).json()
 
-            #live_url_m3u8 = json['data']['stream_url']['hls_pull_url']
+            # live_url_m3u8 = json['data']['stream_url']['hls_pull_url']
             live_url_flv = json['data']['stream_url']['rtmp_pull_url']
-            print("[*] URL FLV", live_url_flv)
+            self.logger.info(f"LIVE URL: {live_url_flv}")
 
             return live_url_flv
         except Exception as ex:
-            print(ex)
+            self.logger.error(ex)
 
     def is_user_in_live(self) -> bool:
         """
@@ -169,13 +172,13 @@ class TikTok:
             return '"status":4' not in content
         except ConnectionAbortedError:
             if self.mode == Mode.MANUAL:
-                print(Error.CONNECTION_CLOSED)
+                self.logger.error(Error.CONNECTION_CLOSED)
             else:
-                print(Error.CONNECTION_CLOSED_AUTOMATIC)
+                self.logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
             return False
         except Exception as ex:
-            print(ex)
+            self.logger.error(ex)
 
     def get_room_id_from_user(self) -> str:
         """
@@ -192,9 +195,9 @@ class TikTok:
 
             return re.findall("room_id=(.*?)\"/>", content)[0]
         except req.HTTPError:
-            raise req.HTTPError(Error.HTTP_ERROR)
+            raise req.HTTPError(Error.BLACKLIST_ERROR)
         except ValueError:
-            print(f"[-] Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED} minutes")
+            self.logger.error(f"Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED} minutes")
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
             return self.get_room_id_from_user()
         except AttributeError:
@@ -202,7 +205,7 @@ class TikTok:
                 raise AttributeError(Error.USERNAME_ERROR)
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
         except Exception as ex:
-            print(ex)
+            self.logger.error(ex)
 
     def get_user_from_room_id(self) -> str:
         """
@@ -217,7 +220,7 @@ class TikTok:
 
             return re.search('uniqueId":"(.*?)",', content).group(1)
         except Exception as ex:
-            print(ex)
+            self.logger.error(ex)
 
     def is_country_blacklisted(self) -> bool:
         """
@@ -227,4 +230,4 @@ class TikTok:
             response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             return response.status_code == StatusCode.REDIRECT
         except Exception as ex:
-            print(ex)
+            self.logger.error(ex)
