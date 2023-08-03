@@ -5,6 +5,7 @@ import os
 import ffmpeg
 import sys
 
+import errors
 from enums import Mode, Error, StatusCode, TimeOut
 
 
@@ -153,11 +154,15 @@ class TikTok:
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
             json = req.get(url, headers=headers).json()
 
-            # live_url_m3u8 = json['data']['stream_url']['hls_pull_url']
+            if 'This account is private' in json['data']['prompts']:
+                raise errors.AccountPrivate('Account is private, login required')
+
             live_url_flv = json['data']['stream_url']['rtmp_pull_url']
             self.logger.info(f"LIVE URL: {live_url_flv}")
 
             return live_url_flv
+        except errors.AccountPrivate as ex:
+            raise ex
         except Exception as ex:
             self.logger.error(ex)
 
@@ -231,3 +236,4 @@ class TikTok:
             return response.status_code == StatusCode.REDIRECT
         except Exception as ex:
             self.logger.error(ex)
+
