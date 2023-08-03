@@ -5,6 +5,7 @@ class LoggerManager:
 
     def __init__(self):
         self.logger = None
+        self.setup_logger()
 
     def setup_logger(self):
         """
@@ -31,8 +32,9 @@ class LoggerManager:
         error_handler.setFormatter(error_formatter)
 
         # Add the handlers to the Logger
-        self.logger.addHandler(info_handler)
-        self.logger.addHandler(error_handler)
+        if self.logger.handlers:
+            self.logger.addHandler(info_handler)
+            self.logger.addHandler(error_handler)
 
     def debug(self, message):
         """
