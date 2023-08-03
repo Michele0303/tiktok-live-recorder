@@ -79,7 +79,7 @@ class TikTok:
         if not live_url:
             raise ValueError(Error.URL_NOT_FOUND)
 
-        current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.gmtime())
+        current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 
         if self.output != "" and isinstance(self.output, str) and not (
                 self.output.endswith('/') or self.output.endswith('\\')):
