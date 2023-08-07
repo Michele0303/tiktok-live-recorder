@@ -1,9 +1,10 @@
-import time
-import requests as req
-import re
 import os
-import ffmpeg
+import re
 import sys
+import time
+
+import ffmpeg
+import requests as req
 
 import errors
 from enums import Mode, Error, StatusCode, TimeOut
