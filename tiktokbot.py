@@ -154,8 +154,8 @@ class TikTok:
             }
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
             json = req.get(url, headers=headers).json()
-
-            if 'This account is private' in json['data']['prompts']:
+            
+            if 'This account is private' in json:
                 raise errors.AccountPrivate('Account is private, login required')
 
             live_url_flv = json['data']['stream_url']['rtmp_pull_url']
@@ -238,4 +238,3 @@ class TikTok:
             return response.status_code == StatusCode.REDIRECT
         except Exception as ex:
             self.logger.error(ex)
-
