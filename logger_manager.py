@@ -5,13 +5,12 @@ class LoggerManager:
 
     def __init__(self):
         self.logger = None
-        self.setup_logger()
 
     def setup_logger(self):
         """
         Set up logging handlers with the specified log level.
         """
-        # Create an instance of Logger with the name 'logger'
+        # Create an instance of Logger with the name 'logger' (you can choose a meaningful name)
         self.logger = logging.getLogger('logger')
         self.logger.setLevel(logging.INFO)  # Set the log level of the Logger to INFO
 
@@ -23,6 +22,7 @@ class LoggerManager:
         info_formatter = logging.Formatter(info_format, info_datefmt)
         info_handler.setFormatter(info_formatter)
 
+        '''
         # Create a handler for ERROR level messages
         error_handler = logging.StreamHandler()
         error_handler.setLevel(logging.ERROR)
@@ -30,11 +30,15 @@ class LoggerManager:
         error_datefmt = '%Y-%m-%d %H:%M:%S'
         error_formatter = logging.Formatter(error_format, error_datefmt)
         error_handler.setFormatter(error_formatter)
+        '''
 
-        # Add the handlers to the Logger
-        if self.logger.handlers:
-            self.logger.addHandler(info_handler)
-            self.logger.addHandler(error_handler)
+        self.logger.addHandler(info_handler)
+
+    def debug(self, message):
+        """
+        Log a debug message.
+        """
+        self.logger.debug(message)
 
     def info(self, message):
         """

@@ -228,6 +228,7 @@ class TikTok:
             return re.search('uniqueId":"(.*?)",', content).group(1)
         except Exception as ex:
             self.logger.error(ex)
+            exit(1)
 
     def is_country_blacklisted(self) -> bool:
         """
