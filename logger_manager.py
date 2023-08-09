@@ -5,6 +5,7 @@ class LoggerManager:
 
     def __init__(self):
         self.logger = None
+        self.setup_logger()
 
     def setup_logger(self):
         """
@@ -33,12 +34,6 @@ class LoggerManager:
         '''
 
         self.logger.addHandler(info_handler)
-
-    def debug(self, message):
-        """
-        Log a debug message.
-        """
-        self.logger.debug(message)
 
     def info(self, message):
         """

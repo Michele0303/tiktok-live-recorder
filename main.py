@@ -4,6 +4,7 @@ import re
 import errors
 import logger_manager
 from enums import Mode, Info, Error, Regex
+from httpclient import HttpClient
 from tiktokbot import TikTok
 
 
@@ -36,6 +37,11 @@ def parse_args():
                         help="recording mode: (manual,automatic) [Default: manual]\n[manual] => manual live recording\n[automatic] => automatic live recording when the user is in live).",
                         default="manual",
                         action='store')
+    parser.add_argument("-proxy",
+                        dest="proxy",
+                        help="using http proxy to bypass login restriction in some country.\n"
+                        "Es. -proxy http://127.0.0.1:8080",
+                        action='store')
     parser.add_argument("-output",
                         dest="output",
                         help="output dir",
@@ -67,13 +73,15 @@ def main():
     user = None
     mode = None
     room_id = None
+    proxy = None
     use_ffmpeg = None
+
+    httpclient = None
 
     args = parse_args()
 
     # setup logging
     logger = logger_manager.LoggerManager()
-    logger.setup_logger()
 
     try:
         if not args.user and not args.room_id and not args.url:
@@ -93,6 +101,9 @@ def main():
         if args.room_id and args.url:
             raise Exception("Enter the room_id or url, not both.")
 
+        if args.proxy:
+            httpclient = HttpClient(logger, args.proxy)
+
         url = args.url
         user = args.user
         room_id = args.room_id
@@ -111,6 +122,7 @@ def main():
 
     try:
         bot = TikTok(
+            httpclient=httpclient,
             output=args.output,
             mode=mode,
             logger=logger,

@@ -5,15 +5,18 @@ import time
 
 import ffmpeg
 import requests as req
+from requests import Session
 
 import errors
 from enums import Mode, Error, StatusCode, TimeOut
+from httpclient import HttpClient
 
 
 class TikTok:
 
-    def __init__(self, output, mode, logger, url=None, user=None, room_id=None, use_ffmpeg=None, duration=None,
+    def __init__(self, httpclient, output, mode, logger, url=None, user=None, room_id=None, use_ffmpeg=None, duration=None,
                  convert=False):
+        self.httpclient: Session = httpclient.req
         self.output = output
         self.url = url
         self.user = user
@@ -38,6 +41,9 @@ class TikTok:
         is_blacklisted = self.is_country_blacklisted()
         if mode == Mode.AUTOMATIC and is_blacklisted:
             raise ValueError(Error.AUTOMATIC_MODE_ERROR)
+
+        # I create a new httpclient without proxy
+        self.httpclient = HttpClient(self.logger, None).req
 
     def run(self):
         """
@@ -116,7 +122,7 @@ class TikTok:
                 ffmpeg.run(stream, quiet=True)
             else:
                 self.logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
-                response = req.get(live_url, stream=True)
+                response = self.httpclient.get(live_url, stream=True)
                 with open(output, "wb") as out_file:
                     start_time = time.time()
                     for chunk in response.iter_content(chunk_size=4096):
@@ -153,12 +159,8 @@ class TikTok:
         I get the cdn (flv or m3u8) of the streaming
         """
         try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                "Referer": "https://www.tiktok.com/",
-            }
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
-            json = req.get(url, headers=headers).json()
+            json = self.httpclient.get(url).json()
 
             if 'This account is private' in json:
                 raise errors.AccountPrivate('Account is private, login required')
@@ -178,7 +180,7 @@ class TikTok:
         """
         try:
             url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
-            content = req.get(url).text
+            content = self.httpclient.get(url).text
 
             return '"status":4' not in content
         except ConnectionAbortedError:
@@ -196,7 +198,7 @@ class TikTok:
         Given a url, get user and room_id.
         """
         try:
-            response = req.get(self.url, allow_redirects=False)
+            response = self.httpclient.get(self.url, allow_redirects=False)
             content = response.text
 
             if response.status_code == StatusCode.REDIRECT:
@@ -225,7 +227,7 @@ class TikTok:
         Given a username, I get the room_id
         """
         try:
-            response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
+            response = self.httpclient.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             if response.status_code == StatusCode.REDIRECT:
                 raise errors.Blacklisted('Redirect')
 
@@ -254,7 +256,7 @@ class TikTok:
         """
         try:
             url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
-            content = req.get(url).text
+            content = self.httpclient.get(url).text
 
             if "LiveRoomInfo" not in content:
                 raise AttributeError(Error.USERNAME_ERROR)
@@ -269,7 +271,7 @@ class TikTok:
         Checks if the user is in a blacklisted country that requires login
         """
         try:
-            response = req.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
+            response = self.httpclient.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             return response.status_code == StatusCode.REDIRECT
         except Exception as ex:
             self.logger.error(ex)
