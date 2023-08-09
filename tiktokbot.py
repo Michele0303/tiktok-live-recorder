@@ -16,7 +16,6 @@ class TikTok:
 
     def __init__(self, httpclient, output, mode, logger, url=None, user=None, room_id=None, use_ffmpeg=None, duration=None,
                  convert=False):
-        self.httpclient: Session = httpclient.req
         self.output = output
         self.url = url
         self.user = user
@@ -26,6 +25,11 @@ class TikTok:
         self.duration = duration
         self.convert = convert
         self.logger = logger
+
+        if httpclient is not None:
+            self.httpclient: Session = httpclient.req
+        else:
+            self.httpclient = req
 
         if self.url is not None:
             self.user, self.room_id = self.get_room_and_user_from_url()
