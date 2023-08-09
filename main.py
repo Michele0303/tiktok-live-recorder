@@ -1,7 +1,9 @@
 import argparse
+import re
 
+import errors
 import logger_manager
-from enums import Mode, Info
+from enums import Mode, Info, Error, Regex
 from tiktokbot import TikTok
 
 
@@ -17,6 +19,10 @@ def parse_args():
     Parse command line arguments.
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("-url",
+                        dest="url",
+                        help="record a live from the url.",
+                        action='store')
     parser.add_argument("-user",
                         dest="user",
                         help="record a live from the username.",
@@ -57,6 +63,7 @@ def parse_args():
 def main():
     banner()
 
+    url = None
     user = None
     mode = None
     room_id = None
@@ -69,17 +76,24 @@ def main():
     logger.setup_logger()
 
     try:
-        if not args.user and not args.room_id:
-            raise Exception("Missing user/room_id value")
+        if not args.user and not args.room_id and not args.url:
+            raise Exception("Missing url/user/room_id value")
 
         if not args.mode:
             raise Exception("Missing mode value")
         if args.mode and args.mode != "manual" and args.mode != "automatic":
             raise Exception("Incorrect -mode value")
 
+        if args.url and not re.match(str(Regex.IS_TIKTOK_LIVE), args.url):
+            raise errors.LiveNotFound("NOT FOUND LIVE")
         if args.user and args.room_id:
             raise Exception("Enter the username or room_id, not both.")
+        if args.user and args.url:
+            raise Exception("Enter the username or url, not both.")
+        if args.room_id and args.url:
+            raise Exception("Enter the room_id or url, not both.")
 
+        url = args.url
         user = args.user
         room_id = args.room_id
         if args.mode == "manual":
@@ -100,6 +114,7 @@ def main():
             output=args.output,
             mode=mode,
             logger=logger,
+            url=url,
             user=user,
             room_id=room_id,
             use_ffmpeg=use_ffmpeg,

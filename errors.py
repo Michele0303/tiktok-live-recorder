@@ -8,3 +8,7 @@ class Blacklisted(Exception):
 
 class UserNotFound(Exception):
     pass
+
+
+class LiveNotFound(Exception):
+    pass

@@ -1,10 +1,19 @@
 from enum import Enum, IntEnum
 
 
+class Regex(Enum):
+
+    def __str__(self):
+        return str(self.value)
+
+    IS_TIKTOK_LIVE = ".*www\.tiktok\.com.*|.*vm\.tiktok\.com.*"
+
+
 class TimeOut(IntEnum):
     """ 
     Enumeration that defines timeout values. 
     """
+
     def __mul__(self, operator):
         return self.value * operator
 
@@ -16,6 +25,7 @@ class TimeOut(IntEnum):
 class StatusCode(IntEnum):
     OK = 200
     REDIRECT = 302
+    MOVED = 301
 
 
 class Mode(IntEnum):
@@ -30,6 +40,7 @@ class Error(Enum):
     """
     Enumeration that contains possible errors while using TikTok-Live-Recorder.
     """
+
     def __str__(self):
         return str(self.value)
 
@@ -39,9 +50,9 @@ class Error(Enum):
                                 "-country"
 
     BLACKLIST_ERROR = "[-] Captcha require or country blocked. Use a vpn or room_id." \
-                 "\n[-] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id" \
-                 "\n[-] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE" \
-                 ".md#unrestricted-country"
+                      "\n[-] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id" \
+                      "\n[-] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE" \
+                      ".md#unrestricted-country"
 
     USERNAME_ERROR = "[-] Error: Username/Room_id not found or the user has never been in live"
 
@@ -49,12 +60,14 @@ class Error(Enum):
     CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after Delay of {TimeOut.CONNECTION_CLOSED} minutes"
 
     URL_NOT_FOUND = "[-] Unable to find stream url."
+    LIVE_NOT_FOUND = "The link provided is not a live tiktok"
 
 
 class Info(Enum):
     """
     Enumeration that defines the version number and the banner message.
     """
+
     def __str__(self):
         return str(self.value)
 

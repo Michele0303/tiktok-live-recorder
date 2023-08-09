@@ -12,8 +12,10 @@ from enums import Mode, Error, StatusCode, TimeOut
 
 class TikTok:
 
-    def __init__(self, output, mode, logger, user=None, room_id=None, use_ffmpeg=None, duration=None, convert=False):
+    def __init__(self, output, mode, logger, url=None, user=None, room_id=None, use_ffmpeg=None, duration=None,
+                 convert=False):
         self.output = output
+        self.url = url
         self.user = user
         self.mode = mode
         self.room_id = room_id
@@ -21,6 +23,9 @@ class TikTok:
         self.duration = duration
         self.convert = convert
         self.logger = logger
+
+        if self.url is not None:
+            self.user, self.room_id = self.get_room_and_user_from_url()
 
         if self.user is None:
             self.user = self.get_user_from_room_id()
@@ -154,7 +159,7 @@ class TikTok:
             }
             url = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={self.room_id}"
             json = req.get(url, headers=headers).json()
-            
+
             if 'This account is private' in json:
                 raise errors.AccountPrivate('Account is private, login required')
 
@@ -185,6 +190,35 @@ class TikTok:
             return False
         except Exception as ex:
             self.logger.error(ex)
+
+    def get_room_and_user_from_url(self):
+        """
+        Given a url, get user and room_id.
+        """
+        try:
+            response = req.get(self.url, allow_redirects=False)
+            content = response.text
+
+            if response.status_code == StatusCode.REDIRECT:
+                raise errors.Blacklisted('Redirect')
+
+            if response.status_code == StatusCode.MOVED:  # MOBILE URL
+                regex = re.findall("com/@(.*?)/live", response.text)
+                if len(regex) < 1:
+                    raise errors.LiveNotFound(Error.LIVE_NOT_FOUND)
+                self.user = regex[0]
+                self.room_id = self.get_room_id_from_user()
+                return self.user, self.room_id
+
+            self.user = re.findall("com/@(.*?)/live", content)[0]
+            self.room_id = re.findall("room_id=(.*?)\"/>", content)[0]
+            return self.user, self.room_id
+
+        except (req.HTTPError, errors.Blacklisted):
+            raise errors.Blacklisted(Error.BLACKLIST_ERROR)
+        except Exception as ex:
+            self.logger.error(ex)
+            exit(1)
 
     def get_room_id_from_user(self) -> str:
         """
