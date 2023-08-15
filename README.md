@@ -16,26 +16,54 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 <div align="left">
 
 
-  <h1> Table of contents </h1>
+  <h1> How To Use </h1>
 
-- [How To Use 📝](#how-to-use-)
-- [To-Do List 🔮](#to-do-list-)
+- [Install on Windows 💻](#install-on-windows--linux-)
+- [Install on Windows 📱](#install-on-android-)
 
 </div>
 
 <br>
 
-## How To Use 📝
+## Install on Windows & Linux 💻
 
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) installed on your computer. From your command line:
 
-<img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0">
+<!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
 
 <be>
 
 </div>
 
   ```bash
+# Clone this repository
+$ git clone https://github.com/Michele0303/tiktok-live-recorder
+# Go into the repository
+$ cd tiktok-live-recorder
+# Install dependencies
+$ pip install -r requirements.txt
+# Run the app on windows
+$ python main.py -h
+# Run the app on linux
+$ python3 main.py -h
+  ```
+
+## Install on Android 📱
+
+<b>Install Termux from F-Droid:</b> <a href="https://f-droid.org/packages/com.termux/">HERE</a> - Avoid installing from Play Store to prevent potential issues.
+
+From termux command line:
+
+<be>
+
+</div>
+
+  ```bash
+# Update packages
+$ pkg update
+$ pkg upgrade
+# Install git, python3, ffmpeg
+$ pkg install git python3 ffmpeg
 # Clone this repository
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
@@ -55,8 +83,8 @@ $ python main.py -h
 - [x] Recording by room_id
 - [x] Recoding by tiktok live url
 - [x] Using a proxy to bypass login restrictions in some countries. (only to get the room_id)
-- [ ] Improve the graphical user interface
 - [x] Implement a logging system
+- [ ] Improve the graphical user interface
 - [ ] Add a feature to send recorded live streams to Telegram via the Telegram bot
 
 ## Legal ⚖️
