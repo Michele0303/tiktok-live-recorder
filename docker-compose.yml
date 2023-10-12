@@ -1,0 +1,11 @@
+---
+version: "3.8"
+services:
+
+  tiktok-live-recorder:
+    build:
+      context: .
+    volumes:
+      - ./data/:/var/data/
+    command: -user majorhustler -mode automatic -output /var/data/ -ffmpeg
+    restart: unless-stopped
