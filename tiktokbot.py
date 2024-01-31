@@ -67,9 +67,13 @@ class TikTok:
 
         if self.mode == Mode.AUTOMATIC:
             while True:
-                self.room_id = self.get_room_id_from_user()
+                client_offline = False
+                try:
+                    self.room_id = self.get_room_id_from_user()
+                except BaseException:
+                    client_offline = True
                 if not self.is_user_in_live():
-                    self.logger.info(f"{self.user} is offline")
+                    self.logger.info(f"{'Client' if client_offline else self.user} is offline")
                     self.logger.info(f"waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
                     time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
                     continue
