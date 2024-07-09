@@ -240,10 +240,10 @@ class TikTok:
                 raise errors.Blacklisted('Redirect')
 
             content = response.text
-            if "room_id" not in content:
+            if "roomId" not in content:
                 raise ValueError()
 
-            return re.findall("room_id=(.*?)\"/>", content)[0]
+            return re.findall("\"roomId\":\"(.*?)\"", content)[0]
         except (req.HTTPError, errors.Blacklisted) as e:
             raise errors.Blacklisted(Error.BLACKLIST_ERROR)
         except ValueError:
