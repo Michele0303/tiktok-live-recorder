@@ -86,6 +86,7 @@ $ python main.py -h
 - [x] Implement a logging system
 - [ ] Improve the graphical user interface
 - [ ] Add a feature to send recorded live streams to Telegram via the Telegram bot
+- [ ] Add a feature to save the chat in file
 
 ## Legal ⚖️
 
