@@ -3,7 +3,7 @@ import re
 
 import logger_manager
 
-from enums import Mode, Info, Error, Regex
+from enums import Mode, Info, Regex
 from errors import LiveNotFound, ArgsParseError, CountryBlacklisted
 from httpclient import HttpClient
 from tiktokbot import TikTok
