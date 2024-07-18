@@ -44,11 +44,11 @@ class TikTok:
                 raise ValueError(Error.AUTOMATIC_MODE_ERROR)
 
         # Get live information based on the provided user data
-        if self.user is None:
-            self.user = self.get_user_from_room_id()
-
         if self.url is not None:
             self.get_room_and_user_from_url()
+                     
+        if self.user is None:
+            self.user = self.get_user_from_room_id()
 
         if self.room_id is None:
             self.room_id = self.get_room_id_from_user()
@@ -271,9 +271,8 @@ class TikTok:
         if 'LiveRoom' not in data and 'CurrentRoom' in data:
             return ""
 
-        live_room_user_info = data['LiveRoom']['liveRoomUserInfo']
-        user_info = live_room_user_info['user']
-        room_id = user_info.get('roomId', None)
+        room_id = data.get('LiveRoom', {}).get('liveRoomUserInfo', {}).get(
+            'user', {}).get('roomId', None)
 
         if room_id is None:
             raise ValueError("RoomId not found.")
