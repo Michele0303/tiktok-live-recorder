@@ -5,7 +5,7 @@ import logger_manager
 
 from enums import Mode, Info, Regex
 from errors import LiveNotFound, ArgsParseError, CountryBlacklisted
-from httpclient import HttpClient
+from http_client import HttpClient
 from tiktokbot import TikTok
 
 

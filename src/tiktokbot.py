@@ -9,7 +9,7 @@ from requests import Session
 
 import errors
 from enums import Mode, Error, StatusCode, TimeOut
-from httpclient import HttpClient
+from http_client import HttpClient
 
 
 class TikTok:

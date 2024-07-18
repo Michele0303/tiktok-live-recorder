@@ -27,11 +27,13 @@ class HttpClient:
 
         self.logger.info(f"Testing {self.proxy}...")
         proxies = {'http': self.proxy, 'https': self.proxy}
-        try:
-            resp = req.get("https://ifconfig.me/ip", proxies=proxies)
-            if resp.status_code == StatusCode.OK:
-                self.req.proxies.update(proxies)
-                self.logger.info("Proxy set up successfully")
-        except req.ConnectionError as ex:
-            print(ex)
-            exit(1)
+
+        response = req.get(
+            "https://ifconfig.me/ip",
+            proxies=proxies,
+            timeout=10
+        )
+
+        if response.status_code == StatusCode.OK:
+            self.req.proxies.update(proxies)
+            self.logger.info("Proxy set up successfully")
