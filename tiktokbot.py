@@ -210,7 +210,7 @@ class TikTok:
             content = response.text
 
             if response.status_code == StatusCode.REDIRECT:
-                raise errors.Blacklisted('Redirect')
+                raise errors.CountryBlacklisted('Redirect')
 
             if response.status_code == StatusCode.MOVED:  # MOBILE URL
                 regex = re.findall("com/@(.*?)/live", response.text)
@@ -224,8 +224,8 @@ class TikTok:
             self.room_id = re.findall("room_id=(.*?)\"/>", content)[0]
             return self.user, self.room_id
 
-        except (req.HTTPError, errors.Blacklisted):
-            raise errors.Blacklisted(Error.BLACKLIST_ERROR)
+        except (req.HTTPError, errors.CountryBlacklisted):
+            raise errors.CountryBlacklisted(Error.BLACKLIST_ERROR)
         except Exception as ex:
             self.logger.error(ex)
             exit(1)
@@ -237,7 +237,7 @@ class TikTok:
         try:
             response = self.httpclient.get(f"https://www.tiktok.com/@{self.user}/live", allow_redirects=False)
             if response.status_code == StatusCode.REDIRECT:
-                raise errors.Blacklisted('Redirect')
+                raise errors.CountryBlacklisted('Redirect')
 
             content = response.text
             if "roomId" in content:
@@ -247,8 +247,8 @@ class TikTok:
                 return re.findall("\"room_id\":\"(.*?)\"", content)[0]
 
             raise ValueError()
-        except (req.HTTPError, errors.Blacklisted) as e:
-            raise errors.Blacklisted(Error.BLACKLIST_ERROR)
+        except (req.HTTPError, errors.CountryBlacklisted) as e:
+            raise errors.CountryBlacklisted(Error.BLACKLIST_ERROR)
         except ValueError:
             self.logger.error(f"Unable to find room_id. I'll try again in {TimeOut.CONNECTION_CLOSED} minutes")
             time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)

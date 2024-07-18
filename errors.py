@@ -2,7 +2,7 @@ class AccountPrivate(Exception):
     pass
 
 
-class Blacklisted(Exception):
+class CountryBlacklisted(Exception):
     pass
 
 
@@ -11,4 +11,8 @@ class UserNotFound(Exception):
 
 
 class LiveNotFound(Exception):
+    pass
+
+
+class ArgsParseError(Exception):
     pass
