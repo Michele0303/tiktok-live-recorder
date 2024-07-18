@@ -286,9 +286,6 @@ class TikTok:
         url = f"https://www.tiktok.com/api/live/detail/?aid=1988&roomID={self.room_id}"
         data = self.httpclient.get(url).json()
 
-        if "LiveRoomInfo" not in data:
-            raise AttributeError(Error.USERNAME_ERROR)
-
         unique_id = data.get('LiveRoomInfo', {}).get('ownerInfo', {}).get(
             'uniqueId', None)
 

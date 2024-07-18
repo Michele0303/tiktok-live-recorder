@@ -73,7 +73,7 @@ class Info(Enum):
     def __str__(self):
         return str(self.value)
 
-    VERSION = 5.0
+    VERSION = 5.1
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         
