@@ -54,7 +54,9 @@ class Error(Enum):
                       "\n[-] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE" \
                       ".md#unrestricted-country"
 
-    USERNAME_ERROR = "[-] Error: Username/Room_id not found or the user has never been in live"
+    USERNAME_ERROR = "[-] Error: Username / RoomId not found or the user has never been in live"
+    USER_NEVER_BEEN_LIVE = "The user has never been in live."
+    USER_NOT_CURRENTLY_LIVE = "The user is not currently live."
 
     CONNECTION_CLOSED = "[-] Connection broken by the server."
     CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after Delay of {TimeOut.CONNECTION_CLOSED} minutes"
@@ -71,7 +73,7 @@ class Info(Enum):
     def __str__(self):
         return str(self.value)
 
-    VERSION = 4.1
+    VERSION = 5.0
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         

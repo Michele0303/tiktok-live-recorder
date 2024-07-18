@@ -10,6 +10,11 @@ class UserNotFound(Exception):
     pass
 
 
+class UserNotLiveException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class LiveNotFound(Exception):
     pass
 
