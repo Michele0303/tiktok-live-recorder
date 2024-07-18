@@ -258,7 +258,7 @@ class TikTok:
         match = pattern.search(content)
 
         if not match:
-            raise json.JSONDecodeError("[-] Errore durante l'estrazione del roomId")
+            raise json.JSONDecodeError("[-] Error extracting roomId")
 
         data = json.loads(match.group(1))
 
