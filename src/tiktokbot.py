@@ -35,12 +35,20 @@ class TikTok:
         self.output = output
         self.logger = logger
 
-        # Get live information based on the provided user data
-        if self.url is not None:
-            self.get_room_and_user_from_url()
+        # Check if the user's country is blacklisted
+        is_blacklisted = self.is_country_blacklisted()
+        if is_blacklisted:
+            if room_id is None:
+                raise CountryBlacklisted(Error.BLACKLIST_ERROR)
+            if mode == Mode.AUTOMATIC:
+                raise ValueError(Error.AUTOMATIC_MODE_ERROR)
 
+        # Get live information based on the provided user data
         if self.user is None:
             self.user = self.get_user_from_room_id()
+
+        if self.url is not None:
+            self.get_room_and_user_from_url()
 
         if self.room_id is None:
             self.room_id = self.get_room_id_from_user()
@@ -50,11 +58,6 @@ class TikTok:
             self.logger.info(f"ROOM_ID: {Error.USER_NEVER_BEEN_LIVE}")
         else:
             self.logger.info(f"ROOM_ID:  {self.room_id}")
-
-        # Check if the user's country is blacklisted
-        is_blacklisted = self.is_country_blacklisted()
-        if mode == Mode.AUTOMATIC and is_blacklisted:
-            raise ValueError(Error.AUTOMATIC_MODE_ERROR)
 
         # Create a new httpclient without proxy
         self.httpclient = HttpClient(self.logger, None).req
