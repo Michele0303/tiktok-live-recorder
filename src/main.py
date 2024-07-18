@@ -5,7 +5,7 @@ import logger_manager
 
 from enums import Mode, Info, Regex
 from custom_exceptions import LiveNotFound, ArgsParseError, CountryBlacklisted, \
-    UserNotLiveException, AccountPrivate
+    UserNotLiveException, AccountPrivate, IPBlockedByWAF
 from http_client import HttpClient
 from tiktokbot import TikTok
 
@@ -174,6 +174,9 @@ def main():
         logger.error(ex)
 
     except CountryBlacklisted as ex:
+        logger.error(ex)
+
+    except IPBlockedByWAF as ex:
         logger.error(ex)
 
     except Exception as ex:

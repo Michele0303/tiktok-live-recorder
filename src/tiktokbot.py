@@ -7,7 +7,7 @@ import time
 import ffmpeg
 
 from custom_exceptions import AccountPrivate, CountryBlacklisted, \
-    LiveNotFound, UserNotLiveException
+    LiveNotFound, UserNotLiveException, IPBlockedByWAF
 from enums import Mode, Error, StatusCode, TimeOut
 from http_client import HttpClient
 
@@ -255,13 +255,16 @@ class TikTok:
             url=f'https://www.tiktok.com/@{self.user}/live'
         ).text
 
+        if 'Please wait...' in content:
+            raise IPBlockedByWAF
+
         pattern = re.compile(
             r'<script id="SIGI_STATE" type="application/json">(.*?)</script>',
             re.DOTALL)
         match = pattern.search(content)
 
         if not match:
-            raise json.JSONDecodeError("[-] Error extracting roomId")
+            raise ValueError("[-] Error extracting roomId")
 
         data = json.loads(match.group(1))
 
@@ -273,7 +276,7 @@ class TikTok:
         room_id = user_info.get('roomId', None)
 
         if room_id is None:
-            raise json.JSONDecodeError("RoomId not found.")
+            raise ValueError("RoomId not found.")
 
         return room_id
 
