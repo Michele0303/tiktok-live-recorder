@@ -40,6 +40,8 @@ To clone and run this application, you'll need [Git](https://git-scm.com) and [P
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
 $ cd tiktok-live-recorder
+# Go into the source code
+$ cd src
 # Install dependencies
 $ pip install -r requirements.txt
 # Run the app on windows
@@ -68,6 +70,8 @@ $ pkg install git python3 ffmpeg
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
 $ cd tiktok-live-recorder
+# Go into the source code
+$ cd src
 # Install dependencies
 $ pip install -r requirements.txt
 # Run the app
