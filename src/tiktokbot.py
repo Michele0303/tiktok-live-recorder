@@ -121,7 +121,7 @@ class TikTok:
             os.remove(file)
             self.logger.info("Finished converting {}".format(file))
         except FileNotFoundError:
-            self.logger.error("FFmpeg is not installed.")
+            self.logger.error("FFmpeg is not installed. -> pip install ffmpeg-python")
 
     def start_recording(self):
         """
@@ -176,7 +176,7 @@ class TikTok:
             self.logger.error(e.stderr.decode('utf-8'))
 
         except FileNotFoundError:
-            self.logger.error("FFmpeg is not installed")
+            self.logger.error("FFmpeg is not installed -> pip install ffmpeg-python")
             sys.exit(1)
 
         except KeyboardInterrupt:
@@ -188,7 +188,7 @@ class TikTok:
             return
 
         if not self.convert:
-            self.logger.info("Do you want to convert it to real mp4? [Requires ffmpeg installed]")
+            self.logger.info("Do you want to convert it to real mp4? [Requires ffmpeg installed] -> pip install ffmpeg-python")
             choice = input("Y/N -> ")
             if choice.lower() == "y":
                 self.convertion_mp4(output)
