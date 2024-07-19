@@ -1,5 +1,11 @@
 class AccountPrivate(Exception):
-    pass
+    def __init__(self, message='Account is private, login required'):
+        super().__init__(message)
+
+
+class LiveRestriction(Exception):
+    def __init__(self, message='Live is private, login required'):
+        super().__init__(message)
 
 
 class CountryBlacklisted(Exception):

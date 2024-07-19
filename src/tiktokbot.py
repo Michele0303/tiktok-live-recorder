@@ -7,7 +7,7 @@ import time
 import ffmpeg
 
 from custom_exceptions import AccountPrivate, CountryBlacklisted, \
-    LiveNotFound, UserNotLiveException, IPBlockedByWAF
+    LiveNotFound, UserNotLiveException, IPBlockedByWAF, LiveRestriction
 from enums import Mode, Error, StatusCode, TimeOut
 from http_client import HttpClient
 
@@ -199,9 +199,14 @@ class TikTok:
         data = self.httpclient.get(url).json()
 
         if 'This account is private' in data:
-            raise AccountPrivate('Account is private, login required')
+            raise AccountPrivate
 
-        live_url_flv = data['data']['stream_url']['rtmp_pull_url']
+        live_url_flv = data.get(
+            'data', {}).get('stream_url', {}).get('rtmp_pull_url', None)
+
+        if live_url_flv is None and data.get('status_code') == 4003110:
+            raise LiveRestriction
+
         self.logger.info(f"LIVE URL: {live_url_flv}")
 
         return live_url_flv
