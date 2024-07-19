@@ -84,14 +84,14 @@ $ python main.py -h
 ## To-Do List 🔮
 
 - [x] Automatic Recording: Enable automatic recording of live TikTok sessions.
+- [x] Authentication: Added support for cookies-based authentication.
 - [x] Recording by room_id: Allow recording by providing the room ID.
 - [x] Recording by TikTok live URL: Enable recording by directly using the TikTok live URL.
 - [x] Using a Proxy to Bypass Login Restrictions: Implement the ability to use an HTTP proxy to bypass login restrictions in some countries (only to obtain the room ID).
 - [x] Implement a Logging System: Set up a comprehensive logging system to track activities and errors.
-- [ ] Improve the Graphical User Interface: Enhance the GUI for a more user-friendly and intuitive experience.
-- [ ] Add Feature to Send Recorded Live Streams to Telegram: Integrate with a Telegram bot to automatically send recorded live streams to a Telegram channel or user.
-- [ ] Add Feature to Save the Chat in a File: Implement a feature to save the live chat to a file for later reference.
-- [ ] Implement Auto-Update Feature: Create a system that automatically checks for new releases or commits and updates the tool for users to the latest version without manual intervention.
+- [ ] Add Feature to Send Recorded Live Streams to Telegram.
+- [ ] Add Feature to Save the Chat in a File.
+- [ ] Implement Auto-Update Feature: Create a system that automatically checks for new releases.
 
 ## Legal ⚖️
 
