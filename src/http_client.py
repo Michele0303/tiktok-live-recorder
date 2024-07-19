@@ -6,10 +6,11 @@ from logger_manager import LoggerManager
 
 class HttpClient:
 
-    def __init__(self, logger: LoggerManager, proxy=None):
+    def __init__(self, logger: LoggerManager, proxy=None, cookies=None):
         self.req = None
         self.logger = logger
         self.proxy = proxy
+        self.cookies = cookies
         self.configure_session()
 
     def configure_session(self) -> None:
@@ -25,6 +26,9 @@ class HttpClient:
             "Priority": "u=0, i",
             "Referer": "https://www.tiktok.com/"
         })
+
+        if self.cookies is not None:
+            self.req.cookies.update(self.cookies)
 
         self.check_proxy()
 

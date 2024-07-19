@@ -14,8 +14,9 @@ from http_client import HttpClient
 
 class TikTok:
 
-    def __init__(self, httpclient, output, mode, logger, url=None, user=None,
-                 room_id=None, use_ffmpeg=None, duration=None, convert=False):
+    def __init__(self, httpclient, output, mode, logger, cookies, url=None,
+                 user=None, room_id=None, use_ffmpeg=None, duration=None,
+                 convert=False):
 
         # TikTok
         self.url = url
@@ -25,6 +26,7 @@ class TikTok:
         # Tool Settings
         self.httpclient = httpclient.req
         self.mode = mode
+        self.cookies = cookies
 
         # Recording Settings
         self.use_ffmpeg = use_ffmpeg
@@ -60,7 +62,9 @@ class TikTok:
             self.logger.info(f"ROOM_ID:  {self.room_id}")
 
         # Create a new httpclient without proxy
-        self.httpclient = HttpClient(self.logger, None).req
+        self.httpclient = HttpClient(
+            self.logger, cookies=self.cookies, proxy=None
+        ).req
 
     def run(self):
         """

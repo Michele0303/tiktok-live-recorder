@@ -1,5 +1,7 @@
 import argparse
+import os
 import re
+import json
 
 import logger_manager
 
@@ -15,6 +17,16 @@ def banner() -> None:
     Prints a banner with the name of the tool and its version number.
     """
     print(Info.BANNER)
+
+
+def read_cookies():
+    """
+    Loads the config file and returns it.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, 'cookies.json')
+    with open(config_path, 'r') as f:
+        return json.load(f)
 
 
 def parse_args():
@@ -158,7 +170,8 @@ def main():
             room_id=room_id,
             use_ffmpeg=use_ffmpeg,
             duration=args.duration,
-            convert=args.auto_convert
+            convert=args.auto_convert,
+            cookies=read_cookies()
         ).run()
 
     except ArgsParseError as ex:
