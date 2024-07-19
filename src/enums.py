@@ -44,15 +44,9 @@ class Error(Enum):
     def __str__(self):
         return str(self.value)
 
-    AUTOMATIC_MODE_ERROR: str = "[-] Automatic mode can be used only in unblacklisted country. Use a VPN\n[*] " \
-                                "Unrestricted country list: " \
-                                "https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted" \
-                                "-country"
+    AUTOMATIC_MODE_ERROR: str = "[-] Automatic mode is available only in unblocked countries. Use a VPN or authenticate with cookies.\n[*] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
 
-    BLACKLIST_ERROR = "[-] Captcha require or country blocked. Use a vpn or room_id." \
-                      "\n[-] How to get room id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id" \
-                      "\n[-] Unrestricted country list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE" \
-                      ".md#unrestricted-country"
+    BLACKLIST_ERROR = "[-] Captcha required or country blocked. Use a VPN, room_id, or authenticate with cookies.\n[-] How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n[-] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
 
     USERNAME_ERROR = "[-] Error: Username / RoomId not found or the user has never been in live"
     USER_NEVER_BEEN_LIVE = "The user has never been in live."
@@ -73,7 +67,7 @@ class Info(Enum):
     def __str__(self):
         return str(self.value)
 
-    VERSION = 5.1
+    VERSION = 5.2
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         

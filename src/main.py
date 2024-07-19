@@ -160,8 +160,11 @@ def main():
         elif mode == Mode.AUTOMATIC:
             raise ArgsParseError("To use automatic mode, add -ffmpeg flag.")
 
+        # read cookies from file
+        cookies = read_cookies()
+
         TikTok(
-            httpclient=HttpClient(logger, args.proxy),
+            httpclient=HttpClient(logger, cookies=cookies, proxy=args.proxy),
             output=args.output,
             mode=mode,
             logger=logger,
@@ -171,7 +174,7 @@ def main():
             use_ffmpeg=use_ffmpeg,
             duration=args.duration,
             convert=args.auto_convert,
-            cookies=read_cookies()
+            cookies=cookies
         ).run()
 
     except ArgsParseError as ex:
