@@ -1,18 +1,18 @@
 import argparse
-import os
 import re
 import json
 import sys
+import os
 
 from utils import logger_manager
 from utils.enums import Mode, Info, Regex
-from utils.custom_exceptions import LiveNotFound, ArgsParseError, CountryBlacklisted, \
-    UserNotLiveException, AccountPrivate, IPBlockedByWAF, LiveRestriction
 from http_utils.http_client import HttpClient
 from core.tiktokbot import TikTok
+from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
+    CountryBlacklisted, UserNotLiveException, AccountPrivate, IPBlockedByWAF, \
+    LiveRestriction
 
-import sys
-import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
