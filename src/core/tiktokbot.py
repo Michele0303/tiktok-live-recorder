@@ -6,10 +6,10 @@ import time
 
 import ffmpeg
 
-from custom_exceptions import AccountPrivate, CountryBlacklisted, \
+from utils.custom_exceptions import AccountPrivate, CountryBlacklisted, \
     LiveNotFound, UserNotLiveException, IPBlockedByWAF, LiveRestriction
-from enums import Mode, Error, StatusCode, TimeOut
-from http_client import HttpClient
+from utils.enums import Mode, Error, StatusCode, TimeOut
+from http_utils.http_client import HttpClient
 
 
 class TikTok:

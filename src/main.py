@@ -2,14 +2,18 @@ import argparse
 import os
 import re
 import json
+import sys
 
-import logger_manager
-
-from enums import Mode, Info, Regex
-from custom_exceptions import LiveNotFound, ArgsParseError, CountryBlacklisted, \
+from utils import logger_manager
+from utils.enums import Mode, Info, Regex
+from utils.custom_exceptions import LiveNotFound, ArgsParseError, CountryBlacklisted, \
     UserNotLiveException, AccountPrivate, IPBlockedByWAF, LiveRestriction
-from http_client import HttpClient
-from tiktokbot import TikTok
+from http_utils.http_client import HttpClient
+from core.tiktokbot import TikTok
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def banner() -> None:
