@@ -37,9 +37,6 @@ class TikTok:
         self.output = output
         self.logger = logger
 
-        # Presave user specified output path in case it contains placeholders
-        self.specified_output = output
-
         # Check if the user's country is blacklisted
         is_blacklisted = self.is_country_blacklisted()
         if is_blacklisted:
@@ -133,27 +130,6 @@ class TikTok:
         live_url = self.get_live_url()
         if not live_url:
             raise LiveNotFound(Error.URL_NOT_FOUND)
-
-        # If output contains placeholders, replace them with appropriate values
-        current_year = time.strftime("%Y", time.localtime())
-        current_month = time.strftime("%m", time.localtime())
-        current_day = time.strftime("%d", time.localtime())
-        current_hour = time.strftime("%H", time.localtime())
-        current_minute = time.strftime("%M", time.localtime())
-        current_second = time.strftime("%S", time.localtime())
-
-        try:
-            self.output = self.specified_output.format(YYYY=current_year, MM=current_month, DD=current_day, hh=current_hour, mm=current_minute, ss=current_second)
-        except:
-            self.logger.info("Output contains undefined placeholder(s). Leaving output unchanged.")
-
-        # Try to create a new directory
-        try:
-            if not os.path.exists(self.output):
-                os.makedirs(self.output)
-                self.logger.info("Creating a new directory '{}'".format(self.output))
-        except:
-            self.logger.error("Could not create a directory '{}'".format(self.output))
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 

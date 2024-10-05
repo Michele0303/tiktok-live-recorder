@@ -90,9 +90,6 @@ def parse_args():
         dest="output",
         help=(
             "Specify the output directory where recordings will be saved.\n"
-            "Placeholders can be used to make dynamic path:\n"
-            "{YYYY} - year; {MM} - month; {DD} - day; {hh} - hour; {mm} - minute; {ss} - second.\n"
-            "Example: /output/{YYYY}{MM}{DD} or /{YYYY}/{MM}/{DD}"
         ),
         action='store'
     )
