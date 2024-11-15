@@ -1,143 +1,84 @@
-from datetime import datetime
-import json
 from pathlib import Path
 import requests
+import zipfile
 
-# TODO: "move to a module"
-
-data = {
-    "last_date_search": "2024-11-15",
-}
 URL = "https://raw.githubusercontent.com/Michele0303/tiktok-live-recorder/main/src/utils/enums.py"
-URL_REPO = (
-    "https://github.com/Michele0303/tiktok-live-recorder/archive/refs/heads/main.zip"
-)
+URL_REPO = "https://github.com/Michele0303/tiktok-live-recorder/archive/refs/heads/main.zip"
 FILE_TEMP = "enums_temp.py"
 FILE_NAME_UPDATE = URL_REPO.split("/")[-1]
 
 
-def save_data():
-    try:
-        with open("data.json", "w", encoding="utf-8") as file:
-            json.dump(
-                data,
-                file,
-                indent=4,
-                ensure_ascii=True,
-                sort_keys=True,
-            )
-    except FileNotFoundError:
-        print("File not found")
-
-
-def check_file(path: str):
-    if Path(path).exists():
-        return True
-    return False
-
-
-def a_week_has_passed() -> bool:
-    """check if a week has passed since the last search
-
-    Returns:
-        bool: _description_
+def check_file(path: str) -> bool:
     """
-    try:
-        with open("data.json", "r", encoding="utf-8") as file:
-            data = json.load(file)
-    except FileNotFoundError:
-        print("File not found")
-        return False
-
-    last_date = datetime.strptime(data["last_date_search"], "%Y-%m-%d")
-    today = datetime.now()
-
-    if (today - last_date).days >= 7:
-        print(today, last_date)
-        return True
-
-    return False
-
-
-def download_file(url: str, file_name: str):
-    """download a file from a url
+    Check if a file exists at the given path.
 
     Args:
-        url (str): url to download the file
-        file_name (str): name of the file to save
+        path (str): Path to the file.
+
+    Returns:
+        bool: True if the file exists, False otherwise.
+    """
+    return Path(path).exists()
+
+
+def download_file(url: str, file_name: str) -> None:
+    """
+    Download a file from a URL and save it locally.
+
+    Args:
+        url (str): URL to download the file from.
+        file_name (str): Name of the file to save.
     """
     response = requests.get(url, stream=True)
 
-    if response.status_code == 200:  # 200 OK
+    if response.status_code == 200:
         with open(file_name, "wb") as file:
             for chunk in response.iter_content(1024):
                 file.write(chunk)
-
     else:
-        print("Error al descargar el archivo")
-        # exit()
-        # return False
+        print("Error downloading the file.")
 
 
-def check_updates():
-    if not check_file("data.json"):
-        save_data()
-    if not a_week_has_passed():
-        return False
+def check_updates() -> bool:
+    """
+    Check if there is a new version available and update if necessary.
 
+    Returns:
+        bool: True if the update was successful, False otherwise.
+    """
     download_file(URL, FILE_TEMP)
 
     if not check_file(FILE_TEMP):
-        print("the file does not exist")
+        print("The temporary file does not exist.")
         return False
 
     try:
-        from enums_temp import Info #type: ignore
-        from utils.enums import Info as Info_old
-        import zipfile
-
+        from enums_temp import Info
+        from utils.enums import Info as InfoOld
     except ImportError:
-        print("Error trying to import the file or missing file or module")
-        # exit()
+        print("Error importing the file or missing module.")
         return False
 
-    if float(Info.__str__(Info.VERSION)) != float(Info_old.__str__(Info_old.VERSION)):
+    if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
         print(Info.BANNER)
-        print(
-            f"----- New version available: {Info.__str__(Info.VERSION)}\n----- Current version: {Info_old.__str__(Info_old.VERSION)}"
-        )
+        print(f"New version available: {Info.__str__(Info.VERSION)}\nCurrent version: {InfoOld.__str__(InfoOld.VERSION)}")
         print("\nNew features:")
-        for feature in Info.NEW_FEACTURES:
+        for feature in Info.NEW_FEATURES:
             print("*", feature)
-
-        # TODO: "Question: Do you want to update the tool? [Y/n]"
-        # exit()
-        # return True
     else:
-        print("No updates available")
-        # print("No hay actualizaciones disponibles")
+        print("No updates available.")
         return False
 
-    download_file(
-        URL_REPO,
-        FILE_NAME_UPDATE,
-    )
+    download_file(URL_REPO, FILE_NAME_UPDATE)
 
-    dir = Path(__file__).parent
-    ouput = Path(__file__).parent.parent.parent
+    dir_path = Path(__file__).parent
+    output_path = dir_path.parent.parent.parent
 
-    # Extract content zip in the same directory
-    with zipfile.ZipFile(dir / FILE_NAME_UPDATE, "r") as zip_ref:
-        zip_ref.extractall(ouput)
+    # Extract content from zip in the parent directory
+    with zipfile.ZipFile(dir_path / FILE_NAME_UPDATE, "r") as zip_ref:
+        zip_ref.extractall(output_path)
 
-    # save the date of the last search
-    save_data()
-
-    # delete the temporary file
+    # Delete the temporary files
     Path(FILE_TEMP).unlink()
     Path(FILE_NAME_UPDATE).unlink()
     return True
-
-    # alternastivas
-    # se actualiza usando los comandos de git
-    # se actualiza usando el comnado curl
