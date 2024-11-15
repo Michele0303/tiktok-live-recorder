@@ -66,8 +66,15 @@ class Info(Enum):
 
     def __str__(self):
         return str(self.value)
+    
+    def __iter__(self):
+        return iter(self.value)
 
-    VERSION = 5.2
+    NEW_FEATURES = [
+        "Added support for autoupdate",
+    ]
+    
+    VERSION = 5.3
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         
