@@ -70,14 +70,11 @@ class Info(Enum):
     def __iter__(self):
         return iter(self.value)
 
-    NEW_FEACTURES = [
+    NEW_FEATURES = [
         "Added support for autoupdate",
-        # "Added support for recording with ffmpeg",
-        # "Added support for automatic mode",
-        # "Added support for recording in unblocked countries",
-        # "Added support for recording with cookies",
     ]
-    VERSION = 5.2
+    
+    VERSION = 5.3
     BANNER = f"""
 
   _____ _ _   _____    _     _    _           ___                   _         
