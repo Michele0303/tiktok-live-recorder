@@ -208,5 +208,12 @@ def main():
         logger.error(ex)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # TODO: Convert to a class
+    from check_upts import check_updates #type: ignore
+
+    if check_updates():
+        exit()
+    # TODO: Add argument to disable update check
+    # TODO: Add argument to force update check
     main()
