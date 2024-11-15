@@ -1,6 +1,7 @@
 from pathlib import Path
 import requests
 import zipfile
+import shutil
 
 URL = "https://raw.githubusercontent.com/Michele0303/tiktok-live-recorder/main/src/utils/enums.py"
 URL_REPO = "https://github.com/Michele0303/tiktok-live-recorder/archive/refs/heads/main.zip"
@@ -72,13 +73,45 @@ def check_updates() -> bool:
     download_file(URL_REPO, FILE_NAME_UPDATE)
 
     dir_path = Path(__file__).parent
-    output_path = dir_path.parent.parent.parent
+    temp_update_dir = dir_path / "update_temp"
 
-    # Extract content from zip in the parent directory
+    # Extract content from zip to a temporary update directory
     with zipfile.ZipFile(dir_path / FILE_NAME_UPDATE, "r") as zip_ref:
-        zip_ref.extractall(output_path)
+        zip_ref.extractall(temp_update_dir)
 
-    # Delete the temporary files
-    Path(FILE_TEMP).unlink()
-    Path(FILE_NAME_UPDATE).unlink()
+    # Find the extracted folder (it will have the name 'tiktok-live-recorder-main')
+    extracted_folder = temp_update_dir / "tiktok-live-recorder-main" / "src"
+
+    # Copy all files and folders from the extracted folder to the main directory
+    for item in extracted_folder.iterdir():
+        source = item
+        destination = dir_path / item.name
+
+        # Skip overwriting the currently running script
+        if source.name == "check_updates.py":
+            continue
+
+        # If it's a file, overwrite it
+        if source.is_file():
+            shutil.copy2(source, destination)
+        # If it's a directory, copy its contents file by file
+        elif source.is_dir():
+            for sub_item in source.rglob('*'):
+                sub_destination = destination / sub_item.relative_to(source)
+                if sub_item.is_file():
+                    sub_destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(sub_item, sub_destination)
+
+    # Delete the temporary files and folders
+    shutil.rmtree(temp_update_dir)
+    try:
+        Path(FILE_TEMP).unlink()
+    except Exception as e:
+        print(f"Failed to remove the temporary file {FILE_TEMP}: {e}")
+
+    try:
+        Path(FILE_NAME_UPDATE).unlink()
+    except Exception as e:
+        print(f"Failed to remove the temporary file {FILE_NAME_UPDATE}: {e}")
+
     return True
