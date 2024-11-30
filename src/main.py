@@ -5,6 +5,7 @@ import sys
 import os
 
 from utils import logger_manager
+from check_updates import check_updates
 from utils.enums import Mode, Info, Regex
 from http_utils.http_client import HttpClient
 from core.tiktokbot import TikTok
@@ -128,6 +129,10 @@ def main():
     # print banner
     banner()
 
+    # check for updates
+    if check_updates():
+        exit()
+
     # setup logging
     logger = logger_manager.LoggerManager()
 
@@ -209,12 +214,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # TODO: Convert to a class
-    from check_updates import check_updates
-
-    if check_updates():
-        exit()
-
-    # TODO: Add argument to disable update check
-    # TODO: Add argument to force update check
     main()

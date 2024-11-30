@@ -67,7 +67,7 @@ def check_updates() -> bool:
         for feature in Info.NEW_FEATURES:
             print("*", feature)
     else:
-        print("No updates available.")
+        # print("No updates available.")
         return False
 
     download_file(URL_REPO, FILE_NAME_UPDATE)
