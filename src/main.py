@@ -4,7 +4,7 @@ import json
 import sys
 import os
 
-from utils import logger_manager
+from utils.logger_manager import logger
 from check_updates import check_updates
 from utils.enums import Mode, Info, Regex
 from http_utils.http_client import HttpClient
@@ -133,9 +133,6 @@ def main():
     if check_updates():
         exit()
 
-    # setup logging
-    logger = logger_manager.LoggerManager()
-
     try:
         args = parse_args()
 
@@ -175,10 +172,9 @@ def main():
         cookies = read_cookies()
 
         TikTok(
-            httpclient=HttpClient(logger, cookies=cookies, proxy=args.proxy),
+            httpclient=HttpClient(cookies=cookies, proxy=args.proxy),
             output=args.output,
             mode=mode,
-            logger=logger,
             url=url,
             user=user,
             room_id=room_id,
