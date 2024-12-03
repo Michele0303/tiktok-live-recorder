@@ -1,14 +1,13 @@
 import requests as req
 
 from utils.enums import StatusCode
-from utils.logger_manager import LoggerManager
+from utils.logger_manager import logger
 
 
 class HttpClient:
 
-    def __init__(self, logger: LoggerManager, proxy=None, cookies=None):
+    def __init__(self, proxy=None, cookies=None):
         self.req = None
-        self.logger = logger
         self.proxy = proxy
         self.cookies = cookies
         self.configure_session()
@@ -36,7 +35,7 @@ class HttpClient:
         if self.proxy is None:
             return
 
-        self.logger.info(f"Testing {self.proxy}...")
+        logger.info(f"Testing {self.proxy}...")
         proxies = {'http': self.proxy, 'https': self.proxy}
 
         response = req.get(
@@ -47,4 +46,4 @@ class HttpClient:
 
         if response.status_code == StatusCode.OK:
             self.req.proxies.update(proxies)
-            self.logger.info("Proxy set up successfully")
+            logger.info("Proxy set up successfully")

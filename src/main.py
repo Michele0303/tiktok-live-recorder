@@ -4,7 +4,8 @@ import json
 import sys
 import os
 
-from utils import logger_manager
+from utils.logger_manager import logger
+from check_updates import check_updates
 from utils.enums import Mode, Info, Regex
 from http_utils.http_client import HttpClient
 from core.tiktokbot import TikTok
@@ -88,7 +89,9 @@ def parse_args():
     parser.add_argument(
         "-output",
         dest="output",
-        help="Specify the output directory where recordings will be saved.",
+        help=(
+            "Specify the output directory where recordings will be saved.\n"
+        ),
         action='store'
     )
 
@@ -126,8 +129,9 @@ def main():
     # print banner
     banner()
 
-    # setup logging
-    logger = logger_manager.LoggerManager()
+    # check for updates
+    if check_updates():
+        exit()
 
     try:
         args = parse_args()
@@ -168,10 +172,9 @@ def main():
         cookies = read_cookies()
 
         TikTok(
-            httpclient=HttpClient(logger, cookies=cookies, proxy=args.proxy),
+            httpclient=HttpClient(cookies=cookies, proxy=args.proxy),
             output=args.output,
             mode=mode,
-            logger=logger,
             url=url,
             user=user,
             room_id=room_id,
@@ -206,5 +209,5 @@ def main():
         logger.error(ex)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

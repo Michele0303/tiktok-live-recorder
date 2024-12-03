@@ -6,12 +6,12 @@ class Regex(Enum):
     def __str__(self):
         return str(self.value)
 
-    IS_TIKTOK_LIVE = ".*www\.tiktok\.com.*|.*vm\.tiktok\.com.*"
+    IS_TIKTOK_LIVE = r".*www\.tiktok\.com.*|.*vm\.tiktok\.com.*"
 
 
 class TimeOut(IntEnum):
-    """ 
-    Enumeration that defines timeout values. 
+    """
+    Enumeration that defines timeout values.
     """
 
     def __mul__(self, operator):
@@ -67,8 +67,15 @@ class Info(Enum):
     def __str__(self):
         return str(self.value)
 
-    VERSION = 5.2
-    BANNER = f"""
+    def __iter__(self):
+        return iter(self.value)
+
+    NEW_FEATURES = [
+        "Added support for autoupdate",
+    ]
+
+    VERSION = 5.3
+    BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
  |_   _(_) |_|_   _|__| |__ | |  (_)_ _____  | _ \___ __ ___ _ _ __| |___ _ _ 

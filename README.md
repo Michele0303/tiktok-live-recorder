@@ -27,7 +27,7 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 ## Install on Windows & Linux 💻
 
-To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) installed on your computer. From your command line:
+To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
 
 <!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
 
@@ -89,9 +89,9 @@ $ python main.py -h
 - [x] <b>Recording by TikTok live URL:</b> Enable recording by directly using the TikTok live URL.
 - [x] <b>Using a Proxy to Bypass Login Restrictions:</b> Implement the ability to use an HTTP proxy to bypass login restrictions in some countries (only to obtain the room ID).
 - [x] <b>Implement a Logging System:</b> Set up a comprehensive logging system to track activities and errors.
+- [x] <b>Implement Auto-Update Feature:</b> Create a system that automatically checks for new releases.
 - [ ] <b>Send Recorded Live Streams to Telegram:</b> Enable the option to send recorded live streams directly to Telegram.
 - [ ] <b>Save Chat in a File:</b> Allow saving the chat from live streams in a file.
-- [ ] <b>Implement Auto-Update Feature:</b> Create a system that automatically checks for new releases.
 
 ## Legal ⚖️
 
