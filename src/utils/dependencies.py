@@ -2,10 +2,23 @@ import subprocess
 import sys
 from subprocess import SubprocessError
 
-import distro
 from sys import platform
 
 from .logger_manager import logger
+
+
+def install_distro_library():
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "distro"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+        logger.info("distro installed successfully")
+    except SubprocessError as e:
+        logger.error(f"Error: {e}")
+        exit(1)
 
 
 def check_ffmpeg_binary():
@@ -26,6 +39,7 @@ def install_ffmpeg_binary():
         if platform == "linux":
             logger.error('Please, install FFmpeg:')
 
+            import distro
             linux_family = distro.like()
             if linux_family == "debian":
                 logger.info('sudo apt install ffmpeg')
@@ -119,6 +133,8 @@ def install_requests_library():
 
 
 def check_and_install_dependencies():
+    install_distro_library()
+
     if not check_ffmpeg_binary():
         install_ffmpeg_binary()
 
