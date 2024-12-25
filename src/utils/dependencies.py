@@ -7,6 +7,15 @@ from sys import platform
 from .logger_manager import logger
 
 
+def check_distro_library():
+    try:
+        import distro
+        return True
+    except ModuleNotFoundError:
+        logger.error("distro library is not installed")
+        return False
+
+
 def install_distro_library():
     try:
         subprocess.run(
