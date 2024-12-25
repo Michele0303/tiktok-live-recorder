@@ -142,7 +142,8 @@ def install_requests_library():
 
 
 def check_and_install_dependencies():
-    install_distro_library()
+    if not check_distro_library():
+        install_distro_library()
 
     if not check_ffmpeg_binary():
         install_ffmpeg_binary()
