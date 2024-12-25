@@ -56,6 +56,8 @@ def install_ffmpeg_binary():
                 logger.info('sudo dnf install ffmpeg / sudo yum install ffmpeg')
             elif linux_family == "arch":
                 logger.info('sudo pacman -S ffmpeg')
+            elif linux_family == "":  # Termux
+                logger.info('pkg install ffmpeg')
             else:
                 logger.info(f"Distro linux not supported (family: {linux_family})")
 
