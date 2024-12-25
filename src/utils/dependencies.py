@@ -61,7 +61,7 @@ def install_ffmpeg_binary():
                 logger.info(f"Distro linux not supported (family: {linux_family})")
 
         elif platform.system().lower() == "windows":
-            logger.info('winget install ffmpeg')
+            logger.info('choco install ffmpeg or follow: https://phoenixnap.com/kb/ffmpeg-windows')
 
         elif platform.system().lower() == "darwin":
             logger.info('brew install ffmpeg')
