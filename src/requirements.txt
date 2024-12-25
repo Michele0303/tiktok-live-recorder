@@ -1,3 +1,4 @@
 requests
 argparse
 ffmpeg-python
+distro
