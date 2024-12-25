@@ -44,8 +44,8 @@ def check_ffmpeg_binary():
 
 def install_ffmpeg_binary():
     try:
+        logger.error('Please, install FFmpeg with this command:')
         if platform.system().lower() == "linux":
-            logger.error('Please, install FFmpeg:')
 
             import distro
             linux_family = distro.like()
@@ -61,17 +61,13 @@ def install_ffmpeg_binary():
                 logger.info(f"Distro linux not supported (family: {linux_family})")
 
         elif platform.system().lower() == "windows":
-            subprocess.run(["winget", "install", "ffmpeg"], check=True)
+            logger.info('winget install ffmpeg')
 
         elif platform.system().lower() == "darwin":
-            subprocess.run(["brew", "install", "ffmpeg"], check=True)
+            logger.info('brew install ffmpeg')
 
         else:
             logger.info(f"OS not supported: {platform}")
-
-        logger.info(
-            "FFmpeg binary installed successfully. Restart the program"
-        )
 
     except Exception as e:
         logger.error(f"Error: {e}")
@@ -143,11 +139,10 @@ def install_requests_library():
 
 
 def check_and_install_dependencies():
+    logger.info("Checking and Installing dependencies")
+
     if not check_distro_library():
         install_distro_library()
-
-    if not check_ffmpeg_binary():
-        install_ffmpeg_binary()
 
     if not check_ffmpeg_library():
         install_ffmpeg_library()
@@ -157,3 +152,6 @@ def check_and_install_dependencies():
 
     if not check_requests_library():
         install_requests_library()
+
+    if not check_ffmpeg_binary():
+        install_ffmpeg_binary()
