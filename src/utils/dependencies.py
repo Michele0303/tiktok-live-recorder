@@ -1,8 +1,7 @@
 import subprocess
 import sys
+import platform
 from subprocess import SubprocessError
-
-from sys import platform
 
 from .logger_manager import logger
 
@@ -45,7 +44,7 @@ def check_ffmpeg_binary():
 
 def install_ffmpeg_binary():
     try:
-        if platform == "linux":
+        if platform.system().lower() == "linux":
             logger.error('Please, install FFmpeg:')
 
             import distro
@@ -61,23 +60,23 @@ def install_ffmpeg_binary():
             else:
                 logger.info(f"Distro linux not supported (family: {linux_family})")
 
-            exit(1)
+        elif platform.system().lower() == "windows":
+            subprocess.run(["winget", "install", "ffmpeg"], check=True)
 
-        elif platform == "windows":
-            subprocess.run(["choco", "install", "-y", "ffmpeg"], check=True)
-
-        elif platform == "darwin":
+        elif platform.system().lower() == "darwin":
             subprocess.run(["brew", "install", "ffmpeg"], check=True)
 
         else:
             logger.info(f"OS not supported: {platform}")
-            exit(1)
 
-        logger.info("FFmpeg installed successfully")
+        logger.info(
+            "FFmpeg binary installed successfully. Restart the program"
+        )
 
     except Exception as e:
         logger.error(f"Error: {e}")
-        exit(1)
+
+    exit(1)
 
 
 def check_ffmpeg_library():
