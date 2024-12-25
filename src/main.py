@@ -6,7 +6,6 @@ banner()
 
 # check and install dependencies
 check_and_install_dependencies()
-exit(0)
 
 import sys
 import os
