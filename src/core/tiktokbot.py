@@ -134,9 +134,10 @@ class TikTok:
 
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
-        logger.info('\nSTARTED RECORDING', endl='')
         if self.duration:
-            logger.info(f" FOR {self.duration} SECONDS ")
+            logger.info(f"STARTED RECORDING FOR {self.duration} SECONDS ")
+        else:
+            logger.info("STARTED RECORDING...")
 
         try:
             logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
@@ -172,7 +173,7 @@ class TikTok:
         if live_url_flv is None and data.get('status_code') == 4003110:
             raise LiveRestriction
 
-        logger.info(f"LIVE URL: {live_url_flv}")
+        logger.info(f"LIVE URL: {live_url_flv}\n")
 
         return live_url_flv
 
