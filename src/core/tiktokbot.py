@@ -61,9 +61,9 @@ class TikTok:
 
         logger.info(f"USERNAME: {self.user}")
         if self.room_id == "" or self.room_id is None:
-            raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
-        else:
-            logger.info(f"ROOM_ID:  {self.room_id}")
+            if mode == Mode.MANUAL:
+                raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
+        logger.info(f"ROOM_ID:  {self.room_id}")
 
         # Create a new httpclient without proxy
         self.httpclient = HttpClient(cookies=self.cookies).req
@@ -96,12 +96,13 @@ class TikTok:
             try:
                 self.room_id = self.get_room_id_from_user()
 
-                if not self.is_user_in_live():
+                if self.room_id == '' or not self.is_user_in_live():
                     raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
                 self.start_recording()
 
-            except UserLiveException:
+            except UserLiveException as ex:
+                logger.info(ex)
                 logger.info(f"Waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
                 time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
 
@@ -119,7 +120,6 @@ class TikTok:
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 
-        # TO CHANGE
         if isinstance(self.output, str) and self.output != '':
             if not (self.output.endswith('/') or self.output.endswith('\\')):
                 if os.name == 'nt':
@@ -130,12 +130,12 @@ class TikTok:
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
         if self.duration:
-            logger.info(f"STARTED RECORDING FOR {self.duration} SECONDS ")
+            logger.info(f"Started recording for {self.duration} seconds ")
         else:
-            logger.info("STARTED RECORDING...")
+            logger.info("Started recording...")
 
         try:
-            logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
+            logger.info("[PRESS CTRL + C ONCE TO STOP]")
             response = self.httpclient.get(live_url, stream=True)
             with open(output, "wb") as out_file:
                 start_time = time.time()
@@ -146,9 +146,9 @@ class TikTok:
                         break
 
         except KeyboardInterrupt:
-            pass
+            logger.info("Recording stopped by user.")
 
-        logger.info(f"FINISH: {output}\n")
+        logger.info(f"Recording finished: {output}\n")
 
         VideoManagement.convert_flv_to_mp4(output)
 
