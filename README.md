@@ -80,6 +80,10 @@ $ python main.py -h
 
 <div align="left">
 
+## Guide
+
+- <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies">How to set cookies in cookies.json</a> 
+- <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-get-room_id">How to get room_id</a> 
 
 ## To-Do List 🔮
 
