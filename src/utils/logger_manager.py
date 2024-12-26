@@ -1,5 +1,17 @@
 import logging
 
+class MaxLevelFilter(logging.Filter):
+    """
+    Filter that only allows log records up to a specified maximum level.
+    """
+    def __init__(self, max_level):
+        super().__init__()
+        self.max_level = max_level
+
+    def filter(self, record):
+        # Only accept records whose level number is <= self.max_level
+        return record.levelno <= self.max_level
+
 class LoggerManager:
 
     _instance = None  # Singleton instance
@@ -12,33 +24,40 @@ class LoggerManager:
         return cls._instance
 
     def setup_logger(self):
-        """
-        Set up logging handlers with the specified log level.
-        """
         if self.logger is None:
-            # Create an instance of Logger with the name 'logger'
             self.logger = logging.getLogger('logger')
             self.logger.setLevel(logging.INFO)
 
-            # Create a handler for INFO level messages
+            # 1) INFO handler
             info_handler = logging.StreamHandler()
             info_handler.setLevel(logging.INFO)
-            info_format = '[*] %(asctime)s - %(levelname)s - %(message)s'
-            info_datefmt = '%Y-%m-%d %H:%M:%S'
-            info_formatter = logging.Formatter(info_format, info_datefmt)
+            info_format = '[*] %(message)s'
+            info_formatter = logging.Formatter(info_format)
             info_handler.setFormatter(info_formatter)
+
+            # Add a filter to exclude ERROR level (and above) messages
+            info_handler.addFilter(MaxLevelFilter(logging.INFO))
 
             self.logger.addHandler(info_handler)
 
+            # 2) ERROR handler
+            error_handler = logging.StreamHandler()
+            error_handler.setLevel(logging.ERROR)
+            error_format = '[!] %(message)s'
+            error_formatter = logging.Formatter(error_format)
+            error_handler.setFormatter(error_formatter)
+
+            self.logger.addHandler(error_handler)
+
     def info(self, message):
         """
-        Log an info message.
+        Log an INFO-level message.
         """
         self.logger.info(message)
 
     def error(self, message):
         """
-        Log an error message.
+        Log an ERROR-level message.
         """
         self.logger.error(message)
 
