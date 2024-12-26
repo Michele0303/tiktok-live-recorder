@@ -67,27 +67,12 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-ffmpeg",
-        dest="ffmpeg",
-        help="Enable recording via ffmpeg, allows real-time conversion to MP4 format.",
-        action="store_const",
-        const=True
-    )
-
-    parser.add_argument(
         "-duration",
         dest="duration",
         help="Specify the duration in seconds to record the live session [Default: None].",
         type=int,
         default=None,
         action='store'
-    )
-
-    parser.add_argument(
-        "--auto-convert",
-        dest="auto_convert",
-        help="Enable automatic video conversion after recording [Default: False].",
-        action='store_true'
     )
 
     args = parser.parse_args()
@@ -113,8 +98,5 @@ def validate_and_parse_args():
         raise ArgsParseError("Please provide only one among username, room ID, or URL.")
 
     mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
-
-    if mode == Mode.AUTOMATIC and not args.ffmpeg:
-        raise ArgsParseError("To use automatic mode, add -ffmpeg flag.")
 
     return args, mode
