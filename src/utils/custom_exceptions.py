@@ -1,10 +1,18 @@
+from utils.enums import TikTokError
+
+
+class TikTokException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class AccountPrivate(Exception):
-    def __init__(self, message='Account is private, login required. Please add your cookies to cookies.json https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'):
+    def __init__(self, message=TikTokError.ACCOUNT_PRIVATE):
         super().__init__(message)
 
 
 class LiveRestriction(Exception):
-    def __init__(self, message='Live is private, login required. Please add your cookies to cookies.json https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'):
+    def __init__(self, message=TikTokError.LIVE_RESTRICTION):
         super().__init__(message)
 
 
@@ -12,17 +20,13 @@ class CountryBlacklisted(Exception):
     pass
 
 
-class UserNotFound(Exception):
-    pass
-
-
-class UserNotLiveException(Exception):
+class UserLiveException(Exception):
     def __init__(self, message):
         super().__init__(message)
 
 
 class IPBlockedByWAF(Exception):
-    def __init__(self, message="Your IP is blocked by TikTok WAF. Please change your IP address."):
+    def __init__(self, message=TikTokError.WAF_BLOCKED):
         super().__init__(message)
 
 
