@@ -72,70 +72,70 @@ class TikTok:
         """
         runs the program in the selected mode. 
         
-        If the mode is MANUAL, it checks if the user is currently live and if so, starts recording. 
+        If the mode is MANUAL, it checks if the user is currently live and
+        if so, starts recording.
         
-        If the mode is AUTOMATIC, it continuously checks if the user is live and if not, waits for the specified timeout before rechecking.
+        If the mode is AUTOMATIC, it continuously checks if the user is live
+        and if not, waits for the specified timeout before rechecking.
         If the user is live, it starts recording.
         """
         if self.mode == Mode.MANUAL:
-
-            if self.room_id == "":
-                raise UserNotLiveException(Error.USER_NEVER_BEEN_LIVE)
-
-            if not self.is_user_in_live():
-                raise UserNotLiveException(Error.USER_NOT_CURRENTLY_LIVE)
-
-            self.start_recording()
+            self.manual_mode()
 
         if self.mode == Mode.AUTOMATIC:
-            while True:
+            self.automatic_mode()
 
-                try:
+    def manual_mode(self):
+        if self.room_id == "":
+            raise UserNotLiveException(Error.USER_NEVER_BEEN_LIVE)
 
-                    self.room_id = self.get_room_id_from_user()
-                    if self.room_id == "":
-                        raise UserNotLiveException(Error.USER_NEVER_BEEN_LIVE)
+        if not self.is_user_in_live():
+            raise UserNotLiveException(Error.USER_NOT_CURRENTLY_LIVE)
 
-                    if not self.is_user_in_live():
-                        raise UserNotLiveException(Error.USER_NOT_CURRENTLY_LIVE)
+        self.start_recording()
 
-                    self.start_recording()
+    def automatic_mode(self):
+        while True:
+            try:
+                self.room_id = self.get_room_id_from_user()
+                if self.room_id == "" or self.room_id is None:
+                    raise UserNotLiveException(Error.USER_NEVER_BEEN_LIVE)
 
-                except UserNotLiveException as ex:
-                    logger.info(ex)
-                    logger.info(f"waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
-                    time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
+                if not self.is_user_in_live():
+                    raise UserNotLiveException(Error.USER_NOT_CURRENTLY_LIVE)
 
-                except ConnectionAbortedError:
-                    logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                    time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+                self.start_recording()
 
-                except Exception as ex:
-                    logger.error(ex)
+            except UserNotLiveException:
+                logger.info(f"waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
+                time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
+
+            except ConnectionAbortedError:
+                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def start_recording(self):
         """
         Start recording live
         """
         live_url = self.get_live_url()
-        if not live_url:
+        if live_url is None or live_url == '':
             raise LiveNotFound(Error.URL_NOT_FOUND)
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 
         # TO CHANGE
-        if (self.output != "" and isinstance(self.output, str) and not
-        (self.output.endswith('/') or self.output.endswith('\\'))):
-            if os.name == 'nt':
-                self.output = self.output + "\\"
-            else:
-                self.output = self.output + "/"
+        if isinstance(self.output, str) and self.output != '':
+            if not (self.output.endswith('/') or self.output.endswith('\\')):
+                if os.name == 'nt':
+                    self.output = self.output + "\\"
+                else:
+                    self.output = self.output + "/"
 
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
-        print("")
         if self.duration:
-            logger.info(f"START RECORDING FOR {self.duration} SECONDS ")
+            logger.info(f"STARTED RECORDING FOR {self.duration} SECONDS ")
         else:
             logger.info("STARTED RECORDING...")
 
@@ -173,7 +173,7 @@ class TikTok:
         if live_url_flv is None and data.get('status_code') == 4003110:
             raise LiveRestriction
 
-        logger.info(f"LIVE URL: {live_url_flv}")
+        logger.info(f"LIVE URL: {live_url_flv}\n")
 
         return live_url_flv
 
@@ -234,7 +234,7 @@ class TikTok:
             re.DOTALL)
         match = pattern.search(content)
 
-        if not match:
+        if match is None:
             raise ValueError("[-] Error extracting roomId")
 
         data = json.loads(match.group(1))
@@ -260,7 +260,7 @@ class TikTok:
         unique_id = data.get('LiveRoomInfo', {}).get('ownerInfo', {}).get(
             'uniqueId', None)
 
-        if not unique_id:
+        if unique_id is None:
             raise AttributeError(Error.USERNAME_ERROR)
 
         return unique_id
