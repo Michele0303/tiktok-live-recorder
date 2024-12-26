@@ -5,9 +5,9 @@ import time
 
 from utils.logger_manager import logger
 from core.video_management import VideoManagement
-from utils.custom_exceptions import AccountPrivate, CountryBlacklisted, \
-    LiveNotFound, UserNotLiveException, IPBlockedByWAF, LiveRestriction
-from utils.enums import Mode, Error, StatusCode, TimeOut
+from utils.custom_exceptions import LiveNotFound, UserLiveException, \
+    IPBlockedByWAF, TikTokException
+from utils.enums import Mode, Error, StatusCode, TimeOut, TikTokError
 from http_utils.http_client import HttpClient
 
 
@@ -45,7 +45,7 @@ class TikTok:
         is_blacklisted = self.is_country_blacklisted()
         if is_blacklisted:
             if room_id is None:
-                raise CountryBlacklisted(Error.BLACKLIST_ERROR)
+                raise UserLiveException(TikTokError.COUNTRY_BLACKLISTED)
             if mode == Mode.AUTOMATIC:
                 raise ValueError(Error.AUTOMATIC_MODE_ERROR)
 
@@ -60,10 +60,10 @@ class TikTok:
             self.room_id = self.get_room_id_from_user()
 
         logger.info(f"USERNAME: {self.user}")
-        if self.room_id == "":
-            logger.info(f"ROOM_ID: {Error.USER_NEVER_BEEN_LIVE}\n")
-        else:
-            logger.info(f"ROOM_ID:  {self.room_id}")
+        if self.room_id == "" or self.room_id is None:
+            if mode == Mode.MANUAL:
+                raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
+        logger.info(f"ROOM_ID:  {self.room_id}")
 
         # Create a new httpclient without proxy
         self.httpclient = HttpClient(cookies=self.cookies).req
@@ -86,11 +86,8 @@ class TikTok:
             self.automatic_mode()
 
     def manual_mode(self):
-        if self.room_id == "":
-            raise UserNotLiveException(Error.USER_NEVER_BEEN_LIVE)
-
         if not self.is_user_in_live():
-            raise UserNotLiveException(Error.USER_NOT_CURRENTLY_LIVE)
+            raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         self.start_recording()
 
@@ -98,16 +95,15 @@ class TikTok:
         while True:
             try:
                 self.room_id = self.get_room_id_from_user()
-                if self.room_id == "" or self.room_id is None:
-                    raise UserNotLiveException(Error.USER_NEVER_BEEN_LIVE)
 
-                if not self.is_user_in_live():
-                    raise UserNotLiveException(Error.USER_NOT_CURRENTLY_LIVE)
+                if self.room_id == '' or not self.is_user_in_live():
+                    raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
                 self.start_recording()
 
-            except UserNotLiveException:
-                logger.info(f"waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
+            except UserLiveException as ex:
+                logger.info(ex)
+                logger.info(f"Waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
                 time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
 
             except ConnectionAbortedError:
@@ -120,11 +116,10 @@ class TikTok:
         """
         live_url = self.get_live_url()
         if live_url is None or live_url == '':
-            raise LiveNotFound(Error.URL_NOT_FOUND)
+            raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 
-        # TO CHANGE
         if isinstance(self.output, str) and self.output != '':
             if not (self.output.endswith('/') or self.output.endswith('\\')):
                 if os.name == 'nt':
@@ -135,12 +130,12 @@ class TikTok:
         output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
 
         if self.duration:
-            logger.info(f"STARTED RECORDING FOR {self.duration} SECONDS ")
+            logger.info(f"Started recording for {self.duration} seconds ")
         else:
-            logger.info("STARTED RECORDING...")
+            logger.info("Started recording...")
 
         try:
-            logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
+            logger.info("[PRESS CTRL + C ONCE TO STOP]")
             response = self.httpclient.get(live_url, stream=True)
             with open(output, "wb") as out_file:
                 start_time = time.time()
@@ -151,9 +146,9 @@ class TikTok:
                         break
 
         except KeyboardInterrupt:
-            pass
+            logger.info("Recording stopped by user.")
 
-        logger.info(f"FINISH: {output}\n")
+        logger.info(f"Recording finished: {output}\n")
 
         VideoManagement.convert_flv_to_mp4(output)
 
@@ -165,13 +160,13 @@ class TikTok:
         data = self.httpclient.get(url).json()
 
         if 'This account is private' in data:
-            raise AccountPrivate
+            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
 
         live_url_flv = data.get(
             'data', {}).get('stream_url', {}).get('rtmp_pull_url', None)
 
         if live_url_flv is None and data.get('status_code') == 4003110:
-            raise LiveRestriction
+            raise UserLiveException(TikTokError.LIVE_RESTRICTION)
 
         logger.info(f"LIVE URL: {live_url_flv}\n")
 
@@ -199,12 +194,12 @@ class TikTok:
         content = response.text
 
         if response.status_code == StatusCode.REDIRECT:
-            raise CountryBlacklisted('Redirect')
+            raise UserLiveException(TikTokError.COUNTRY_BLACKLISTED)
 
         if response.status_code == StatusCode.MOVED:  # MOBILE URL
             matches = re.findall("com/@(.*?)/live", content)
             if len(matches) < 1:
-                raise LiveNotFound(Error.LIVE_NOT_FOUND)
+                raise LiveNotFound(TikTokError.INVALID_TIKTOK_LIVE_URL)
 
             self.user = matches[0]
 
@@ -235,7 +230,7 @@ class TikTok:
         match = pattern.search(content)
 
         if match is None:
-            raise ValueError("[-] Error extracting roomId")
+            raise UserLiveException(TikTokError.ROOM_ID_ERROR)
 
         data = json.loads(match.group(1))
 
@@ -246,7 +241,7 @@ class TikTok:
             'user', {}).get('roomId', None)
 
         if room_id is None:
-            raise ValueError("RoomId not found.")
+            raise UserLiveException(TikTokError.ROOM_ID_ERROR)
 
         return room_id
 
@@ -261,7 +256,7 @@ class TikTok:
             'uniqueId', None)
 
         if unique_id is None:
-            raise AttributeError(Error.USERNAME_ERROR)
+            raise TikTokException(TikTokError.USERNAME_ERROR)
 
         return unique_id
 
