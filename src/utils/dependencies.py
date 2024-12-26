@@ -88,7 +88,9 @@ def install_ffmpeg_library():
     try:
         subprocess.run(
             [sys.executable, "-m", "pip", "install", "ffmpeg-python"],
-            check=True
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            check=True,
         )
         logger.info("ffmpeg-python installed successfully\n")
     except SubprocessError as e:
@@ -109,7 +111,9 @@ def install_argparse_library():
     try:
         subprocess.run(
             [sys.executable, "-m", "pip", "install", "argparse"],
-            check=True
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            check=True,
         )
         logger.info("argparse installed successfully\n")
     except SubprocessError as e:
@@ -130,7 +134,9 @@ def install_requests_library():
     try:
         subprocess.run(
             [sys.executable, "-m", "pip", "install", "requests"],
-            check=True
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            check=True,
         )
         logger.info("requests installed successfully\n")
     except SubprocessError as e:
