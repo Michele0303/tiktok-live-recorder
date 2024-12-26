@@ -44,19 +44,49 @@ class Error(Enum):
     def __str__(self):
         return str(self.value)
 
-    AUTOMATIC_MODE_ERROR: str = "[-] Automatic mode is available only in unblocked countries. Use a VPN or authenticate with cookies.\n[*] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
+    AUTOMATIC_MODE_ERROR = 'Automatic mode is available only in unblocked countries.' \
+                           ' Use a VPN or authenticate with cookies.\n' \
+                           'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
 
-    BLACKLIST_ERROR = "[-] Captcha required or country blocked. Use a VPN, room_id, or authenticate with cookies.\n[-] How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n[-] How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n[-] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
-
-    USERNAME_ERROR = "[-] Error: Username / RoomId not found or the user has never been in live"
-    USER_NEVER_BEEN_LIVE = "The user has never been in live."
-    USER_NOT_CURRENTLY_LIVE = "The user is not currently live."
-
-    CONNECTION_CLOSED = "[-] Connection broken by the server."
+    CONNECTION_CLOSED = "Connection broken by the server."
     CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after Delay of {TimeOut.CONNECTION_CLOSED} minutes"
 
-    URL_NOT_FOUND = "[-] Unable to find stream url."
-    LIVE_NOT_FOUND = "The link provided is not a live tiktok"
+
+class TikTokError(Enum):
+    """
+    Enumeration that contains possible errors of TikTok
+    """
+
+    def __str__(self):
+        return str(self.value)
+
+    COUNTRY_BLACKLISTED = 'Captcha required or country blocked. ' \
+                          'Use a VPN, room_id, or authenticate with cookies.\n' \
+                          'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n' \
+                          'How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n'
+
+    ACCOUNT_PRIVATE = 'Account is private, login required. ' \
+                      'Please add your cookies to cookies.json ' \
+                      'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
+
+    LIVE_RESTRICTION = 'Live is private, login required. ' \
+                       'Please add your cookies to cookies.json' \
+                       'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
+
+    USERNAME_ERROR = 'Username / RoomID not found or the user has never been in live.'
+
+    ROOM_ID_ERROR = 'Error extracting RoomID'
+
+    USER_NEVER_BEEN_LIVE = "The user has never hosted a live stream on TikTok."
+
+    USER_NOT_CURRENTLY_LIVE = "The user is not hosting a live stream at the moment."
+
+    RETRIEVE_LIVE_URL = 'Unable to retrieve live streaming url. Please try again later.'
+
+    INVALID_TIKTOK_LIVE_URL = 'The provided URL is not a valid TikTok live stream.'
+
+    WAF_BLOCKED = 'Your IP is blocked by TikTok WAF. Please change your IP address.'
+
 
 
 class Info(Enum):
