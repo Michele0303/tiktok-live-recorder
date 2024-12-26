@@ -48,12 +48,6 @@ class Error(Enum):
                            ' Use a VPN or authenticate with cookies.\n' \
                            'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
 
-    BLACKLIST_ERROR = 'Captcha required or country blocked. ' \
-                      'Use a VPN, room_id, or authenticate with cookies.\n' \
-                      'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n' \
-                      'How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n'
-
-
     CONNECTION_CLOSED = "Connection broken by the server."
     CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after Delay of {TimeOut.CONNECTION_CLOSED} minutes"
 
@@ -65,6 +59,11 @@ class TikTokError(Enum):
 
     def __str__(self):
         return str(self.value)
+
+    COUNTRY_BLACKLISTED = 'Captcha required or country blocked. ' \
+                          'Use a VPN, room_id, or authenticate with cookies.\n' \
+                          'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n' \
+                          'How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n'
 
     ACCOUNT_PRIVATE = 'Account is private, login required. ' \
                       'Please add your cookies to cookies.json ' \

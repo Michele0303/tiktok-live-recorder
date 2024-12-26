@@ -25,8 +25,7 @@ from http_utils.http_client import HttpClient
 from core.tiktokbot import TikTok
 from utils.enums import TikTokError
 from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
-    CountryBlacklisted, UserLiveException, AccountPrivate, \
-    IPBlockedByWAF, LiveRestriction, TikTokException
+    UserLiveException, IPBlockedByWAF, TikTokException
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -55,20 +54,11 @@ def main():
     except LiveNotFound as ex:
         logger.error(ex)
 
-    except LiveRestriction:
-        logger.error(TikTokError.LIVE_RESTRICTION)
-
-    except AccountPrivate:
-        logger.error(TikTokError.ACCOUNT_PRIVATE)
+    except IPBlockedByWAF:
+        logger.error(TikTokError.WAF_BLOCKED)
 
     except UserLiveException as ex:
         logger.error(ex)
-
-    except CountryBlacklisted as ex:
-        logger.error(ex)
-
-    except IPBlockedByWAF:
-        logger.error(TikTokError.WAF_BLOCKED)
 
     except TikTokException as ex:
         logger.error(ex)

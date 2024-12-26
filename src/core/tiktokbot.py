@@ -5,9 +5,8 @@ import time
 
 from utils.logger_manager import logger
 from core.video_management import VideoManagement
-from utils.custom_exceptions import AccountPrivate, CountryBlacklisted, \
-    LiveNotFound, UserLiveException, IPBlockedByWAF, LiveRestriction, \
-    TikTokException
+from utils.custom_exceptions import LiveNotFound, UserLiveException, \
+    IPBlockedByWAF, TikTokException
 from utils.enums import Mode, Error, StatusCode, TimeOut, TikTokError
 from http_utils.http_client import HttpClient
 
@@ -46,7 +45,7 @@ class TikTok:
         is_blacklisted = self.is_country_blacklisted()
         if is_blacklisted:
             if room_id is None:
-                raise CountryBlacklisted(Error.BLACKLIST_ERROR)
+                raise UserLiveException(TikTokError.COUNTRY_BLACKLISTED)
             if mode == Mode.AUTOMATIC:
                 raise ValueError(Error.AUTOMATIC_MODE_ERROR)
 
@@ -161,13 +160,13 @@ class TikTok:
         data = self.httpclient.get(url).json()
 
         if 'This account is private' in data:
-            raise AccountPrivate
+            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
 
         live_url_flv = data.get(
             'data', {}).get('stream_url', {}).get('rtmp_pull_url', None)
 
         if live_url_flv is None and data.get('status_code') == 4003110:
-            raise LiveRestriction
+            raise UserLiveException(TikTokError.LIVE_RESTRICTION)
 
         logger.info(f"LIVE URL: {live_url_flv}\n")
 
@@ -195,7 +194,7 @@ class TikTok:
         content = response.text
 
         if response.status_code == StatusCode.REDIRECT:
-            raise CountryBlacklisted('Redirect')
+            raise UserLiveException(TikTokError.COUNTRY_BLACKLISTED)
 
         if response.status_code == StatusCode.MOVED:  # MOBILE URL
             matches = re.findall("com/@(.*?)/live", content)
