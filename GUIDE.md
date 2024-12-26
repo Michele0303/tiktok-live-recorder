@@ -1,5 +1,22 @@
 # GUIDE
 
+### How To Set Cookies
+1) Go to https://www.tiktok.com/.
+2) Open Inspect Element => Ctrl + Shift + I for Windows/Linux and Cmd + Option + I for macOS users. Or, right-click on the web page and choose Inspect to access the Developer tools panel.
+3) Switch to the **Application** tab.
+
+![image](https://github.com/user-attachments/assets/7a7cb64b-41fe-49ed-9d85-bc00d451b9ef)
+
+4) **Copy** the **value** of session_ss.
+
+![image](https://github.com/user-attachments/assets/dccd9b11-6efc-4cb9-8003-599a4fcc8957)
+
+5) **Paste** this **value** into the cookies.json file.
+
+![image](https://github.com/user-attachments/assets/5cd23e80-bfb0-45d4-9141-601807dc027b)
+
+<br />
+
 ### How To Get Room_ID
 1) Go to https://www.tiktok.com/@username/live
 2) Open Inspect Element => Ctrl + Shift + I for Windows/Linux and Cmd + Option + I for macOS users. Or, right-click on the web page and choose Inspect to access the Developer tools panel
@@ -7,6 +24,7 @@
 
 ![image](https://user-images.githubusercontent.com/31160531/202849647-922d75d6-570c-43fe-a4b3-fcb795d39f92.png)
 
+<br />
 
 ### Restricted Country
 1) Italy
