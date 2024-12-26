@@ -18,7 +18,7 @@ def check_distro_library():
 def install_distro_library():
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "distro"],
+            [sys.executable, "-m", "pip", "install", "distro", "--break-system-packages"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
@@ -87,7 +87,7 @@ def check_ffmpeg_library():
 def install_ffmpeg_library():
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "ffmpeg-python"],
+            [sys.executable, "-m", "pip", "install", "ffmpeg-python", "--break-system-packages"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
@@ -110,7 +110,7 @@ def check_argparse_library():
 def install_argparse_library():
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "argparse"],
+            [sys.executable, "-m", "pip", "install", "argparse", "--break-system-packages"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
@@ -133,7 +133,7 @@ def check_requests_library():
 def install_requests_library():
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "requests"],
+            [sys.executable, "-m", "pip", "install", "requests", "--break-system-packages"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
