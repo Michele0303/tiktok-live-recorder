@@ -71,7 +71,9 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Added support for autoupdate",
+        "Improved dependency installation",
+        "Improved speed and performance of MP4 conversion",
+        "Improved logging messages",
     ]
 
     VERSION = 5.3
