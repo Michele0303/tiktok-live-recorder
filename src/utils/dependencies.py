@@ -23,7 +23,7 @@ def install_distro_library():
             stderr=subprocess.STDOUT,
             check=True,
         )
-        logger.info("distro installed successfully")
+        logger.info("distro installed successfully\n")
     except SubprocessError as e:
         logger.error(f"Error: {e}")
         exit(1)
@@ -90,7 +90,7 @@ def install_ffmpeg_library():
             [sys.executable, "-m", "pip", "install", "ffmpeg-python"],
             check=True
         )
-        logger.info("ffmpeg-python installed successfully")
+        logger.info("ffmpeg-python installed successfully\n")
     except SubprocessError as e:
         logger.error(f"Error: {e}")
         exit(1)
@@ -111,7 +111,7 @@ def install_argparse_library():
             [sys.executable, "-m", "pip", "install", "argparse"],
             check=True
         )
-        logger.info("argparse installed successfully")
+        logger.info("argparse installed successfully\n")
     except SubprocessError as e:
         logger.error(f"Error: {e}")
         exit(1)
@@ -132,14 +132,14 @@ def install_requests_library():
             [sys.executable, "-m", "pip", "install", "requests"],
             check=True
         )
-        logger.info("requests installed successfully")
+        logger.info("requests installed successfully\n")
     except SubprocessError as e:
         logger.error(f"Error: {e}")
         exit(1)
 
 
 def check_and_install_dependencies():
-    logger.info("Checking and Installing dependencies")
+    logger.info("Checking and Installing dependencies\n")
 
     if not check_distro_library():
         install_distro_library()
