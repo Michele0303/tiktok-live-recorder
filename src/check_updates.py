@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import requests
 import zipfile
@@ -108,6 +109,8 @@ def check_updates() -> bool:
         Path(FILE_TEMP).unlink()
     except Exception as e:
         print(f"Failed to remove the temporary file {FILE_TEMP}: {e}")
+
+    os.remove(FILE_TEMP)
 
     try:
         Path(FILE_NAME_UPDATE).unlink()
