@@ -76,7 +76,7 @@ class Info(Enum):
         "Improved logging messages",
     ]
 
-    VERSION = 5.41
+    VERSION = 5.4
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
