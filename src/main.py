@@ -42,9 +42,7 @@ def main():
             url=args.url,
             user=args.user,
             room_id=args.room_id,
-            use_ffmpeg=args.ffmpeg,
             duration=args.duration,
-            convert=args.auto_convert,
             cookies=cookies
         ).run()
 

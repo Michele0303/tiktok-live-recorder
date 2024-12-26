@@ -11,14 +11,14 @@ class VideoManagement:
         """
         Convert the video from flv format to mp4 format
         """
-        try:
-            logger.info("Converting {} to MP4 format...".format(file))
+        logger.info("Converting {} to MP4 format...".format(file))
 
-            ffmpeg.input(file).output(
-                file.replace('_flv.mp4', '.mp4'), y='-y'
-            ).run(quiet=True)
-            os.remove(file)
+        ffmpeg.input(file).output(
+            file.replace('_flv.mp4', '.mp4'),
+            c='copy',
+            y='-y',
+        ).run(quiet=True)
 
-            logger.info("Finished converting {}".format(file))
-        except FileNotFoundError:
-            logger.error("FFmpeg is not installed.")
+        os.remove(file)
+
+        logger.info("Finished converting {}\n".format(file))

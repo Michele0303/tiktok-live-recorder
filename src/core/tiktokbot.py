@@ -1,10 +1,7 @@
 import json
 import os
 import re
-import sys
 import time
-
-import ffmpeg
 
 from utils.logger_manager import logger
 from core.video_management import VideoManagement
@@ -16,9 +13,17 @@ from http_utils.http_client import HttpClient
 
 class TikTok:
 
-    def __init__(self, httpclient, output, mode, cookies, url=None,
-                 user=None, room_id=None, use_ffmpeg=None, duration=None,
-                 convert=False):
+    def __init__(
+        self,
+        httpclient,
+        output,
+        mode,
+        cookies,
+        url=None,
+        user=None,
+        room_id=None,
+        duration=None
+    ):
 
         # TikTok
         self.url = url
@@ -31,9 +36,7 @@ class TikTok:
         self.cookies = cookies
 
         # Recording Settings
-        self.use_ffmpeg = use_ffmpeg
         self.duration = duration
-        self.convert = convert
 
         # Output & Results
         self.output = output
@@ -58,7 +61,7 @@ class TikTok:
 
         logger.info(f"USERNAME: {self.user}")
         if self.room_id == "":
-            logger.info(f"ROOM_ID: {Error.USER_NEVER_BEEN_LIVE}")
+            logger.info(f"ROOM_ID: {Error.USER_NEVER_BEEN_LIVE}\n")
         else:
             logger.info(f"ROOM_ID:  {self.room_id}")
 
@@ -137,50 +140,22 @@ class TikTok:
             logger.info("STARTED RECORDING...")
 
         try:
-            if self.use_ffmpeg:
-                logger.info("[PRESS 'q' TO STOP RECORDING]")
-                stream = ffmpeg.input(live_url)
-
-                if self.duration is not None:
-                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), c='copy', t=self.duration)
-                else:
-                    stream = ffmpeg.output(stream, output.replace("_flv.mp4", ".mp4"), c='copy')
-
-                ffmpeg.run(stream, quiet=True)
-            else:
-                logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
-                response = self.httpclient.get(live_url, stream=True)
-                with open(output, "wb") as out_file:
-                    start_time = time.time()
-                    for chunk in response.iter_content(chunk_size=4096):
-                        out_file.write(chunk)
-                        elapsed_time = time.time() - start_time
-                        if self.duration is not None and elapsed_time >= self.duration:
-                            break
-
-        except ffmpeg.Error as e:
-            logger.error('FFmpeg Error:')
-            logger.error(e.stderr.decode('utf-8'))
-
-        except FileNotFoundError:
-            logger.error("FFmpeg is not installed -> pip install ffmpeg-python")
-            sys.exit(1)
+            logger.info("[PRESS ONLY ONCE CTRL + C TO STOP]")
+            response = self.httpclient.get(live_url, stream=True)
+            with open(output, "wb") as out_file:
+                start_time = time.time()
+                for chunk in response.iter_content(chunk_size=4096):
+                    out_file.write(chunk)
+                    elapsed_time = time.time() - start_time
+                    if self.duration is not None and elapsed_time >= self.duration:
+                        break
 
         except KeyboardInterrupt:
             pass
 
         logger.info(f"FINISH: {output}\n")
 
-        if self.use_ffmpeg:
-            return
-
-        if not self.convert:
-            logger.info("Do you want to convert it to real mp4? [Requires ffmpeg installed] -> pip install ffmpeg-python")
-            choice = input("Y/N -> ")
-            if choice.lower() == "y":
-                VideoManagement.convert_flv_to_mp4(output)
-        else:
-            VideoManagement.convert_flv_to_mp4(output)
+        VideoManagement.convert_flv_to_mp4(output)
 
     def get_live_url(self) -> str:
         """
