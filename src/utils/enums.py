@@ -46,7 +46,7 @@ class Error(Enum):
 
     AUTOMATIC_MODE_ERROR: str = "[-] Automatic mode is available only in unblocked countries. Use a VPN or authenticate with cookies.\n[*] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
 
-    BLACKLIST_ERROR = "[-] Captcha required or country blocked. Use a VPN, room_id, or authenticate with cookies.\n[-] How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n[-] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
+    BLACKLIST_ERROR = "[-] Captcha required or country blocked. Use a VPN, room_id, or authenticate with cookies.\n[-] How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n[-] How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n[-] Unrestricted countries list: https://github.com/Michele0303/TikTok-Live-Recorder/edit/main/GUIDE.md#unrestricted-country"
 
     USERNAME_ERROR = "[-] Error: Username / RoomId not found or the user has never been in live"
     USER_NEVER_BEEN_LIVE = "The user has never been in live."
