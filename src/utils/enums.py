@@ -101,12 +101,11 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Improved codebase",
-        "Resolved lag-related issues causing video splitting: recording now continues seamlessly into a single file even during stream interruptions or lagging",
-        "Fixed issue where enums_tempy.py was not being deleted correctly",
+        "Fixed duration argument not working correctly",
+        "Improved connections error handling",
     ]
 
-    VERSION = 5.5
+    VERSION = 5.6
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
