@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+from http.client import IncompleteRead
 
 from utils.logger_manager import logger
 from core.video_management import VideoManagement
@@ -161,6 +162,9 @@ class TikTok:
                     if self.mode == Mode.AUTOMATIC:
                         logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+
+                except IncompleteRead:
+                    pass
 
                 except KeyboardInterrupt:
                     logger.info("Recording stopped by user.")
