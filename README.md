@@ -43,7 +43,7 @@ $ cd tiktok-live-recorder
 # Go into the source code
 $ cd src
 # Install dependencies
-$ pip install -r requirements.txt
+$ pip install -r requirements.txt --break-system-packages
 # Run the app on windows
 $ python main.py -h
 # Run the app on linux
@@ -73,7 +73,7 @@ $ cd tiktok-live-recorder
 # Go into the source code
 $ cd src
 # Install dependencies
-$ pip install -r requirements.txt
+$ pip install -r requirements.txt --break-system-packages
 # Run the app
 $ python main.py -h
   ```
