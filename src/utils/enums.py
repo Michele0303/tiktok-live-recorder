@@ -101,9 +101,9 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Improved dependency installation",
-        "Improved speed and performance of MP4 conversion",
-        "Improved logging messages",
+        "Improved codebase",
+        "Resolved lag-related issues causing video splitting: recording now continues seamlessly into a single file even during stream interruptions or lagging",
+        "Fixed issue where enums_tempy.py was not being deleted correctly",
     ]
 
     VERSION = 5.4

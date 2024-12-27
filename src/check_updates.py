@@ -51,6 +51,7 @@ def check_updates() -> bool:
     download_file(URL, FILE_TEMP)
 
     if not check_file(FILE_TEMP):
+        os.remove(FILE_TEMP)
         print("The temporary file does not exist.")
         return False
 
@@ -59,6 +60,7 @@ def check_updates() -> bool:
         from utils.enums import Info as InfoOld
     except ImportError:
         print("Error importing the file or missing module.")
+        os.remove(FILE_TEMP)
         return False
 
     if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
@@ -68,6 +70,7 @@ def check_updates() -> bool:
         for feature in Info.NEW_FEATURES:
             print("*", feature)
     else:
+        os.remove(FILE_TEMP)
         # print("No updates available.")
         return False
 
