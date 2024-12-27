@@ -105,7 +105,7 @@ class Info(Enum):
         "Improved connections error handling",
     ]
 
-    VERSION = 5.6
+    VERSION = 5.61
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
