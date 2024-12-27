@@ -111,6 +111,9 @@ class TikTok:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
+            except Exception as ex:
+                logger.error(f"Unexpected error: {ex}\n")
+
     def start_recording(self):
         """
         Start recording live
