@@ -153,8 +153,9 @@ class TikTok:
                             break
 
                 except ConnectionError:
-                    logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                    time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+                    if self.mode == Mode.AUTOMATIC:
+                        logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                        time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
                 except KeyboardInterrupt:
                     logger.info("Recording stopped by user.")
