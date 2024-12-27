@@ -59,11 +59,12 @@ class TikTok:
         if self.room_id is None:
             self.room_id = self.get_room_id_from_user()
 
-        logger.info(f"USERNAME: {self.user}")
+        logger.info(f"USERNAME: {self.user}" + ("\n" if not self.room_id else ""))
         if self.room_id == "" or self.room_id is None:
             if mode == Mode.MANUAL:
                 raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
-        logger.info(f"ROOM_ID:  {self.room_id}")
+        else:
+            logger.info(f"ROOM_ID:  {self.room_id}")
 
         # Create a new httpclient without proxy
         self.httpclient = HttpClient(cookies=self.cookies).req
