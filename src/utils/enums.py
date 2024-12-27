@@ -101,11 +101,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Fixed duration argument not working correctly",
-        "Improved connections error handling",
+        "Fix bugs"
     ]
 
-    VERSION = 5.61
+    VERSION = 5.62
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         

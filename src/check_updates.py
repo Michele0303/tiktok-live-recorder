@@ -10,6 +10,12 @@ FILE_TEMP = "enums_temp.py"
 FILE_NAME_UPDATE = URL_REPO.split("/")[-1]
 
 
+def delete_tmp_file():
+    try:
+        os.remove(FILE_TEMP)
+    except:
+        pass
+
 def check_file(path: str) -> bool:
     """
     Check if a file exists at the given path.
@@ -51,7 +57,7 @@ def check_updates() -> bool:
     download_file(URL, FILE_TEMP)
 
     if not check_file(FILE_TEMP):
-        os.remove(FILE_TEMP)
+        delete_tmp_file()
         print("The temporary file does not exist.")
         return False
 
@@ -60,7 +66,7 @@ def check_updates() -> bool:
         from utils.enums import Info as InfoOld
     except ImportError:
         print("Error importing the file or missing module.")
-        os.remove(FILE_TEMP)
+        delete_tmp_file()
         return False
 
     if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
@@ -70,7 +76,7 @@ def check_updates() -> bool:
         for feature in Info.NEW_FEATURES:
             print("*", feature)
     else:
-        os.remove(FILE_TEMP)
+        delete_tmp_file()
         # print("No updates available.")
         return False
 
@@ -113,7 +119,7 @@ def check_updates() -> bool:
     except Exception as e:
         print(f"Failed to remove the temporary file {FILE_TEMP}: {e}")
 
-    os.remove(FILE_TEMP)
+    delete_tmp_file()
 
     try:
         Path(FILE_NAME_UPDATE).unlink()
