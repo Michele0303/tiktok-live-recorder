@@ -107,7 +107,7 @@ class TikTok:
                 logger.info(f"Waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
                 time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
 
-            except ConnectionAbortedError:
+            except ConnectionError:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
@@ -151,6 +151,10 @@ class TikTok:
                         elapsed_time = time.time() - start_time
                         if self.duration is not None and elapsed_time >= self.duration:
                             break
+
+                except ConnectionError:
+                    logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                    time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
                 except KeyboardInterrupt:
                     logger.info("Recording stopped by user.")
