@@ -64,7 +64,7 @@ class TikTok:
             if mode == Mode.MANUAL:
                 raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
         else:
-            logger.info(f"ROOM_ID:  {self.room_id}")
+            logger.info(f"ROOM_ID:  {self.room_id}" + ("\n" if not self.is_user_in_live() else ""))
 
         # Create a new httpclient without proxy
         self.httpclient = HttpClient(cookies=self.cookies).req
@@ -135,19 +135,26 @@ class TikTok:
         else:
             logger.info("Started recording...")
 
-        try:
-            logger.info("[PRESS CTRL + C ONCE TO STOP]")
-            response = self.httpclient.get(live_url, stream=True)
-            with open(output, "wb") as out_file:
-                start_time = time.time()
-                for chunk in response.iter_content(chunk_size=4096):
-                    out_file.write(chunk)
-                    elapsed_time = time.time() - start_time
-                    if self.duration is not None and elapsed_time >= self.duration:
-                        break
+        logger.info("[PRESS CTRL + C ONCE TO STOP]")
+        with open(output, "wb") as out_file:
+            while True:
 
-        except KeyboardInterrupt:
-            logger.info("Recording stopped by user.")
+                if not self.is_user_in_live():
+                    logger.info("User is no longer live. Stopping recording.")
+                    break
+
+                try:
+                    response = self.httpclient.get(live_url, stream=True)
+                    start_time = time.time()
+                    for chunk in response.iter_content(chunk_size=4096):
+                        out_file.write(chunk)
+                        elapsed_time = time.time() - start_time
+                        if self.duration is not None and elapsed_time >= self.duration:
+                            break
+
+                except KeyboardInterrupt:
+                    logger.info("Recording stopped by user.")
+                    break
 
         logger.info(f"Recording finished: {output}\n")
 
