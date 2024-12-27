@@ -137,7 +137,8 @@ class TikTok:
 
         logger.info("[PRESS CTRL + C ONCE TO STOP]")
         with open(output, "wb") as out_file:
-            while True:
+            stop_recording = False
+            while not stop_recording:
 
                 if not self.is_user_in_live():
                     logger.info("User is no longer live. Stopping recording.")
@@ -150,6 +151,7 @@ class TikTok:
                         out_file.write(chunk)
                         elapsed_time = time.time() - start_time
                         if self.duration is not None and elapsed_time >= self.duration:
+                            stop_recording = True
                             break
 
                 except ConnectionError:
@@ -159,6 +161,7 @@ class TikTok:
 
                 except KeyboardInterrupt:
                     logger.info("Recording stopped by user.")
+                    stop_recording = True
                     break
 
         logger.info(f"Recording finished: {output}\n")
