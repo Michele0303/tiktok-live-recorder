@@ -162,7 +162,6 @@ class TikTok:
                 except KeyboardInterrupt:
                     logger.info("Recording stopped by user.")
                     stop_recording = True
-                    break
 
         logger.info(f"Recording finished: {output}\n")
 
