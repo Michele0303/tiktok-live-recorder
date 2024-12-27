@@ -106,7 +106,7 @@ class Info(Enum):
         "Fixed issue where enums_tempy.py was not being deleted correctly",
     ]
 
-    VERSION = 5.4
+    VERSION = 5.5
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
