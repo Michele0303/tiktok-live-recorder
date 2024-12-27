@@ -31,8 +31,9 @@ class LoggerManager:
             # 1) INFO handler
             info_handler = logging.StreamHandler()
             info_handler.setLevel(logging.INFO)
-            info_format = '[*] %(message)s'
-            info_formatter = logging.Formatter(info_format)
+            info_format = '[*] %(asctime)s - %(message)s'
+            info_datefmt = '%Y-%m-%d %H:%M:%S'
+            info_formatter = logging.Formatter(info_format, info_datefmt)
             info_handler.setFormatter(info_formatter)
 
             # Add a filter to exclude ERROR level (and above) messages
@@ -43,8 +44,9 @@ class LoggerManager:
             # 2) ERROR handler
             error_handler = logging.StreamHandler()
             error_handler.setLevel(logging.ERROR)
-            error_format = '[!] %(message)s'
-            error_formatter = logging.Formatter(error_format)
+            error_format = '[!] %(asctime)s - %(message)s'
+            error_datefmt = '%Y-%m-%d %H:%M:%S'
+            error_formatter = logging.Formatter(error_format, error_datefmt)
             error_handler.setFormatter(error_formatter)
 
             self.logger.addHandler(error_handler)
