@@ -145,12 +145,11 @@ class TikTok:
         with open(output, "wb") as out_file:
             stop_recording = False
             while not stop_recording:
-
-                if not self.is_user_in_live():
-                    logger.info("User is no longer live. Stopping recording.")
-                    break
-
                 try:
+                    if not self.is_user_in_live():
+                        logger.info("User is no longer live. Stopping recording.")
+                        break
+
                     response = self.httpclient.get(live_url, stream=True)
                     start_time = time.time()
                     for chunk in response.iter_content(chunk_size=4096):
@@ -165,8 +164,7 @@ class TikTok:
                         logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-                except (RequestException, HTTPException) as ex:
-                    print('Erorre request', ex)
+                except (RequestException, HTTPException):
                     time.sleep(2)
 
                 except KeyboardInterrupt:
