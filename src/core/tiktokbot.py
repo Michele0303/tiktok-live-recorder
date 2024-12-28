@@ -165,7 +165,8 @@ class TikTok:
                         logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-                except (RequestException, HTTPException):
+                except (RequestException, HTTPException) as ex:
+                    print('Erorre request', ex)
                     time.sleep(2)
 
                 except KeyboardInterrupt:
