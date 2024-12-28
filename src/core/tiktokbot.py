@@ -164,7 +164,7 @@ class TikTok:
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
                 except IncompleteRead:
-                    pass
+                    time.sleep(1)
 
                 except KeyboardInterrupt:
                     logger.info("Recording stopped by user.")
