@@ -141,6 +141,9 @@ class TikTok:
         else:
             logger.info("Started recording...")
 
+        BUFFER_SIZE = 3 * (1024 * 1024)  # 3 MB buffer
+        buffer = bytearray()
+
         logger.info("[PRESS CTRL + C ONCE TO STOP]")
         with open(output, "wb") as out_file:
             stop_recording = False
@@ -152,8 +155,15 @@ class TikTok:
 
                     response = self.httpclient.get(live_url, stream=True)
                     start_time = time.time()
-                    for chunk in response.iter_content(chunk_size=4096):
-                        out_file.write(chunk)
+                    for chunk in response.iter_content(chunk_size=None):
+                        if not chunk or len(chunk) == 0:
+                            continue
+
+                        buffer.extend(chunk)
+                        if len(buffer) >= BUFFER_SIZE:
+                            out_file.write(buffer)
+                            buffer.clear()
+
                         elapsed_time = time.time() - start_time
                         if self.duration is not None and elapsed_time >= self.duration:
                             stop_recording = True
@@ -174,6 +184,11 @@ class TikTok:
                 except Exception as ex:
                     logger.error(f"Unexpected error: {ex}\n")
                     stop_recording = True
+
+                finally:
+                    if buffer:
+                        out_file.write(buffer)
+                        buffer.clear()
 
         logger.info(f"Recording finished: {output}\n")
 
