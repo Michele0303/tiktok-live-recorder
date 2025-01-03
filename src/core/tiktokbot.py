@@ -25,7 +25,8 @@ class TikTok:
         url=None,
         user=None,
         room_id=None,
-        duration=None
+        duration=None,
+        upload=False
     ):
 
         # TikTok
@@ -193,6 +194,11 @@ class TikTok:
         logger.info(f"Recording finished: {output}\n")
 
         VideoManagement.convert_flv_to_mp4(output)
+
+    def upload_to_telegram(self):
+        if self.upload:
+            pass
+        pass
 
     def get_live_url(self) -> str:
         """
