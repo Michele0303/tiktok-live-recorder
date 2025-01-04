@@ -75,6 +75,13 @@ def parse_args():
         action='store'
     )
 
+    parser.add_argument(
+        "-upload",
+        "-up",
+        action="store_true",
+        help="Activate the option to upload the video to Telegram at the end of the recording.\nRequires configuring the telegram.json file",
+    )
+
     args = parser.parse_args()
 
     return args

@@ -45,6 +45,7 @@ def main():
             user=args.user,
             room_id=args.room_id,
             duration=args.duration,
+            upload=args.upload,
             cookies=cookies
         ).run()
 
