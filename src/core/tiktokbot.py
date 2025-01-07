@@ -8,6 +8,7 @@ from requests import RequestException
 
 from utils.logger_manager import logger
 from core.video_management import VideoManagement
+from core.telegram import Telegram
 from utils.custom_exceptions import LiveNotFound, UserLiveException, \
     IPBlockedByWAF, TikTokException
 from utils.enums import Mode, Error, StatusCode, TimeOut, TikTokError
@@ -44,6 +45,9 @@ class TikTok:
 
         # Output & Results
         self.output = output
+
+        # Telegram
+        self.upload = upload
 
         # Check if the user's country is blacklisted
         is_blacklisted = self.is_country_blacklisted()
@@ -192,13 +196,14 @@ class TikTok:
                         buffer.clear()
 
         logger.info(f"Recording finished: {output}\n")
-
         VideoManagement.convert_flv_to_mp4(output)
+        self.upload_to_telegram(output)
 
-    def upload_to_telegram(self):
+
+    def upload_to_telegram(self, output):
         if self.upload:
-            pass
-        pass
+            file = output.replace("_flv.mp4", ".mp4")
+            Telegram().upload(file)
 
     def get_live_url(self) -> str:
         """
