@@ -26,6 +26,27 @@
 
 <br />
 
+### How enable upload to telegram
+1) Go to https://my.telegram.org
+2) Log in with your number registered in Telegram in  format "+{country code}{your_number}"
+   
+   ![image](https://github.com/user-attachments/assets/f591b9d2-4189-4bfe-9180-f4484625eea2)
+
+3) Go to API development tols
+   
+   ![image](https://github.com/user-attachments/assets/89900d60-851e-4c6c-a20a-892dd99f7e24)
+   
+6) Copy the API_ID and API_HASH
+   
+   ![image](https://github.com/user-attachments/assets/b0a7fe9a-cb9b-413f-a5bf-2434146c63b3)
+
+7) Execute and follow instructions
+   ```bash
+   python3 genStr.py
+   ```
+
+<br />
+
 ### Restricted Country
 1) Italy
 2) Hong Kong
