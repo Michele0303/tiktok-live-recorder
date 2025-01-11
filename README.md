@@ -94,7 +94,7 @@ $ python main.py -h
 - [x] <b>Using a Proxy to Bypass Login Restrictions:</b> Implement the ability to use an HTTP proxy to bypass login restrictions in some countries (only to obtain the room ID).
 - [x] <b>Implement a Logging System:</b> Set up a comprehensive logging system to track activities and errors.
 - [x] <b>Implement Auto-Update Feature:</b> Create a system that automatically checks for new releases.
-- [ ] <b>Send Recorded Live Streams to Telegram:</b> Enable the option to send recorded live streams directly to Telegram.
+- [x] <b>Send Recorded Live Streams to Telegram:</b> Enable the option to send recorded live streams directly to Telegram.
 - [ ] <b>Save Chat in a File:</b> Allow saving the chat from live streams in a file.
 
 ## Legal ⚖️
