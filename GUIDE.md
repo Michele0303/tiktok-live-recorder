@@ -29,18 +29,22 @@
 ### How enable upload to telegram
 1) Go to https://my.telegram.org
 2) Log in with your number registered in Telegram in  format "+{country code}{your_number}"
-   
+
    ![image](https://github.com/user-attachments/assets/f591b9d2-4189-4bfe-9180-f4484625eea2)
 
-3) Go to API development tols
-   
+3) Once you are authenticated, click on "API Development Tools"
+
    ![image](https://github.com/user-attachments/assets/89900d60-851e-4c6c-a20a-892dd99f7e24)
-   
-6) Copy the API_ID and API_HASH
-   
+
+4) Please go ahead and create a new request by filling out the form below (skip if you already have one)
+
+   ![image](https://github.com/user-attachments/assets/3e61e39d-81d9-4c93-ae26-c6bccf6a509c)
+
+5) You should now have the necessary parameter values ​​for the required text inputs from the genStr.py file TELEGRAM_API_HASH and TELEGRAM_API_APP_ID
+
    ![image](https://github.com/user-attachments/assets/b0a7fe9a-cb9b-413f-a5bf-2434146c63b3)
 
-7) Execute and follow instructions
+6) Execute and follow instructions
    ```bash
    python3 genStr.py
    ```
