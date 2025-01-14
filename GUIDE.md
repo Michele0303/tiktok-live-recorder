@@ -26,7 +26,7 @@
 
 <br />
 
-### How enable upload to telegram
+### How Enable Upload To Telegram
 1) Go to https://my.telegram.org
 2) Log in with your number registered in Telegram in  format "+{country code}{your_number}"
 
@@ -44,7 +44,7 @@
 
    ![image](https://github.com/user-attachments/assets/b0a7fe9a-cb9b-413f-a5bf-2434146c63b3)
 
-6) Execute and follow instructions
+6) Execute **genStr.py** and follow instructions
    ```bash
    python3 genStr.py
    ```
