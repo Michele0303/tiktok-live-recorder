@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from pyrogram import Client
-
 from utils.logger_manager import logger
 from utils.utils import read_telegram_config
 
@@ -40,6 +38,8 @@ class Telegram:
         """
         Upload the video to Telegram.
         """
+        from pyrogram import Client
+
         self.file = file
         if not self.session_string:
             logger.error("Telegram session string not found.")
