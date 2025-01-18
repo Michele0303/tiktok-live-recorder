@@ -62,7 +62,6 @@ class Telegram:
 
         self.file = file
         if not validate_session_string(self.session_string):
-            logger.error("Telegram session string not found.")
             return
 
         self.app = Client(
