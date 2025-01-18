@@ -8,6 +8,26 @@ session_string = telegram_config.get("session_string")
 FREE_USER_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024
 PREMIUM_USER_MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024
 
+def validate_session_string(session_string):
+    """
+    Validate the Telegram session string.
+    """
+    if not session_string:
+        logger.error("Telegram session string not found.")
+        return False
+    if session_string == "your_session_string":
+        logger.error("Telegram session string not found.")
+        return False
+    elif session_string.startswith("1"):
+        logger.error("Invalid session string.")
+        return False
+    elif len(session_string) < 100:
+        logger.error("Invalid session string.")
+        return False
+
+    return True
+
+
 
 class Telegram:
     def __init__(self):
@@ -41,7 +61,7 @@ class Telegram:
         from pyrogram import Client
 
         self.file = file
-        if not self.session_string:
+        if not validate_session_string(self.session_string):
             logger.error("Telegram session string not found.")
             return
 
