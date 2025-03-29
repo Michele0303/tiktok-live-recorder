@@ -26,7 +26,7 @@
 
 <br />
 
-### How Enable Upload To Telegram
+### How to Enable Upload to Telegram
 1) Go to https://my.telegram.org
 2) Log in with your number registered in Telegram in  format "+{country code}{your_number}"
 
