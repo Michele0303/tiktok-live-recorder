@@ -104,7 +104,7 @@ class Info(Enum):
         "Fix bugs"
     ]
 
-    VERSION = 5.9
+    VERSION = 5.8
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
