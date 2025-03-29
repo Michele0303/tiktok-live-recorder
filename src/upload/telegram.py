@@ -1,6 +1,7 @@
+import uvloop
+
 from pathlib import Path
 
-import uvloop
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 
