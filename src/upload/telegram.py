@@ -15,7 +15,6 @@ PREMIUM_USER_MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024
 class Telegram:
 
     def __init__(self):
-        session_name = 'telegram_session'
         config = read_telegram_config()
 
         self.api_id = config["api_id"]
@@ -26,7 +25,7 @@ class Telegram:
         uvloop.install()
 
         self.app = Client(
-            session_name,
+            'telegram_session',
             api_id=self.api_id,
             api_hash=self.api_hash,
             bot_token=self.bot_token
