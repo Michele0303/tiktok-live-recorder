@@ -103,7 +103,7 @@ class Info(Enum):
     NEW_FEATURES = [
         "Bug fixes uvloop"
     ]
-    
+
     VERSION = 6.0
     BANNER = fr"""
 
