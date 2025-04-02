@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import uvloop
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 
@@ -21,8 +20,6 @@ class Telegram:
         self.api_hash = config["api_hash"]
         self.bot_token = config["bot_token"]
         self.chat_id = config["chat_id"]
-
-        uvloop.install()
 
         self.app = Client(
             'telegram_session',

@@ -25,4 +25,3 @@ TgCrypto==1.2.5
 tqdm==4.67.1
 typing_extensions==4.12.2
 urllib3==2.2.3
-uvloop==0.21.0
