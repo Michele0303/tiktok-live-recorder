@@ -5,7 +5,6 @@ Stream are downloaded in /download and it's mandatory to mount this directory to
 
 ## Builing
 ```bash
-cd Docker
 docker build -t tiktok-live-recorder:latest .
 ```
 ## Run a container 
