@@ -133,3 +133,6 @@ dmypy.json
 *.flv
 cookies.json
 telegram.json
+
+# VisualStudio Files
+.vs/
