@@ -93,12 +93,13 @@ def check_updates() -> bool:
     extracted_folder = temp_update_dir / "tiktok-live-recorder-main" / "src"
 
     # Copy all files and folders from the extracted folder to the main directory
+    files_to_preserve = {"check_updates.py", "cookies.json", "telegram.json"}
     for item in extracted_folder.iterdir():
         source = item
         destination = dir_path / item.name
 
-        # Skip overwriting the currently running script
-        if source.name == "check_updates.py":
+        # Skip overwriting the files we want to preserve
+        if source.name in files_to_preserve:
             continue
 
         # If it's a file, overwrite it
