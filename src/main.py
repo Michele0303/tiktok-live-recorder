@@ -12,7 +12,7 @@ check_and_install_dependencies()
 from check_updates import check_updates
 
 if check_updates():
-    exit()
+#    exit()
 
 import sys
 import os
