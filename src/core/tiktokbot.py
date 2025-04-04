@@ -213,7 +213,7 @@ class TikTok:
             raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
 
         live_url_flv = data.get(
-            'data', {}).get('stream_url', {}).get('rtmp_pull_url', None)
+            'data', {}).get('stream_url', {}).get('hls_pull_url', None)
 
         if live_url_flv is None and data.get('status_code') == 4003110:
             raise UserLiveException(TikTokError.LIVE_RESTRICTION)
