@@ -133,3 +133,6 @@ dmypy.json
 *.flv
 cookies.json
 telegram.json
+
+# macOS folder metadata
+.DS_Store
