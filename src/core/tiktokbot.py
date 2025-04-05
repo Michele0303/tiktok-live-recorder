@@ -215,15 +215,17 @@ class TikTok:
         stream_url = data.get('data', {}).get('stream_url', {})
 
         live_url_flv = stream_url.get('hls_pull_url', None)
-        if live_url_flv is None and data.get('status_code') == 4003110:
-            raise UserLiveException(TikTokError.LIVE_RESTRICTION)
 
         # if hls_pull_url is not available, use flv_pull_url
         if live_url_flv == '' or live_url_flv is None:
             live_url_flv = stream_url.get('flv_pull_url', {}).get('FULL_HD1', None)
+        
         # if flv_pull_url is not available, use rtmp_pull_url
         if live_url_flv == '' or live_url_flv is None:
             live_url_flv = stream_url.get('rtmp_pull_url', None)
+
+        if live_url_flv is None and data.get('status_code') == 4003110:
+            raise UserLiveException(TikTokError.LIVE_RESTRICTION)
 
         logger.info(f"LIVE URL: {live_url_flv}\n")
 
