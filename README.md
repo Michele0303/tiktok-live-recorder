@@ -23,7 +23,6 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 </div>
 
-<br>
 
 ## Install on Windows & Linux 💻
 
