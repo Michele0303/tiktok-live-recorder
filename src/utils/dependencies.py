@@ -147,7 +147,7 @@ def install_pyrogram_library():
             stderr=subprocess.STDOUT,
             check=True,
         )
-        logger.info("argparse installed successfully\n")
+        logger.info("pyrogram installed successfully\n")
     except SubprocessError as e:
         logger.error(f"Error: {e}")
         exit(1)

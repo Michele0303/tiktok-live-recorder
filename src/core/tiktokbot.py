@@ -214,17 +214,22 @@ class TikTok:
 
         stream_url = data.get('data', {}).get('stream_url', {})
 
-        live_url_flv = stream_url.get('hls_pull_url', None)
+        # TODO: Implement m3u8 support
+        #live_url_flv = stream_url.get('hls_pull_url', None)
+        #if not live_url_flv:
 
-        # if hls_pull_url is not available, use flv_pull_url
-        if live_url_flv == '' or live_url_flv is None:
-            live_url_flv = stream_url.get('flv_pull_url', {}).get('FULL_HD1', None)
+        live_url_flv = (
+                stream_url.get('flv_pull_url', {}).get('FULL_HD1') or
+                stream_url.get('flv_pull_url', {}).get('HD1') or
+                stream_url.get('flv_pull_url', {}).get('SD2') or
+                stream_url.get('flv_pull_url', {}).get('SD1')
+        )
         
         # if flv_pull_url is not available, use rtmp_pull_url
-        if live_url_flv == '' or live_url_flv is None:
+        if not live_url_flv:
             live_url_flv = stream_url.get('rtmp_pull_url', None)
 
-        if live_url_flv is None and data.get('status_code') == 4003110:
+        if not live_url_flv and data.get('status_code') == 4003110:
             raise UserLiveException(TikTokError.LIVE_RESTRICTION)
 
         logger.info(f"LIVE URL: {live_url_flv}\n")

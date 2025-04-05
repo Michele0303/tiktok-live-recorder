@@ -3,4 +3,3 @@ distro
 ffmpeg-python
 pyrogram
 requests
-TgCrypto
