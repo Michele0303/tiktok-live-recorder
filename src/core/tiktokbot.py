@@ -220,8 +220,7 @@ class TikTok:
 
         # if hls_pull_url is not available, use flv_pull_url
         if live_url_flv == '' or live_url_flv is None:
-            live_url_flv = stream_url.get('flv_pull_url', None).get('FULL_HD1', None)
-
+            live_url_flv = stream_url.get('flv_pull_url', {}).get('FULL_HD1', None)
         # if flv_pull_url is not available, use rtmp_pull_url
         if live_url_flv == '' or live_url_flv is None:
             live_url_flv = stream_url.get('rtmp_pull_url', None)
