@@ -97,6 +97,8 @@ $ python main.py -h
 - [x] <b>Implement Auto-Update Feature:</b> Create a system that automatically checks for new releases.
 - [x] <b>Send Recorded Live Streams to Telegram:</b> Enable the option to send recorded live streams directly to Telegram.
 - [ ] <b>Save Chat in a File:</b> Allow saving the chat from live streams in a file.
+- [ ] <b>Support for M3U8:</b> Add support for recording live streams via m3u8 format.
+- [ ] <b>Watchlist Feature:</b> Implement a watchlist to monitor multiple users simultaneously (while respecting TikTok's limitations).
 
 ## Legal ⚖️
 
