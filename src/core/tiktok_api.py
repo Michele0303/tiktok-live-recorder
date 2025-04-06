@@ -2,10 +2,10 @@ import json
 import re
 
 from http_utils.http_client import HttpClient
-from utils.custom_exceptions import UserLiveException, TikTokException, \
-    LiveNotFound, IPBlockedByWAF
 from utils.enums import StatusCode, TikTokError
 from utils.logger_manager import logger
+from utils.custom_exceptions import UserLiveException, TikTokException, \
+    LiveNotFound, IPBlockedByWAF
 
 
 class TikTokAPI:
@@ -31,6 +31,9 @@ class TikTokAPI:
         """
         Checking whether the user is live.
         """
+        if not room_id:
+            raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
+
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/check_alive/"
             f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
@@ -152,3 +155,14 @@ class TikTokAPI:
         logger.info(f"LIVE URL: {live_url_flv}\n")
 
         return live_url_flv
+
+    def download_live_stream(self, live_url: str):
+        """
+        Generator che restituisce lo streaming live per un dato room_id.
+        """
+        stream = self.http_client.get(live_url, stream=True)
+        for chunk in stream.iter_content(chunk_size=4096):
+            if not chunk:
+                continue
+
+            yield chunk

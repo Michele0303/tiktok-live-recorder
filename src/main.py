@@ -21,7 +21,6 @@ from utils.args_handler import validate_and_parse_args
 from utils.utils import read_cookies
 from utils.logger_manager import logger
 
-from http_utils.http_client import HttpClient
 from core.tiktok_recorder import TikTokRecorder
 from utils.enums import TikTokError
 from utils.custom_exceptions import LiveNotFound, ArgsParseError, \

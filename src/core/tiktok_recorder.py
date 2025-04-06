@@ -6,7 +6,7 @@ from requests import RequestException
 
 from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
-from core.video_management import VideoManagement
+from utils.video_management import VideoManagement
 from upload.telegram import Telegram
 from utils.custom_exceptions import LiveNotFound, UserLiveException, \
     TikTokException
@@ -27,6 +27,9 @@ class TikTokRecorder:
         duration,
         use_telegram,
     ):
+        # Setup TikTok API client
+        self.tiktok = TikTokAPI(proxy=proxy, cookies=cookies)
+
         # TikTok Data
         self.url = url
         self.user = user
@@ -40,33 +43,26 @@ class TikTokRecorder:
         # Upload Settings
         self.use_telegram = use_telegram
 
-        # Setup TikTok API client
-        self.client = TikTokAPI(proxy=proxy, cookies=cookies)
-
         # Check if the user's country is blacklisted
         self.check_country_blacklisted()
 
         # Get live information based on the provided user data
         if self.url:
             self.user, self.room_id = \
-                self.client.get_room_and_user_from_url(self.url)
+                self.tiktok.get_room_and_user_from_url(self.url)
 
         if not self.user:
-            self.user = self.client.get_user_from_room_id(self.room_id)
+            self.user = self.tiktok.get_user_from_room_id(self.room_id)
 
         if not self.room_id:
-            self.room_id = self.client.get_room_id_from_user(self.user)
+            self.room_id = self.tiktok.get_room_id_from_user(self.user)
 
         logger.info(f"USERNAME: {self.user}" + ("\n" if not self.room_id else ""))
-        if not self.room_id:
-            if mode == Mode.MANUAL:
-                raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
-        else:
-            logger.info(f"ROOM_ID:  {self.room_id}" + ("\n" if not self.client.is_room_alive(self.user) else ""))
+        logger.info(f"ROOM_ID:  {self.room_id}" + ("\n" if not self.tiktok.is_room_alive(self.room_id) else ""))
 
         # If proxy is provided, set up the HTTP client without the proxy
         if proxy:
-            self.client = TikTokAPI(proxy=None, cookies=cookies)
+            self.tiktok = TikTokAPI(proxy=None, cookies=cookies)
 
     def run(self):
         """
@@ -86,7 +82,7 @@ class TikTokRecorder:
             self.automatic_mode()
 
     def manual_mode(self):
-        if not self.client.is_room_alive(self.room_id):
+        if not self.tiktok.is_room_alive(self.room_id):
             raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         self.start_recording()
@@ -94,12 +90,8 @@ class TikTokRecorder:
     def automatic_mode(self):
         while True:
             try:
-                self.room_id = self.client.get_room_id_from_user(self.user)
-
-                if self.room_id == '' or not self.client.is_room_alive(self.room_id):
-                    raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
-
-                self.start_recording()
+                self.room_id = self.tiktok.get_room_id_from_user(self.user)
+                self.manual_mode()
 
             except UserLiveException as ex:
                 logger.info(ex)
@@ -117,7 +109,7 @@ class TikTokRecorder:
         """
         Start recording live
         """
-        live_url = self.client.get_live_url(self.room_id)
+        live_url = self.tiktok.get_live_url(self.room_id)
         if not live_url:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
@@ -137,7 +129,7 @@ class TikTokRecorder:
         else:
             logger.info("Started recording...")
 
-        BUFFER_SIZE = 3 * (1024 * 1024)  # 3 MB buffer
+        buffer_size = 3 * (1024 * 1024)  # 3 MB buffer
         buffer = bytearray()
 
         logger.info("[PRESS CTRL + C ONCE TO STOP]")
@@ -145,23 +137,19 @@ class TikTokRecorder:
             stop_recording = False
             while not stop_recording:
                 try:
-                    if not self.client.is_room_alive(self.room_id):
+                    if not self.tiktok.is_room_alive(self.room_id):
                         logger.info("User is no longer live. Stopping recording.")
                         break
 
-                    response = self.httpclient.get(live_url, stream=True)
                     start_time = time.time()
-                    for chunk in response.iter_content(chunk_size=None):
-                        if not chunk or len(chunk) == 0:
-                            continue
-
+                    for chunk in self.tiktok.download_live_stream(live_url):
                         buffer.extend(chunk)
-                        if len(buffer) >= BUFFER_SIZE:
+                        if len(buffer) >= buffer_size:
                             out_file.write(buffer)
                             buffer.clear()
 
                         elapsed_time = time.time() - start_time
-                        if self.duration is not None and elapsed_time >= self.duration:
+                        if self.duration and elapsed_time >= self.duration:
                             stop_recording = True
                             break
 
@@ -193,7 +181,7 @@ class TikTokRecorder:
             Telegram().upload(output.replace('_flv.mp4', '.mp4'))
 
     def check_country_blacklisted(self):
-        is_blacklisted = self.client.is_country_blacklisted()
+        is_blacklisted = self.tiktok.is_country_blacklisted()
         if not is_blacklisted:
             return False
 
