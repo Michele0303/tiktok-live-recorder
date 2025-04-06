@@ -153,29 +153,6 @@ def install_pyrogram_library():
         exit(1)
 
 
-def check_tgcrypto_library():
-    try:
-        import tgcrypto
-        return True
-    except ModuleNotFoundError:
-        logger.error("tgcrypto library is not installed")
-        return False
-
-
-def install_tgcrypto_library():
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "TgCrypto", "--break-system-packages"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-        logger.info("TgCrypto installed successfully\n")
-    except SubprocessError as e:
-        logger.error(f"Error: {e}")
-        exit(1)
-
-
 def install_requests_library():
     try:
         subprocess.run(
@@ -207,9 +184,6 @@ def check_and_install_dependencies():
 
     if not check_pyrogram_library():
         install_pyrogram_library()
-
-    if not check_tgcrypto_library():
-        install_tgcrypto_library()
 
     if not check_ffmpeg_binary():
         install_ffmpeg_binary()

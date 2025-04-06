@@ -104,11 +104,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Fixed URL not found",
-        "Removed tgcrypto"
+        "Bugs fixed",
     ]
 
-    VERSION = 6.1
+    VERSION = 6.2
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
