@@ -129,7 +129,7 @@ class TikTokRecorder:
         else:
             logger.info("Started recording...")
 
-        buffer_size = 3 * (1024 * 1024)  # 3 MB buffer
+        buffer_size = 512 * 1024 # 512 KB buffer
         buffer = bytearray()
 
         logger.info("[PRESS CTRL + C ONCE TO STOP]")
@@ -173,6 +173,7 @@ class TikTokRecorder:
                     if buffer:
                         out_file.write(buffer)
                         buffer.clear()
+                    out_file.flush()
 
         logger.info(f"Recording finished: {output}\n")
         VideoManagement.convert_flv_to_mp4(output)
