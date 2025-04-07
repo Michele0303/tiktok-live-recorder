@@ -60,7 +60,7 @@ class TikTokAPI:
 
         return unique_id
 
-    def get_room_and_user_from_url(self, live_url: str) -> str | str:
+    def get_room_and_user_from_url(self, live_url: str):
         """
         Given a url, get user and room_id.
         """
