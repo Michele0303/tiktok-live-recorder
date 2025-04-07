@@ -51,8 +51,7 @@ class Telegram:
                                "uploaded with this type of account.")
                 return
 
-            logger.info(f"Uploading video on Telegram...")
-            logger.info("This may take a while depending on the file size.")
+            logger.info(f"Uploading video on Telegram... This may take a while depending on the file size.")
             self.app.send_document(
                 chat_id=self.chat_id,
                 document=file_path,
@@ -63,10 +62,10 @@ class Telegram:
                 parse_mode=ParseMode.HTML,
                 force_document=True,
             )
-            logger.info("File successfully uploaded to Telegram.")
+            logger.info("File successfully uploaded to Telegram.\n")
 
         except Exception as e:
-            logger.error(f"Error during Telegram upload: {e}")
+            logger.error(f"Error during Telegram upload: {e}\n")
 
         finally:
             self.app.stop()

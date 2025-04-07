@@ -44,9 +44,7 @@ class Error(Enum):
     def __str__(self):
         return str(self.value)
 
-    AUTOMATIC_MODE_ERROR = 'Automatic mode is available only in unblocked countries.' \
-                           ' Use a VPN or authenticate with cookies.\n' \
-                           'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
+
 
     CONNECTION_CLOSED = "Connection broken by the server."
     CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after delay of {TimeOut.CONNECTION_CLOSED} minutes"
@@ -64,6 +62,11 @@ class TikTokError(Enum):
                           'Use a VPN, room_id, or authenticate with cookies.\n' \
                           'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n' \
                           'How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n'
+
+    COUNTRY_BLACKLISTED_AUTO_MODE = \
+        'Automatic mode is available only in unblocked countries. ' \
+        'Use a VPN or authenticate with cookies.\n' \
+        'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n'
 
     ACCOUNT_PRIVATE = 'Account is private, login required. ' \
                       'Please add your cookies to cookies.json ' \
@@ -101,10 +104,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Bug fixes uvloop"
+        "Bugs fixed",
     ]
 
-    VERSION = 6.0
+    VERSION = 6.2
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         

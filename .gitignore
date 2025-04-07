@@ -133,6 +133,8 @@ dmypy.json
 *.flv
 cookies.json
 telegram.json
-
 # VisualStudio Files
 .vs/
+=======
+# macOS folder metadata
+.DS_Store
