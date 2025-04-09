@@ -21,8 +21,7 @@ from utils.args_handler import validate_and_parse_args
 from utils.utils import read_cookies
 from utils.logger_manager import logger
 
-from http_utils.http_client import HttpClient
-from core.tiktokbot import TikTok
+from core.tiktok_recorder import TikTokRecorder
 from utils.enums import TikTokError
 from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
     UserLiveException, IPBlockedByWAF, TikTokException
@@ -37,16 +36,16 @@ def main():
         # read cookies from file
         cookies = read_cookies()
 
-        TikTok(
-            httpclient=HttpClient(cookies=cookies, proxy=args.proxy),
-            output=args.output,
-            mode=mode,
+        TikTokRecorder(
             url=args.url,
             user=args.user,
             room_id=args.room_id,
+            mode=mode,
+            cookies=cookies,
+            proxy=args.proxy,
+            output=args.output,
             duration=args.duration,
-            upload=args.upload,
-            cookies=cookies
+            use_telegram=args.telegram,
         ).run()
 
     except ArgsParseError as ex:

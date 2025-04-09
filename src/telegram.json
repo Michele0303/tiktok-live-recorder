@@ -1,7 +1,6 @@
 {
-    "api_id": "your_api_id",
-    "api_hash": "your_api_hash",
-    "session_string": "your_session_string",
+    "api_id": "",
+    "api_hash": "",
     "bot_token": "",
-    "bot_username": ""
+    "chat_id": 1110107842
 }

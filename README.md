@@ -5,7 +5,7 @@
 
 <em>TikTok Live Recorder is a tool for recording live streaming tiktok.</em>
 
-[![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE) ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE)
 
 The TikTok Live Recorder is a tool designed to easily capture and save live streaming sessions from TikTok. It records both audio and video, allowing users to revisit and preserve engaging live content for later enjoyment and analysis. It's a valuable resource for creators, researchers, and anyone who wants to capture memorable moments from TikTok live streams.
 
@@ -23,7 +23,6 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 </div>
 
-<br>
 
 ## Install on Windows & Linux 💻
 
@@ -84,7 +83,7 @@ $ python main.py -h
 
 - <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies">How to set cookies in cookies.json</a> 
 - <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-get-room_id">How to get room_id</a> 
-- <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-enable-upload-to-telegram">How enable upload to telegram</a> 
+- <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-enable-upload-to-telegram">How to enable upload to telegram</a> 
 
 ## To-Do List 🔮
 
@@ -97,6 +96,8 @@ $ python main.py -h
 - [x] <b>Implement Auto-Update Feature:</b> Create a system that automatically checks for new releases.
 - [x] <b>Send Recorded Live Streams to Telegram:</b> Enable the option to send recorded live streams directly to Telegram.
 - [ ] <b>Save Chat in a File:</b> Allow saving the chat from live streams in a file.
+- [ ] <b>Support for M3U8:</b> Add support for recording live streams via m3u8 format.
+- [ ] <b>Watchlist Feature:</b> Implement a watchlist to monitor multiple users simultaneously (while respecting TikTok's limitations).
 
 ## Legal ⚖️
 

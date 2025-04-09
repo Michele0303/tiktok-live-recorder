@@ -130,6 +130,29 @@ def check_requests_library():
         return False
 
 
+def check_pyrogram_library():
+    try:
+        import pyrogram
+        return True
+    except ModuleNotFoundError:
+        logger.error("pyrogram library is not installed")
+        return False
+
+
+def install_pyrogram_library():
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "pyrogram", "--break-system-packages"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+        logger.info("pyrogram installed successfully\n")
+    except SubprocessError as e:
+        logger.error(f"Error: {e}")
+        exit(1)
+
+
 def install_requests_library():
     try:
         subprocess.run(
@@ -145,7 +168,7 @@ def install_requests_library():
 
 
 def check_and_install_dependencies():
-    logger.info("Checking and Installing dependencies\n")
+    logger.info("Checking and Installing dependencies...\n")
 
     if not check_distro_library():
         install_distro_library()
@@ -158,6 +181,9 @@ def check_and_install_dependencies():
 
     if not check_requests_library():
         install_requests_library()
+
+    if not check_pyrogram_library():
+        install_pyrogram_library()
 
     if not check_ffmpeg_binary():
         install_ffmpeg_binary()

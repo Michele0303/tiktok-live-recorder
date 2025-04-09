@@ -131,3 +131,8 @@ dmypy.json
 # video file extensions
 *.mp4
 *.flv
+cookies.json
+telegram.json
+
+# macOS folder metadata
+.DS_Store
