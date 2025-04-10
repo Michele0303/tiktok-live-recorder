@@ -50,9 +50,10 @@ def parse_args():
     parser.add_argument(
         "-automatic_interval",
         dest="automatic_interval",
+        help="Sets the interval in minutes to check if the user is live in automatic mode. [Default: 5]",
         type=int,
         default=5,
-        help="Sets the interval in minutes to check if the user is live in automatic mode. [Default: 5 minutes]"
+        action='store'
     )
 
 
