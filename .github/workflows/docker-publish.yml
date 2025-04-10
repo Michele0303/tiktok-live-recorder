@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - '**'   # Trigger on all branches
+      - '**'
     paths:
       - 'src/**'
       - '.github/workflows/docker-publish.yml'
@@ -33,13 +33,14 @@ jobs:
           if [[ "${{ github.event_name }}" == "release" ]]; then
             echo "TAGS=robinmeis/tiktok-live-recorder:latest,robinmeis/tiktok-live-recorder:${{ github.event.release.tag_name }}" >> $GITHUB_ENV
           else
+            BRANCH_NAME=$(echo "${{ github.ref }}" | sed 's#refs/heads/##' | sed 's#/#-#g')
             SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-            echo "TAGS=robinmeis/tiktok-live-recorder:${SHORT_SHA}" >> $GITHUB_ENV
+            echo "TAGS=robinmeis/tiktok-live-recorder:${SHORT_SHA},robinmeis/tiktok-live-recorder:${BRANCH_NAME}" >> $GITHUB_ENV
           fi
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./src   # Important: your Dockerfile is inside src/
+          context: ./src
           push: true
           tags: ${{ env.TAGS }}
