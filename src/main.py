@@ -41,6 +41,7 @@ def main():
             user=args.user,
             room_id=args.room_id,
             mode=mode,
+            automatic_interval=args.automatic_interval,
             cookies=cookies,
             proxy=args.proxy,
             output=args.output,
