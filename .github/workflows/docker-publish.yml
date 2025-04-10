@@ -1,0 +1,45 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - '**'   # Trigger on all branches
+    paths:
+      - 'src/**'
+      - '.github/workflows/docker-publish.yml'
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set Docker tags
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "TAGS=robinmeis/tiktok-live-recorder:latest,robinmeis/tiktok-live-recorder:${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          else
+            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+            echo "TAGS=robinmeis/tiktok-live-recorder:${SHORT_SHA}" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src   # Important: your Dockerfile is inside src/
+          push: true
+          tags: ${{ env.TAGS }}
