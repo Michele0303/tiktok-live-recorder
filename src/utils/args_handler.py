@@ -48,6 +48,15 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-interval",
+        dest="interval",
+        type=int,
+        default=5,
+        help="Sets the interval in minutes to check if the user is live in automatic mode. [Default: 5 minutes]"
+    )
+
+
+    parser.add_argument(
         "-proxy",
         dest="proxy",
         help=(
