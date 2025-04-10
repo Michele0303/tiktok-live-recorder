@@ -114,6 +114,9 @@ def validate_and_parse_args():
     if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
         raise ArgsParseError("Please provide only one among username, room ID, or URL.")
 
+    if (args.automatic_interval < 1):
+        raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")
+
     mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
 
     return args, mode
