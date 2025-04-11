@@ -134,5 +134,8 @@ dmypy.json
 cookies.json
 telegram.json
 
+# telegram session file
+*.session
+
 # macOS folder metadata
 .DS_Store

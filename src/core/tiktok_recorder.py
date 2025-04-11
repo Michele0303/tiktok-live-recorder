@@ -83,7 +83,9 @@ class TikTokRecorder:
 
     def manual_mode(self):
         if not self.tiktok.is_room_alive(self.room_id):
-            raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
+            raise UserLiveException(
+                f"@{self.user}: {TikTokError.USER_NOT_CURRENTLY_LIVE}"
+            )
 
         self.start_recording()
 
