@@ -21,6 +21,7 @@ class TikTokRecorder:
         user,
         room_id,
         mode,
+        automatic_interval,
         cookies,
         proxy,
         output,
@@ -37,6 +38,7 @@ class TikTokRecorder:
 
         # Tool Settings
         self.mode = mode
+        self.automatic_interval = automatic_interval
         self.duration = duration
         self.output = output
 
@@ -97,8 +99,8 @@ class TikTokRecorder:
 
             except UserLiveException as ex:
                 logger.info(ex)
-                logger.info(f"Waiting {TimeOut.AUTOMATIC_MODE} minutes before recheck\n")
-                time.sleep(TimeOut.AUTOMATIC_MODE * TimeOut.ONE_MINUTE)
+                logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
+                time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
             except ConnectionError:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)

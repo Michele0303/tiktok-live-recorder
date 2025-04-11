@@ -48,6 +48,16 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-automatic_interval",
+        dest="automatic_interval",
+        help="Sets the interval in minutes to check if the user is live in automatic mode. [Default: 5]",
+        type=int,
+        default=5,
+        action='store'
+    )
+
+
+    parser.add_argument(
         "-proxy",
         dest="proxy",
         help=(
@@ -114,6 +124,9 @@ def validate_and_parse_args():
 
     if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
         raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+
+    if (args.automatic_interval < 1):
+        raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")
 
     mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
 
