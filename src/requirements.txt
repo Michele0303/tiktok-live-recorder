@@ -2,5 +2,4 @@ argparse
 distro
 ffmpeg-python
 pyrogram
-tgcrypto
 requests
