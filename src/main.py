@@ -8,11 +8,7 @@ from utils.dependencies import check_and_install_dependencies
 
 check_and_install_dependencies()
 
-# check for updates
 from check_updates import check_updates
-
-if check_updates():
-    exit()
 
 import sys
 import os
@@ -32,6 +28,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def main():
     try:
         args, mode = validate_and_parse_args()
+
+        # check for updates
+        if args.update_check is True:
+            logger.info("Checking for updates...\n")
+            if check_updates():
+                exit()
+        else:
+            logger.info("Skipped update check\n")
 
         # read cookies from file
         cookies = read_cookies()
