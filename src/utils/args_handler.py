@@ -128,6 +128,9 @@ def validate_and_parse_args():
     if (args.automatic_interval < 1):
         raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")
 
+    if args.user and "@" in args.user[0]:
+        args.user = args.user[1:]
+
     mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
 
     return args, mode
