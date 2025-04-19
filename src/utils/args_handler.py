@@ -1,5 +1,6 @@
 import argparse
 import re
+import os
 
 from utils.custom_exceptions import ArgsParseError
 from utils.enums import Mode, Regex
@@ -18,6 +19,7 @@ def parse_args():
         "-url",
         dest="url",
         help="Record a live session from the TikTok URL.",
+        default=os.environ.get('URL'),
         action='store'
     )
 
@@ -25,6 +27,7 @@ def parse_args():
         "-user",
         dest="user",
         help="Record a live session from the TikTok username.",
+        default=os.environ.get('USER'),
         action='store'
     )
 
@@ -32,6 +35,7 @@ def parse_args():
         "-room_id",
         dest="room_id",
         help="Record a live session from the TikTok room ID.",
+        default=os.environ.get('ROOM_ID'),
         action='store'
     )
 
@@ -43,7 +47,7 @@ def parse_args():
             "[manual] => Manual live recording.\n"
             "[automatic] => Automatic live recording when the user is live."
         ),
-        default="manual",
+        default=os.environ.get('MODE', 'manual'),
         action='store'
     )
 
@@ -52,7 +56,7 @@ def parse_args():
         dest="automatic_interval",
         help="Sets the interval in minutes to check if the user is live in automatic mode. [Default: 5]",
         type=int,
-        default=5,
+        default=os.environ.get('AUTOMATIC_INTERVAL', 5),
         action='store'
     )
 
@@ -64,6 +68,7 @@ def parse_args():
             "Use HTTP proxy to bypass login restrictions in some countries.\n"
             "Example: -proxy http://127.0.0.1:8080"
         ),
+        default=os.environ.get('PROXY'),
         action='store'
     )
 
@@ -73,6 +78,7 @@ def parse_args():
         help=(
             "Specify the output directory where recordings will be saved.\n"
         ),
+        default=os.environ.get('OUTPUT'),
         action='store'
     )
 
@@ -81,7 +87,7 @@ def parse_args():
         dest="duration",
         help="Specify the duration in seconds to record the live session [Default: None].",
         type=int,
-        default=None,
+        default=os.environ.get('DURATION'),
         action='store'
     )
 
@@ -91,6 +97,7 @@ def parse_args():
         action="store_true",
         help="Activate the option to upload the video to Telegram at the end "
              "of the recording.\nRequires configuring the telegram.json file",
+        default=bool(os.environ.get('TELEGRAM', "false").lower() == "true")
     )
 
     parser.add_argument(
@@ -100,7 +107,8 @@ def parse_args():
         help=(
             "Disable the check for updates before running the program. "
             "By default, update checking is enabled."
-        )
+        ),
+        default=not bool(os.environ.get('NO_UPDATE_CHECK', "false").lower() == "true")
     )
 
     args = parser.parse_args()
