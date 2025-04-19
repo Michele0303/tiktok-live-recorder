@@ -114,6 +114,9 @@ def validate_and_parse_args():
     if not args.user and not args.room_id and not args.url:
         raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
 
+    if args.user and "@" in args.user[0]:
+        args.user = args.user[1:]
+
     if not args.mode:
         raise ArgsParseError("Missing mode value. Please specify the mode (manual or automatic).")
     if args.mode not in ["manual", "automatic"]:
@@ -127,9 +130,6 @@ def validate_and_parse_args():
 
     if (args.automatic_interval < 1):
         raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")
-
-    if args.user and "@" in args.user[0]:
-        args.user = args.user[1:]
 
     mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
 
