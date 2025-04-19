@@ -114,7 +114,7 @@ def validate_and_parse_args():
     if not args.user and not args.room_id and not args.url:
         raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
 
-    if args.user and "@" in args.user[0]:
+    if args.user and args.user.startswith('@'):
         args.user = args.user[1:]
 
     if not args.mode:
