@@ -104,10 +104,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Bugs fixed",
+        "Bug fixes",
     ]
 
-    VERSION = 6.2
+    VERSION = 6.3
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
