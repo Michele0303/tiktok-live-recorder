@@ -49,16 +49,17 @@ class TikTokAPI:
         Given a room_id, I get the username
         """
         data = self.http_client.get(
-            f"{self.BASE_URL}/api/live/detail/?aid=1988&roomID={room_id}"
+            f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
         ).json()
 
-        unique_id = data.get('LiveRoomInfo', {}).get('ownerInfo', {}).get(
-            'uniqueId', None)
+        if 'This account is private' in data:
+            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
 
-        if unique_id is None:
+        display_id = data.get("data", {}).get("owner", {}).get("display_id")
+        if display_id is None:
             raise TikTokException(TikTokError.USERNAME_ERROR)
 
-        return unique_id
+        return display_id
 
     def get_room_and_user_from_url(self, live_url: str):
         """
