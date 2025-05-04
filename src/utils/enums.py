@@ -71,6 +71,8 @@ class TikTokError(Enum):
     ACCOUNT_PRIVATE = 'Account is private, login required. ' \
                       'Please add your cookies to cookies.json ' \
                       'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
+    
+    ACCOUNT_PRIVATE_FOLLOW = 'This account is private. Follow the creator to access their LIVE.'
 
     LIVE_RESTRICTION = 'Live is private, login required. ' \
                        'Please add your cookies to cookies.json' \

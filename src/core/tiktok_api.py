@@ -52,6 +52,9 @@ class TikTokAPI:
             f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
         ).json()
 
+        if 'Follow the creator to watch their LIVE' in json.dumps(data):
+            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE_FOLLOW)
+
         if 'This account is private' in data:
             raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
 
