@@ -149,7 +149,10 @@ class TikTokAPI:
 
         # Extract stream options
         sdk_data = json.loads(sdk_data_str).get('data', {})
-        qualities = stream_url['live_core_sdk_data']['pull_data']['options']['qualities']
+        qualities = stream_url.get('live_core_sdk_data', {}).get('pull_data', {}).get('options', {}).get('qualities', [])
+        if not qualities:
+            logger.warning("No qualities found in the stream data. Returning None.")
+            return None
         level_map = {q['sdk_key']: q['level'] for q in qualities}
 
         best_level = -1
