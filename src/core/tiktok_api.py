@@ -141,7 +141,11 @@ class TikTokAPI:
         sdk_data_str = stream_url.get('live_core_sdk_data', {}).get('pull_data', {}).get('stream_data')
         if not sdk_data_str:
             logger.warning("No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code.")
-            return stream_url.get('flv_pull_url', {}).get('HD1') or stream_url.get('rtmp_pull_url', '')
+            return (stream_url.get('flv_pull_url', {}).get('FULL_HD1') or
+                    stream_url.get('flv_pull_url', {}).get('HD1') or
+                    stream_url.get('flv_pull_url', {}).get('SD2') or
+                    stream_url.get('flv_pull_url', {}).get('SD1') or
+                    stream_url.get('rtmp_pull_url', ''))
 
         # Extract stream options
         sdk_data = json.loads(sdk_data_str).get('data', {})
