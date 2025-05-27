@@ -138,27 +138,29 @@ class TikTokAPI:
 
         stream_url = data.get('data', {}).get('stream_url', {})
 
-        # TODO: Implement m3u8 support
-        # live_url_flv = stream_url.get('hls_pull_url', None)
-        # if not live_url_flv:
+        sdk_data_str = stream_url.get('live_core_sdk_data', {}).get('pull_data', {}).get('stream_data')
+        if not sdk_data_str:
+            logger.warning("No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code.")
+            return stream_url.get('flv_pull_url', {}).get('HD1') or stream_url.get('rtmp_pull_url', '')
 
-        live_url_flv = (
-                stream_url.get('flv_pull_url', {}).get('FULL_HD1') or
-                stream_url.get('flv_pull_url', {}).get('HD1') or
-                stream_url.get('flv_pull_url', {}).get('SD2') or
-                stream_url.get('flv_pull_url', {}).get('SD1')
-        )
+        # Extract stream options
+        sdk_data = json.loads(sdk_data_str).get('data', {})
+        qualities = stream_url['live_core_sdk_data']['pull_data']['options']['qualities']
+        level_map = {q['sdk_key']: q['level'] for q in qualities}
 
-        # if flv_pull_url is not available, use rtmp_pull_url
-        if not live_url_flv:
-            live_url_flv = stream_url.get('rtmp_pull_url', None)
+        best_level = -1
+        best_flv = None
+        for sdk_key, entry in sdk_data.items():
+            level = level_map.get(sdk_key, -1)
+            stream_main = entry.get('main', {})
+            if level > best_level:
+                best_level = level
+                best_flv = stream_main.get('flv')
 
-        if not live_url_flv and data.get('status_code') == 4003110:
+        if not best_flv and data.get('status_code') == 4003110:
             raise UserLiveException(TikTokError.LIVE_RESTRICTION)
 
-        logger.info(f"LIVE URL: {live_url_flv}\n")
-
-        return live_url_flv
+        return best_flv
 
     def download_live_stream(self, live_url: str):
         """
