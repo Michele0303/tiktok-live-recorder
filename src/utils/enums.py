@@ -34,6 +34,7 @@ class Mode(IntEnum):
     """
     MANUAL = 0
     AUTOMATIC = 1
+    FOLLOWERS = 2
 
 
 class Error(Enum):

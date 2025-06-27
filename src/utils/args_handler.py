@@ -111,26 +111,32 @@ def parse_args():
 def validate_and_parse_args():
     args = parse_args()
 
-    if not args.user and not args.room_id and not args.url:
-        raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
-
-    if args.user and args.user.startswith('@'):
-        args.user = args.user[1:]
-
     if not args.mode:
-        raise ArgsParseError("Missing mode value. Please specify the mode (manual or automatic).")
-    if args.mode not in ["manual", "automatic"]:
+        raise ArgsParseError("Missing mode value. Please specify the mode (manual, automatic or followers).")
+    if args.mode not in ["manual", "automatic", "followers"]:
         raise ArgsParseError("Incorrect mode value. Choose between 'manual' and 'automatic'.")
 
-    if args.url and not re.match(str(Regex.IS_TIKTOK_LIVE), args.url):
-        raise ArgsParseError("The provided URL does not appear to be a valid TikTok live URL.")
+    if args.mode in ["manual", "automatic"]:
+        if not args.user and not args.room_id and not args.url:
+            raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
 
-    if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
-        raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+        if args.user and args.user.startswith('@'):
+            args.user = args.user[1:]
 
-    if (args.automatic_interval < 1):
+        if args.url and not re.match(str(Regex.IS_TIKTOK_LIVE), args.url):
+            raise ArgsParseError("The provided URL does not appear to be a valid TikTok live URL.")
+
+        if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
+            raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+
+    if args.automatic_interval < 1:
         raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")
 
-    mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
+    if args.mode == "manual":
+        mode = Mode.MANUAL
+    elif args.mode == "automatic":
+        mode = Mode.AUTOMATIC
+    elif args.mode == "followers":
+        mode = Mode.FOLLOWERS
 
     return args, mode

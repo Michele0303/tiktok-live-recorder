@@ -16,6 +16,13 @@ class TikTokAPI:
 
         self.http_client = HttpClient(proxy, cookies).req
 
+    def _is_authenticated(self) -> bool:
+        response = self.http_client.get(f'{self.BASE_URL}/foryou')
+        response.raise_for_status()
+
+        content = response.text
+        return 'login-title' not in content
+
     def is_country_blacklisted(self) -> bool:
         """
         Checks if the user is in a blacklisted country that requires login
@@ -43,6 +50,17 @@ class TikTokAPI:
             return False
 
         return data['data'][0].get('alive', False)
+
+    def get_sec_uid(self):
+        """
+        Returns the sec_uid of the authenticated user.
+        """
+        response = self.http_client.get(
+            f"{self.BASE_URL}/foryou"
+        )
+
+        sec_uid = re.search('"secUid":"(.*?)",', response.text).group(1)
+        return sec_uid
 
     def get_user_from_room_id(self, room_id) -> str:
         """
@@ -124,6 +142,42 @@ class TikTokAPI:
             raise UserLiveException(TikTokError.ROOM_ID_ERROR)
 
         return room_id
+
+    def get_followers_list(self, sec_uid) -> list:
+        """
+        Returns a list of followers for the authenticated user.
+        """
+        response = self.http_client.get(
+            f"{self.BASE_URL}/api/user/list/?" +
+            "WebIdLastTime=1747672102&aid=1988&app_language=it-IT&app_name=tiktok_web"
+            "&browser_language=it-IT&browser_name=Mozilla&browser_online=true"
+            "&browser_platform=Linux%20x86_64"
+            "&browser_version=5.0%20%28X11%3B%20Linux%20x86_64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F136.0.0.0%20Safari%2F537.36"
+            "&channel=tiktok_web&cookie_enabled=true&count=30&data_collection_enabled=true"
+            "&device_id=7506194516308166166&device_platform=web_pc&focus_state=true"
+            "&from_page=user&history_len=2&is_fullscreen=false&is_page_visible=true"
+            "&maxCursor=0&minCursor=0&odinId=7246312836442604570&os=linux&priority_region=IT"
+            "&referer=&region=IT&scene=21&screen_height=1080&screen_width=1920"
+            f"&secUid={sec_uid}&tz_name=Europe%2FRome&user_is_login=true"
+            f"&webcast_language=it-IT&msToken=&X-Bogus=&X-Gnarly="
+        )
+
+        if response.status_code != StatusCode.OK:
+            raise TikTokException("Failed to retrieve followers list.")
+
+        data = response.json()
+
+        user_list = data.get('userList', [])
+        if not user_list:
+            raise TikTokException("Followers list is empty.")
+
+        # Extracting the user data from the list
+        followers = []
+        for user in user_list:
+            username = user.get('user', {}).get('uniqueId')
+            followers.append(username)
+
+        return followers
 
     def get_live_url(self, room_id: str) -> str:
         """
