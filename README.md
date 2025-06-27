@@ -6,7 +6,7 @@ I'm currently running a community poll to decide the future of TikTok Live Recor
 
 Should we keep it CLI-only, add a GUI, or support both?
 
-👉 [Click here to vote in the GitHub Discussion]([https://github.com/Michele0303/tiktok-live-recorder/discussions/45](https://github.com/Michele0303/tiktok-live-recorder/discussions/279))
+👉 [Click here to vote in the GitHub Discussion](https://github.com/Michele0303/tiktok-live-recorder/discussions/279)
 
 Your input is extremely valuable — thank you! 🙏
 
