@@ -31,9 +31,6 @@ class TikTokRecorder:
         # Setup TikTok API client
         self.tiktok = TikTokAPI(proxy=proxy, cookies=cookies)
 
-        # Check if the user's country is blacklisted
-        self.check_country_blacklisted()
-
         # TikTok Data
         self.url = url
         self.user = user
@@ -44,6 +41,15 @@ class TikTokRecorder:
         self.automatic_interval = automatic_interval
         self.duration = duration
         self.output = output
+
+        # Check if the user's country is blacklisted
+        is_blacklisted = self.check_country_blacklisted()
+        if is_blacklisted:
+            if self.room_id is None:
+                raise TikTokException(TikTokError.COUNTRY_BLACKLISTED)
+
+            if self.mode == Mode.AUTOMATIC:
+                raise TikTokException(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
 
         # Retrieve sec_uid if the mode is FOLLOWERS
         if self.mode == Mode.FOLLOWERS:
@@ -127,6 +133,17 @@ class TikTokRecorder:
         while True:
             try:
                 followers = self.tiktok.get_followers_list(self.sec_uid)
+
+                for follower in followers:
+                    self.room_id = self.tiktok.get_room_id_from_user(self.user)
+
+                    if not self.tiktok.is_room_alive(self.room_id):
+                        logger.info(f"@{self.user} is not live. Skipping...")
+                        continue
+
+                    logger.info(f"@{self.user} is live. Starting recording...")
+                    self.start_recording()
+                    break
 
             except UserLiveException as ex:
                 logger.info(ex)
@@ -218,11 +235,4 @@ class TikTokRecorder:
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
-        if not is_blacklisted:
-            return False
-
-        if self.room_id is None:
-            raise TikTokException(TikTokError.COUNTRY_BLACKLISTED)
-
-        if self.mode == Mode.AUTOMATIC:
-            raise TikTokException(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
+        return is_blacklisted
