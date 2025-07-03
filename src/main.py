@@ -26,7 +26,7 @@ from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def record_user(user, args, mode, cookies):
+def record_user(user: str, args, mode, cookies):
     try:
         logger.info(f"Starting recording for user: {user}")
         TikTokRecorder(
@@ -44,6 +44,23 @@ def record_user(user, args, mode, cookies):
     except Exception as ex:
         logger.error(f"Error for user {user}: {ex}")
 
+
+def run_recordings(args, mode, cookies):
+    if isinstance(args.user, list):
+        processes = []
+        for user in args.user:
+            p = multiprocessing.Process(
+                target=record_user,
+                args=(user, args, mode, cookies)
+            )
+            p.start()
+            processes.append(p)
+        for p in processes:
+            p.join()
+    else:
+        record_user(args.user, args, mode, cookies)
+
+
 def main():
     try:
         args, mode = validate_and_parse_args()
@@ -59,30 +76,7 @@ def main():
         # read cookies from file
         cookies = read_cookies()
 
-        if isinstance(args.user, list):
-            processes = []
-            for user in args.user:
-                p = multiprocessing.Process(
-                    target=record_user,
-                    args=(user, args, mode, cookies)
-                )
-                p.start()
-                processes.append(p)
-            for p in processes:
-                p.join()
-        else:
-            TikTokRecorder(
-                url=args.url,
-                user=args.user,
-                room_id=args.room_id,
-                mode=mode,
-                automatic_interval=args.automatic_interval,
-                cookies=cookies,
-                proxy=args.proxy,
-                output=args.output,
-                duration=args.duration,
-                use_telegram=args.telegram,
-            ).run()
+        run_recordings(args, mode, cookies)
 
     except ArgsParseError as ex:
         logger.error(ex)
