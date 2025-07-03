@@ -1,24 +1,30 @@
-from utils.enums import TikTokError
+class TikTokRecorderError(Exception):
+    """Base exception for all TikTok Recorder errors."""
+    def __init__(self, message):
+        super().__init__(message)
 
-
-class TikTokException(Exception):
+class UserLiveError(TikTokRecorderError):
+    """Error related to user live status."""
     def __init__(self, message):
         super().__init__(message)
 
 
-class UserLiveException(Exception):
-    def __init__(self, message):
+class IPBlockedByWAF(TikTokRecorderError):
+    """Raised when IP is blocked by WAF."""
+    def __init__(self, message="IP blocked by WAF"):
         super().__init__(message)
 
 
-class IPBlockedByWAF(Exception):
-    def __init__(self, message=TikTokError.WAF_BLOCKED):
-        super().__init__(message)
-
-
-class LiveNotFound(Exception):
+class LiveNotFound(TikTokRecorderError):
+    """Raised when a live stream is not found."""
     pass
 
 
-class ArgsParseError(Exception):
+class ArgsParseError(TikTokRecorderError):
+    """Raised for argument parsing errors."""
+    pass
+
+
+class NetworkError(TikTokRecorderError):
+    """Raised for network-related errors."""
     pass

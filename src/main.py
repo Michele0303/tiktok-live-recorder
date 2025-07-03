@@ -21,29 +21,25 @@ from utils.logger_manager import logger
 from core.tiktok_recorder import TikTokRecorder
 from utils.enums import TikTokError
 from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
-    UserLiveException, IPBlockedByWAF, TikTokException
+    UserLiveError, IPBlockedByWAF, TikTokRecorderError, TikTokRecorderError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def record_user(user: str, args, mode, cookies):
-    try:
-        logger.info(f"Starting recording for user: {user}")
-        TikTokRecorder(
-            url=None,
-            user=user,
-            room_id=None,
-            mode=mode,
-            automatic_interval=args.automatic_interval,
-            cookies=cookies,
-            proxy=args.proxy,
-            output=args.output,
-            duration=args.duration,
-            use_telegram=args.telegram,
-        ).run()
-    except Exception as ex:
-        logger.error(f"Error for user {user}: {ex}")
-
+    logger.info(f"Starting recording for user: {user}")
+    TikTokRecorder(
+        url=None,
+        user=user,
+        room_id=None,
+        mode=mode,
+        automatic_interval=args.automatic_interval,
+        cookies=cookies,
+        proxy=args.proxy,
+        output=args.output,
+        duration=args.duration,
+        use_telegram=args.telegram,
+    ).run()
 
 def run_recordings(args, mode, cookies):
     if isinstance(args.user, list):
@@ -78,23 +74,11 @@ def main():
 
         run_recordings(args, mode, cookies)
 
-    except ArgsParseError as ex:
-        logger.error(ex)
-
-    except LiveNotFound as ex:
-        logger.error(ex)
-
-    except IPBlockedByWAF:
-        logger.error(TikTokError.WAF_BLOCKED)
-
-    except UserLiveException as ex:
-        logger.error(ex)
-
-    except TikTokException as ex:
-        logger.error(ex)
+    except TikTokRecorderError as ex:
+        logger.error(f"Application Error: {ex}")
 
     except Exception as ex:
-        logger.error(ex)
+        logger.critical(f"Generic Error: {ex}", exc_info=True)
 
 
 if __name__ == "__main__":

@@ -8,8 +8,8 @@ from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
 from utils.video_management import VideoManagement
 from upload.telegram import Telegram
-from utils.custom_exceptions import LiveNotFound, UserLiveException, \
-    TikTokException
+from utils.custom_exceptions import LiveNotFound, UserLiveError, \
+    TikTokRecorderError
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
 
@@ -85,7 +85,7 @@ class TikTokRecorder:
 
     def manual_mode(self):
         if not self.tiktok.is_room_alive(self.room_id):
-            raise UserLiveException(
+            raise UserLiveError(
                 f"@{self.user}: {TikTokError.USER_NOT_CURRENTLY_LIVE}"
             )
 
@@ -97,7 +97,7 @@ class TikTokRecorder:
                 self.room_id = self.tiktok.get_room_id_from_user(self.user)
                 self.manual_mode()
 
-            except UserLiveException as ex:
+            except UserLiveError as ex:
                 logger.info(ex)
                 logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
@@ -191,7 +191,7 @@ class TikTokRecorder:
             return False
 
         if self.room_id is None:
-            raise TikTokException(TikTokError.COUNTRY_BLACKLISTED)
+            raise TikTokRecorderError(TikTokError.COUNTRY_BLACKLISTED)
 
         if self.mode == Mode.AUTOMATIC:
-            raise TikTokException(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
+            raise TikTokRecorderError(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
