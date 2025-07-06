@@ -1,16 +1,5 @@
 <div align="center">
 
-# 📊 Help Shape the Future of This Project!
-
-I'm currently running a community poll to decide the future of TikTok Live Recorder.
-
-Should we keep it CLI-only, add a GUI, or support both?
-
-👉 [Click here to vote in the GitHub Discussion](https://github.com/Michele0303/tiktok-live-recorder/discussions/279)
-
-Your input is extremely valuable — thank you! 🙏
-
-
 <h1> TikTok Live Recorder🎥</h1>
 
 <em>TikTok Live Recorder is a tool for recording live streaming tiktok.</em>
