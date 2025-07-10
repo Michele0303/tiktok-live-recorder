@@ -46,19 +46,13 @@ class TikTokRecorder:
         self.use_telegram = use_telegram
 
         # Check if the user's country is blacklisted
-        is_blacklisted = self.check_country_blacklisted()
-        if is_blacklisted:
-            if self.room_id is None:
-                raise TikTokException(TikTokError.COUNTRY_BLACKLISTED)
-
-            if self.mode == Mode.AUTOMATIC:
-                raise TikTokException(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
+        self.check_country_blacklisted()
 
         # Retrieve sec_uid if the mode is FOLLOWERS
         if self.mode == Mode.FOLLOWERS:
             self.sec_uid = self.tiktok.get_sec_uid()
             if self.sec_uid is None:
-                raise TikTokException("Failed to retrieve sec_uid.")
+                raise TikTokRecorderError("Failed to retrieve sec_uid.")
 
             logger.info(f"Followers mode activated")
         else:
@@ -135,7 +129,9 @@ class TikTokRecorder:
                 followers = self.tiktok.get_followers_list(self.sec_uid)
 
                 for follower in followers:
-                    self.room_id = self.tiktok.get_room_id_from_user(self.user)
+                    print(follower, end=' ')
+                    room_id = self.tiktok.get_room_id_from_user(self.user)
+                    print(room_id)
 
                     if not self.tiktok.is_room_alive(self.room_id):
                         logger.info(f"@{self.user} is not live. Skipping...")
@@ -145,7 +141,7 @@ class TikTokRecorder:
                     self.start_recording()
                     break
 
-            except UserLiveException as ex:
+            except UserLiveError as ex:
                 logger.info(ex)
                 logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
@@ -243,4 +239,8 @@ class TikTokRecorder:
 
         if self.mode == Mode.AUTOMATIC:
             raise TikTokRecorderError(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
+
+        elif self.mode == Mode.FOLLOWERS:
+            raise TikTokRecorderError(TikTokError.COUNTRY_BLACKLISTED_FOLLOWERS_MODE)
+
         return is_blacklisted

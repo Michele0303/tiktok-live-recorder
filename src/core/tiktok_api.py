@@ -168,13 +168,13 @@ class TikTokAPI:
         )
 
         if response.status_code != StatusCode.OK:
-            raise TikTokException("Failed to retrieve followers list.")
+            raise TikTokRecorderError("Failed to retrieve followers list.")
 
         data = response.json()
 
         user_list = data.get('userList', [])
         if not user_list:
-            raise TikTokException("Followers list is empty.")
+            raise TikTokRecorderError("Followers list is empty.")
 
         # Extracting the user data from the list
         followers = []

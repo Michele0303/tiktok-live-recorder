@@ -69,6 +69,11 @@ class TikTokError(Enum):
         'Use a VPN or authenticate with cookies.\n' \
         'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n'
 
+    COUNTRY_BLACKLISTED_FOLLOWERS_MODE = \
+        'Followers mode is available only in unblocked countries. ' \
+        'Use a VPN or authenticate with cookies.\n' \
+        'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n'
+
     ACCOUNT_PRIVATE = 'Account is private, login required. ' \
                       'Please add your cookies to cookies.json ' \
                       'https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies'
