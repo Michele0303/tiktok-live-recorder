@@ -150,38 +150,53 @@ class TikTokAPI:
 
     def get_followers_list(self, sec_uid) -> list:
         """
-        Returns a list of followers for the authenticated user.
+        Returns all followers for the authenticated user by paginating
         """
-        # TODO: Scrape all followers, not just the first 30.
-        response = self.http_client.get(
-            f"{self.BASE_URL}/api/user/list/?" +
-            "WebIdLastTime=1747672102&aid=1988&app_language=it-IT&app_name=tiktok_web"
-            "&browser_language=it-IT&browser_name=Mozilla&browser_online=true"
-            "&browser_platform=Linux%20x86_64"
-            "&browser_version=5.0%20%28X11%3B%20Linux%20x86_64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F136.0.0.0%20Safari%2F537.36"
-            "&channel=tiktok_web&cookie_enabled=true&count=30&data_collection_enabled=true"
-            "&device_id=7506194516308166166&device_platform=web_pc&focus_state=true"
-            "&from_page=user&history_len=2&is_fullscreen=false&is_page_visible=true"
-            "&maxCursor=0&minCursor=0&odinId=7246312836442604570&os=linux&priority_region=IT"
-            "&referer=&region=IT&scene=21&screen_height=1080&screen_width=1920"
-            f"&secUid={sec_uid}&tz_name=Europe%2FRome&user_is_login=true"
-            f"&webcast_language=it-IT&msToken=&X-Bogus=&X-Gnarly="
-        )
-
-        if response.status_code != StatusCode.OK:
-            raise TikTokRecorderError("Failed to retrieve followers list.")
-
-        data = response.json()
-
-        user_list = data.get('userList', [])
-        if not user_list:
-            raise TikTokRecorderError("Followers list is empty.")
-
-        # Extracting the user data from the list
         followers = []
-        for user in user_list:
-            username = user.get('user', {}).get('uniqueId')
-            followers.append(username)
+        cursor = 0
+        has_more = True
+
+        while has_more:
+            url = (
+                f"{self.BASE_URL}/api/user/list/"
+                "?WebIdLastTime=1747672102"
+                "&aid=1988&app_language=it-IT&app_name=tiktok_web"
+                "&browser_language=it-IT&browser_name=Mozilla&browser_online=true"
+                "&browser_platform=Linux%20x86_64"
+                "&browser_version=5.0%20%28X11%3B%20Linux%20x86_64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F136.0.0.0%20Safari%2F537.36"
+                "&channel=tiktok_web&cookie_enabled=true&count=30&data_collection_enabled=true"
+                "&device_id=7506194516308166166&device_platform=web_pc&focus_state=true"
+                "&from_page=user&history_len=2&is_fullscreen=false&is_page_visible=true"
+                f"&maxCursor={cursor}&minCursor={cursor}"
+                "&odinId=7246312836442604570&os=linux&priority_region=IT"
+                "&referer=&region=IT&scene=21&screen_height=1080&screen_width=1920"
+                f"&secUid={sec_uid}&tz_name=Europe%2FRome&user_is_login=true"
+                "&webcast_language=it-IT&msToken=&X-Bogus=&X-Gnarly="
+            )
+
+            response = self.http_client.get(url)
+
+            if response.status_code != StatusCode.OK:
+                raise TikTokRecorderError("Failed to retrieve followers list.")
+
+            data = response.json()
+            user_list = data.get('userList', [])
+
+            for user in user_list:
+                username = user.get('user', {}).get('uniqueId')
+                if username:
+                    followers.append(username)
+
+            has_more = data.get('hasMore', False)
+            new_cursor = data.get('minCursor', 0)
+
+            if new_cursor == cursor:
+                break
+
+            cursor = new_cursor
+
+        if not followers:
+            raise TikTokRecorderError("Followers list is empty.")
 
         return followers
 
