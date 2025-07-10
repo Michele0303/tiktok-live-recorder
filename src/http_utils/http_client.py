@@ -1,4 +1,5 @@
-from curl_cffi import requests, Session, CurlHttpVersion
+from curl_cffi import requests, Session
+import requests
 
 from utils.enums import StatusCode
 from utils.logger_manager import logger
@@ -8,16 +9,11 @@ class HttpClient:
 
     def __init__(self, proxy=None, cookies=None):
         self.req = None
+        self.req_stream = requests
+
         self.proxy = proxy
         self.cookies = cookies
-        self.configure_session()
-
-    def configure_session(self) -> None:
-        self.req = Session(
-            impersonate="chrome136",
-            #http_version=CurlHttpVersion.V1_1,
-        )
-        self.req.headers.update({
+        self.headers = {
             "Sec-Ch-Ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\"",
             "Sec-Ch-Ua-Mobile": "?0", "Sec-Ch-Ua-Platform": "\"Linux\"",
             "Accept-Language": "en-US", "Upgrade-Insecure-Requests": "1",
@@ -27,10 +23,20 @@ class HttpClient:
             "Sec-Fetch-User": "?1", "Sec-Fetch-Dest": "document",
             "Priority": "u=0, i",
             "Referer": "https://www.tiktok.com/"
-        })
+        }
+
+        self.configure_session()
+
+    def configure_session(self) -> None:
+        self.req = Session(impersonate="chrome136")
+        self.req_stream = requests.Session()
+
+        self.req.headers.update(self.headers)
+        self.req_stream.headers.update(self.headers)
 
         if self.cookies is not None:
             self.req.cookies.update(self.cookies)
+            self.req_stream.cookies.update(self.cookies)
 
         self.check_proxy()
 

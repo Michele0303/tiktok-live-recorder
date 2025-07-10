@@ -15,6 +15,7 @@ class TikTokAPI:
         self.WEBCAST_URL = 'https://webcast.tiktok.com'
 
         self.http_client = HttpClient(proxy, cookies).req
+        self._http_client_stream = HttpClient(proxy, cookies).req_stream
 
     def _is_authenticated(self) -> bool:
         response = self.http_client.get(f'{self.BASE_URL}/foryou')
@@ -248,9 +249,7 @@ class TikTokAPI:
         """
         Generator che restituisce lo streaming live per un dato room_id.
         """
-        stream = self.http_client.get(live_url, stream=True)
+        stream = self._http_client_stream.get(live_url, stream=True)
         for chunk in stream.iter_content(chunk_size=4096):
-            if not chunk:
-                continue
-
-            yield chunk
+            if chunk:
+                yield chunk
