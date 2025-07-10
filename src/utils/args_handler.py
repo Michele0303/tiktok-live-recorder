@@ -120,14 +120,26 @@ def validate_and_parse_args():
         if not args.user and not args.room_id and not args.url:
             raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
 
-        if args.user and args.user.startswith('@'):
-            args.user = args.user[1:]
+    if args.user:
+        args.user = [u.lstrip('@').strip() for u in args.user.split(',') if u.strip()]
 
-        if args.url and not re.match(str(Regex.IS_TIKTOK_LIVE), args.url):
-            raise ArgsParseError("The provided URL does not appear to be a valid TikTok live URL.")
+    if args.user and len(args.user) > 1 and (args.room_id or args.url):
+        raise ArgsParseError("When using multiple usernames, do not provide room_id or url.")
 
-        if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
-            raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+    if args.url and not re.match(str(Regex.IS_TIKTOK_LIVE), args.url):
+        raise ArgsParseError("The provided URL does not appear to be a valid TikTok live URL.")
+
+    if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
+        raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+
+    # Edit: now arg.user is a list
+    if args.user and len(args.user) == 1:
+        args.user = args.user[0]
+
+    if (isinstance(args.user, str) and args.user and args.room_id) or \
+       (isinstance(args.user, str) and args.user and args.url) or \
+       (args.room_id and args.url):
+        raise ArgsParseError("Please provide only one among username, room ID, or URL.")
 
     if args.automatic_interval < 1:
         raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")

@@ -6,29 +6,6 @@ from subprocess import SubprocessError
 from .logger_manager import logger
 
 
-def check_distro_library():
-    try:
-        import distro
-        return True
-    except ModuleNotFoundError:
-        logger.error("distro library is not installed")
-        return False
-
-
-def install_distro_library():
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "distro", "--break-system-packages"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-        logger.info("distro installed successfully\n")
-    except SubprocessError as e:
-        logger.error(f"Error: {e}")
-        exit(1)
-
-
 def check_ffmpeg_binary():
     try:
         subprocess.run(
@@ -75,6 +52,15 @@ def install_ffmpeg_binary():
     exit(1)
 
 
+def check_distro_library():
+    try:
+        import distro
+        return True
+    except ModuleNotFoundError:
+        logger.error("distro library is not installed")
+        return False
+
+
 def check_ffmpeg_library():
     try:
         import ffmpeg
@@ -82,20 +68,6 @@ def check_ffmpeg_library():
     except ModuleNotFoundError:
         logger.error("ffmpeg-python library is not installed")
         return False
-
-
-def install_ffmpeg_library():
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "ffmpeg-python", "--break-system-packages"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-        logger.info("ffmpeg-python installed successfully\n")
-    except SubprocessError as e:
-        logger.error(f"Error: {e}")
-        exit(1)
 
 
 def check_argparse_library():
@@ -107,26 +79,12 @@ def check_argparse_library():
         return False
 
 
-def install_argparse_library():
+def check_curl_cffi_library():
     try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "argparse", "--break-system-packages"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-        logger.info("argparse installed successfully\n")
-    except SubprocessError as e:
-        logger.error(f"Error: {e}")
-        exit(1)
-
-
-def check_requests_library():
-    try:
-        import requests
+        import curl_cffi
         return True
     except ModuleNotFoundError:
-        logger.error("requests library is not installed")
+        logger.error("curl_cffi library is not installed")
         return False
 
 
@@ -139,51 +97,36 @@ def check_pyrogram_library():
         return False
 
 
-def install_pyrogram_library():
+def install_requirements():
     try:
+        print()
+        logger.error('Installing requirements...\n')
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "pyrogram", "--break-system-packages"],
+            [sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--break-system-packages"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
         )
-        logger.info("pyrogram installed successfully\n")
-    except SubprocessError as e:
-        logger.error(f"Error: {e}")
-        exit(1)
-
-
-def install_requests_library():
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "requests", "--break-system-packages"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-        logger.info("requests installed successfully\n")
+        logger.info("Requirements installed successfully\n")
     except SubprocessError as e:
         logger.error(f"Error: {e}")
         exit(1)
 
 
 def check_and_install_dependencies():
-    logger.info("Checking and Installing dependencies...\n")
+    logger.info("Checking and Installing dependencies...")
 
-    if not check_distro_library():
-        install_distro_library()
+    dependencies = [
+        check_distro_library(),
+        check_ffmpeg_library(),
+        check_argparse_library(),
+        check_curl_cffi_library(),
+        check_pyrogram_library(),
+        check_ffmpeg_binary(),
+    ]
 
-    if not check_ffmpeg_library():
-        install_ffmpeg_library()
-
-    if not check_argparse_library():
-        install_argparse_library()
-
-    if not check_requests_library():
-        install_requests_library()
-
-    if not check_pyrogram_library():
-        install_pyrogram_library()
+    if False in dependencies:
+        install_requirements()
 
     if not check_ffmpeg_binary():
         install_ffmpeg_binary()

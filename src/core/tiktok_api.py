@@ -4,7 +4,7 @@ import re
 from http_utils.http_client import HttpClient
 from utils.enums import StatusCode, TikTokError
 from utils.logger_manager import logger
-from utils.custom_exceptions import UserLiveException, TikTokException, \
+from utils.custom_exceptions import UserLiveError, TikTokRecorderError, \
     LiveNotFound, IPBlockedByWAF
 
 
@@ -39,7 +39,7 @@ class TikTokAPI:
         Checking whether the user is live.
         """
         if not room_id:
-            raise UserLiveException(TikTokError.USER_NOT_CURRENTLY_LIVE)
+            raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/check_alive/"
@@ -71,14 +71,14 @@ class TikTokAPI:
         ).json()
 
         if 'Follow the creator to watch their LIVE' in json.dumps(data):
-            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE_FOLLOW)
+            raise UserLiveError(TikTokError.ACCOUNT_PRIVATE_FOLLOW)
 
         if 'This account is private' in data:
-            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
+            raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
 
         display_id = data.get("data", {}).get("owner", {}).get("display_id")
         if display_id is None:
-            raise TikTokException(TikTokError.USERNAME_ERROR)
+            raise TikTokRecorderError(TikTokError.USERNAME_ERROR)
 
         return display_id
 
@@ -90,7 +90,7 @@ class TikTokAPI:
         content = response.text
 
         if response.status_code == StatusCode.REDIRECT:
-            raise UserLiveException(TikTokError.COUNTRY_BLACKLISTED)
+            raise UserLiveError(TikTokError.COUNTRY_BLACKLISTED)
 
         if response.status_code == StatusCode.MOVED:  # MOBILE URL
             matches = re.findall("com/@(.*?)/live", content)
@@ -120,7 +120,12 @@ class TikTokAPI:
         ).text
 
         if 'Please wait...' in content:
-            raise IPBlockedByWAF
+            content = self.http_client.get(
+                url=f'https://www.tiktok.com/@{user}/live/'
+            ).text
+
+            if 'Please wait...' in content:
+                raise IPBlockedByWAF
 
         pattern = re.compile(
             r'<script id="SIGI_STATE" type="application/json">(.*?)</script>',
@@ -128,7 +133,7 @@ class TikTokAPI:
         match = pattern.search(content)
 
         if match is None:
-            raise UserLiveException(TikTokError.ROOM_ID_ERROR)
+            raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
         data = json.loads(match.group(1))
 
@@ -139,7 +144,7 @@ class TikTokAPI:
             'user', {}).get('roomId', None)
 
         if room_id is None:
-            raise UserLiveException(TikTokError.ROOM_ID_ERROR)
+            raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
         return room_id
 
@@ -188,7 +193,7 @@ class TikTokAPI:
         ).json()
 
         if 'This account is private' in data:
-            raise UserLiveException(TikTokError.ACCOUNT_PRIVATE)
+            raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
 
         stream_url = data.get('data', {}).get('stream_url', {})
 
@@ -219,7 +224,7 @@ class TikTokAPI:
                 best_flv = stream_main.get('flv')
 
         if not best_flv and data.get('status_code') == 4003110:
-            raise UserLiveException(TikTokError.LIVE_RESTRICTION)
+            raise UserLiveError(TikTokError.LIVE_RESTRICTION)
 
         return best_flv
 
