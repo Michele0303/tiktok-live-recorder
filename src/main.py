@@ -19,9 +19,7 @@ from utils.utils import read_cookies
 from utils.logger_manager import logger
 
 from core.tiktok_recorder import TikTokRecorder
-from utils.enums import TikTokError
-from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
-    UserLiveError, IPBlockedByWAF, TikTokRecorderError, TikTokRecorderError
+from utils.custom_exceptions import TikTokRecorderError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

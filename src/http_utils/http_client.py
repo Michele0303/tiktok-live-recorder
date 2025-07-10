@@ -1,4 +1,4 @@
-import requests as req
+from curl_cffi import requests, Session, CurlHttpVersion
 
 from utils.enums import StatusCode
 from utils.logger_manager import logger
@@ -13,7 +13,10 @@ class HttpClient:
         self.configure_session()
 
     def configure_session(self) -> None:
-        self.req = req.Session()
+        self.req = Session(
+            impersonate="chrome136",
+            #http_version=CurlHttpVersion.V1_1,
+        )
         self.req.headers.update({
             "Sec-Ch-Ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\"",
             "Sec-Ch-Ua-Mobile": "?0", "Sec-Ch-Ua-Platform": "\"Linux\"",
@@ -38,7 +41,7 @@ class HttpClient:
         logger.info(f"Testing {self.proxy}...")
         proxies = {'http': self.proxy, 'https': self.proxy}
 
-        response = req.get(
+        response = requests.get(
             "https://ifconfig.me/ip",
             proxies=proxies,
             timeout=10

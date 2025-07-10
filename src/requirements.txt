@@ -1,5 +1,5 @@
-argparse
-distro
-ffmpeg-python
-pyrogram
-requests
+argparse~=1.4.0
+ffmpeg-python~=0.2.0
+Pyrogram~=2.0.0
+distro~=1.9.0
+curl_cffi~=0.11.0
