@@ -131,7 +131,7 @@ class TikTokRecorder:
             try:
                 followers = self.tiktok.get_followers_list(self.sec_uid)
 
-                for follower in followers + ['ch9our0', '_giu.ulia_', 'verogae']:
+                for follower in followers:
                     if follower in active_recordings:
                         if not active_recordings[follower].is_alive():
                             logger.info(f'Recording of @{follower} finished.')
