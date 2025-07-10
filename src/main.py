@@ -19,19 +19,16 @@ from utils.utils import read_cookies
 from utils.logger_manager import logger
 
 from core.tiktok_recorder import TikTokRecorder
-from utils.enums import TikTokError
-from utils.custom_exceptions import LiveNotFound, ArgsParseError, \
-    UserLiveError, IPBlockedByWAF, TikTokRecorderError, TikTokRecorderError
+from utils.custom_exceptions import TikTokRecorderError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def record_user(user: str, args, mode, cookies):
-    logger.info(f"Starting recording for user: {user}")
+def record_user(args, mode, cookies):
     TikTokRecorder(
-        url=None,
-        user=user,
-        room_id=None,
+        url=args.url,
+        user=args.user,
+        room_id=args.room_id,
         mode=mode,
         automatic_interval=args.automatic_interval,
         cookies=cookies,
@@ -54,7 +51,7 @@ def run_recordings(args, mode, cookies):
         for p in processes:
             p.join()
     else:
-        record_user(args.user, args, mode, cookies)
+        record_user(args, mode, cookies)
 
 
 def main():

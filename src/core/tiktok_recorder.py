@@ -2,7 +2,7 @@ import os
 import time
 from http.client import HTTPException
 
-from requests import RequestException
+from curl_cffi import CurlError
 
 from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
@@ -162,7 +162,7 @@ class TikTokRecorder:
                         logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-                except (RequestException, HTTPException):
+                except (CurlError, HTTPException):
                     time.sleep(2)
 
                 except KeyboardInterrupt:
