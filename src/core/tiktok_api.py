@@ -102,6 +102,11 @@ class TikTokAPI:
         ).text
 
         if 'Please wait...' in content:
+            content = self.http_client.get(
+                url=f'https://www.tiktok.com/@{user}/live/'
+            ).text
+
+        if 'Please wait...' in content:
             raise IPBlockedByWAF
 
         pattern = re.compile(
