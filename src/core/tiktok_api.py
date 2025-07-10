@@ -60,7 +60,10 @@ class TikTokAPI:
             f"{self.BASE_URL}/foryou"
         )
 
-        sec_uid = re.search('"secUid":"(.*?)",', response.text).group(1)
+        sec_uid = re.search('"secUid":"(.*?)",', response.text)
+        if sec_uid:
+            sec_uid = sec_uid.group(1)
+
         return sec_uid
 
     def get_user_from_room_id(self, room_id) -> str:
