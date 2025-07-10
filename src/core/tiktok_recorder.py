@@ -1,8 +1,9 @@
 import os
 import time
 from http.client import HTTPException
+from multiprocessing import Process
 
-from curl_cffi import CurlError
+from requests import RequestException
 
 from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
@@ -48,19 +49,29 @@ class TikTokRecorder:
         # Check if the user's country is blacklisted
         self.check_country_blacklisted()
 
-        # Get live information based on the provided user data
-        if self.url:
-            self.user, self.room_id = \
-                self.tiktok.get_room_and_user_from_url(self.url)
+        # Retrieve sec_uid if the mode is FOLLOWERS
+        if self.mode == Mode.FOLLOWERS:
+            self.sec_uid = self.tiktok.get_sec_uid()
+            if self.sec_uid is None:
+                raise TikTokRecorderError("Failed to retrieve sec_uid.")
 
-        if not self.user:
-            self.user = self.tiktok.get_user_from_room_id(self.room_id)
+            logger.info(f"Followers mode activated\n")
+        else:
+            # Get live information based on the provided user data
+            if self.url:
+                self.user, self.room_id = \
+                    self.tiktok.get_room_and_user_from_url(self.url)
 
-        if not self.room_id:
-            self.room_id = self.tiktok.get_room_id_from_user(self.user)
+            if not self.user:
+                self.user = self.tiktok.get_user_from_room_id(self.room_id)
 
-        logger.info(f"USERNAME: {self.user}" + ("\n" if not self.room_id else ""))
-        logger.info(f"ROOM_ID:  {self.room_id}" + ("\n" if not self.tiktok.is_room_alive(self.room_id) else ""))
+            if not self.room_id:
+                self.room_id = self.tiktok.get_room_id_from_user(self.user)
+
+            logger.info(
+                f"USERNAME: {self.user}" + ("\n" if not self.room_id else ""))
+            logger.info(f"ROOM_ID:  {self.room_id}" + (
+                "\n" if not self.tiktok.is_room_alive(self.room_id) else ""))
 
         # If proxy is provided, set up the HTTP client without the proxy
         if proxy:
@@ -77,11 +88,15 @@ class TikTokRecorder:
         and if not, waits for the specified timeout before rechecking.
         If the user is live, it starts recording.
         """
+
         if self.mode == Mode.MANUAL:
             self.manual_mode()
 
-        if self.mode == Mode.AUTOMATIC:
+        elif self.mode == Mode.AUTOMATIC:
             self.automatic_mode()
+
+        elif self.mode == Mode.FOLLOWERS:
+            self.followers_mode()
 
     def manual_mode(self):
         if not self.tiktok.is_room_alive(self.room_id):
@@ -89,7 +104,7 @@ class TikTokRecorder:
                 f"@{self.user}: {TikTokError.USER_NOT_CURRENTLY_LIVE}"
             )
 
-        self.start_recording()
+        self.start_recording(self.user, self.room_id)
 
     def automatic_mode(self):
         while True:
@@ -109,11 +124,65 @@ class TikTokRecorder:
             except Exception as ex:
                 logger.error(f"Unexpected error: {ex}\n")
 
-    def start_recording(self):
+    def followers_mode(self):
+        active_recordings = {}  # follower -> Process
+
+        while True:
+            try:
+                followers = self.tiktok.get_followers_list(self.sec_uid)
+
+                for follower in followers:
+                    if follower in active_recordings:
+                        if not active_recordings[follower].is_alive():
+                            logger.info(f'Recording of @{follower} finished.')
+                            del active_recordings[follower]
+                        else:
+                            continue
+
+                    try:
+                        room_id = self.tiktok.get_room_id_from_user(follower)
+
+                        if not room_id or not self.tiktok.is_room_alive(room_id):
+                            #logger.info(f"@{follower} is not live. Skipping...")
+                            continue
+
+                        logger.info(f"@{follower} is live. Starting recording...")
+
+                        process = Process(
+                            target=self.start_recording,
+                            args=(follower, room_id)
+                        )
+                        process.start()
+                        active_recordings[follower] = process
+
+                        time.sleep(2.5)
+
+                    except Exception as e:
+                        logger.error(f'Error while processing @{follower}: {e}')
+                        continue
+
+                print()
+                delay = self.automatic_interval * TimeOut.ONE_MINUTE
+                logger.info(f'Waiting {delay} minutes for the next check...')
+                time.sleep(delay)
+
+            except UserLiveError as ex:
+                logger.info(ex)
+                logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
+                time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
+
+            except ConnectionError:
+                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+
+            except Exception as ex:
+                logger.error(f"Unexpected error: {ex}\n")
+
+    def start_recording(self, user, room_id):
         """
         Start recording live
         """
-        live_url = self.tiktok.get_live_url(self.room_id)
+        live_url = self.tiktok.get_live_url(room_id)
         if not live_url:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
@@ -126,7 +195,7 @@ class TikTokRecorder:
                 else:
                     self.output = self.output + "/"
 
-        output = f"{self.output if self.output else ''}TK_{self.user}_{current_date}_flv.mp4"
+        output = f"{self.output if self.output else ''}TK_{user}_{current_date}_flv.mp4"
 
         if self.duration:
             logger.info(f"Started recording for {self.duration} seconds ")
@@ -141,7 +210,7 @@ class TikTokRecorder:
             stop_recording = False
             while not stop_recording:
                 try:
-                    if not self.tiktok.is_room_alive(self.room_id):
+                    if not self.tiktok.is_room_alive(room_id):
                         logger.info("User is no longer live. Stopping recording.")
                         break
 
@@ -162,7 +231,7 @@ class TikTokRecorder:
                         logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-                except (CurlError, HTTPException):
+                except (RequestException,HTTPException):
                     time.sleep(2)
 
                 except KeyboardInterrupt:
@@ -195,3 +264,8 @@ class TikTokRecorder:
 
         if self.mode == Mode.AUTOMATIC:
             raise TikTokRecorderError(TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE)
+
+        elif self.mode == Mode.FOLLOWERS:
+            raise TikTokRecorderError(TikTokError.COUNTRY_BLACKLISTED_FOLLOWERS_MODE)
+
+        return is_blacklisted

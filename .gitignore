@@ -139,3 +139,5 @@ telegram.json
 
 # macOS folder metadata
 .DS_Store
+
+.idea/

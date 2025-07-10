@@ -34,6 +34,7 @@ class Mode(IntEnum):
     """
     MANUAL = 0
     AUTOMATIC = 1
+    FOLLOWERS = 2
 
 
 class Error(Enum):
@@ -65,6 +66,11 @@ class TikTokError(Enum):
 
     COUNTRY_BLACKLISTED_AUTO_MODE = \
         'Automatic mode is available only in unblocked countries. ' \
+        'Use a VPN or authenticate with cookies.\n' \
+        'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n'
+
+    COUNTRY_BLACKLISTED_FOLLOWERS_MODE = \
+        'Followers mode is available only in unblocked countries. ' \
         'Use a VPN or authenticate with cookies.\n' \
         'How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n'
 
@@ -106,10 +112,11 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Bug fixes",
+        "Implemented a new feature to record TikTok live streams from followers.",
+        "Improved HTTP requests"
     ]
 
-    VERSION = 6.4
+    VERSION = 6.5
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         

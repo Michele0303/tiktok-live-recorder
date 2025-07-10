@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument(
         "-user",
         dest="user",
-        help="Record a live session from one or more TikTok usernames (comma separated, e.g. user1,user2,user3).",
+        help="Record a live session from the TikTok username.",
         action='store'
     )
 
@@ -111,22 +111,26 @@ def parse_args():
 def validate_and_parse_args():
     args = parse_args()
 
+    if not args.mode:
+        raise ArgsParseError("Missing mode value. Please specify the mode (manual, automatic or followers).")
+    if args.mode not in ["manual", "automatic", "followers"]:
+        raise ArgsParseError("Incorrect mode value. Choose between 'manual' and 'automatic'.")
+
+    if args.mode in ["manual", "automatic"]:
+        if not args.user and not args.room_id and not args.url:
+            raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
+
     if args.user:
         args.user = [u.lstrip('@').strip() for u in args.user.split(',') if u.strip()]
-
-    if not args.user and not args.room_id and not args.url:
-        raise ArgsParseError("Missing URL, username, or room ID. Please provide one of these parameters.")
 
     if args.user and len(args.user) > 1 and (args.room_id or args.url):
         raise ArgsParseError("When using multiple usernames, do not provide room_id or url.")
 
-    if not args.mode:
-        raise ArgsParseError("Missing mode value. Please specify the mode (manual or automatic).")
-    if args.mode not in ["manual", "automatic"]:
-        raise ArgsParseError("Incorrect mode value. Choose between 'manual' and 'automatic'.")
-
     if args.url and not re.match(str(Regex.IS_TIKTOK_LIVE), args.url):
         raise ArgsParseError("The provided URL does not appear to be a valid TikTok live URL.")
+
+    if (args.user and args.room_id) or (args.user and args.url) or (args.room_id and args.url):
+        raise ArgsParseError("Please provide only one among username, room ID, or URL.")
 
     # Edit: now arg.user is a list
     if args.user and len(args.user) == 1:
@@ -137,9 +141,14 @@ def validate_and_parse_args():
        (args.room_id and args.url):
         raise ArgsParseError("Please provide only one among username, room ID, or URL.")
 
-    if (args.automatic_interval < 1):
+    if args.automatic_interval < 1:
         raise ArgsParseError("Incorrect automatic_interval value. Must be one minute or more.")
 
-    mode = Mode.MANUAL if args.mode == "manual" else Mode.AUTOMATIC
+    if args.mode == "manual":
+        mode = Mode.MANUAL
+    elif args.mode == "automatic":
+        mode = Mode.AUTOMATIC
+    elif args.mode == "followers":
+        mode = Mode.FOLLOWERS
 
     return args, mode

@@ -88,6 +88,15 @@ def check_curl_cffi_library():
         return False
 
 
+def check_requests_library():
+    try:
+        import requests
+        return True
+    except ModuleNotFoundError:
+        logger.error("requests library is not installed")
+        return False
+
+
 def check_pyrogram_library():
     try:
         import pyrogram
@@ -121,6 +130,7 @@ def check_and_install_dependencies():
         check_ffmpeg_library(),
         check_argparse_library(),
         check_curl_cffi_library(),
+        check_requests_library(),
         check_pyrogram_library(),
         check_ffmpeg_binary(),
     ]
