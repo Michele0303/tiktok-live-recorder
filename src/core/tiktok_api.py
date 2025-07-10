@@ -152,6 +152,7 @@ class TikTokAPI:
         """
         Returns a list of followers for the authenticated user.
         """
+        # TODO: Scrape all followers, not just the first 30.
         response = self.http_client.get(
             f"{self.BASE_URL}/api/user/list/?" +
             "WebIdLastTime=1747672102&aid=1988&app_language=it-IT&app_name=tiktok_web"
