@@ -106,8 +106,8 @@ class TikTokAPI:
                 url=f'https://www.tiktok.com/@{user}/live/'
             ).text
 
-        if 'Please wait...' in content:
-            raise IPBlockedByWAF
+            if 'Please wait...' in content:
+                raise IPBlockedByWAF
 
         pattern = re.compile(
             r'<script id="SIGI_STATE" type="application/json">(.*?)</script>',
