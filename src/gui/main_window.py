@@ -204,6 +204,7 @@ class TikTokRecorderGUI(QMainWindow):
             }
         """)
         
+        control_layout.addStretch()
         control_layout.addWidget(self.start_button)
         control_layout.addWidget(self.stop_button)
         control_layout.addStretch()
