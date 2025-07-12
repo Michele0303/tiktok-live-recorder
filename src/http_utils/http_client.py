@@ -1,8 +1,9 @@
-from curl_cffi import requests, Session
+from curl_cffi import Session
 import requests
 
 from utils.enums import StatusCode
 from utils.logger_manager import logger
+from utils.utils import is_termux
 
 
 class HttpClient:
@@ -28,8 +29,12 @@ class HttpClient:
         self.configure_session()
 
     def configure_session(self) -> None:
-        self.req = Session(impersonate="chrome136")
         self.req_stream = requests.Session()
+
+        if is_termux():
+            self.req = self.req_stream
+        else:
+            self.req = Session(impersonate="chrome136")
 
         self.req.headers.update(self.headers)
         self.req_stream.headers.update(self.headers)

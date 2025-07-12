@@ -1,4 +1,5 @@
 import json
+import platform
 import re
 
 from http_utils.http_client import HttpClient

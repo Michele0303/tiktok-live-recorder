@@ -1,5 +1,8 @@
 import json
 import os
+import platform
+
+import distro
 
 from utils.enums import Info
 
@@ -29,3 +32,12 @@ def read_telegram_config():
     config_path = os.path.join(script_dir, "..", "telegram.json")
     with open(config_path, "r") as f:
         return json.load(f)
+
+def is_termux() -> bool:
+    """
+    Checks if the script is running in Termux.
+
+    Returns:
+        bool: True if running in Termux, False otherwise.
+    """
+    return platform.system().lower() == "linux" and distro.like() == ""
