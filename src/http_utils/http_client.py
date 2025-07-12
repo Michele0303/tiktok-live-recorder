@@ -1,4 +1,3 @@
-from curl_cffi import Session
 import requests
 
 from utils.enums import StatusCode
@@ -34,6 +33,7 @@ class HttpClient:
         if is_termux():
             self.req = self.req_stream
         else:
+            from curl_cffi import Session
             self.req = Session(impersonate="chrome136")
 
         self.req.headers.update(self.headers)

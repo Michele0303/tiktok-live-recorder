@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from curl_cffi import requests
+import requests
 import zipfile
 import shutil
 
