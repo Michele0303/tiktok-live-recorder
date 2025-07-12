@@ -112,11 +112,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Implemented a new feature to record TikTok live streams from followers.",
-        "Improved HTTP requests"
+        "Fixed termux compatibility",
     ]
 
-    VERSION = 6.5
+    VERSION = 6.6
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
