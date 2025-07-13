@@ -42,9 +42,11 @@ def run_recordings(args, mode, cookies):
     if isinstance(args.user, list):
         processes = []
         for user in args.user:
+            args.user = user # set argument user to string for TikTokRecorder to use
+            
             p = multiprocessing.Process(
                 target=record_user,
-                args=(user, args, mode, cookies)
+                args=(args, mode, cookies)
             )
             p.start()
             processes.append(p)
