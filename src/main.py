@@ -1,11 +1,7 @@
-# print banner
 from utils.utils import banner
-
 banner()
 
-# check and install dependencies
 from utils.dependencies import check_and_install_dependencies
-
 check_and_install_dependencies()
 
 from check_updates import check_updates
@@ -17,43 +13,69 @@ import multiprocessing
 from utils.args_handler import validate_and_parse_args
 from utils.utils import read_cookies
 from utils.logger_manager import logger
+from utils.custom_exceptions import TikTokRecorderError
 
 from core.tiktok_recorder import TikTokRecorder
-from utils.custom_exceptions import TikTokRecorderError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def record_user(args, mode, cookies):
-    TikTokRecorder(
-        url=args.url,
-        user=args.user,
-        room_id=args.room_id,
-        mode=mode,
-        automatic_interval=args.automatic_interval,
-        cookies=cookies,
-        proxy=args.proxy,
-        output=args.output,
-        duration=args.duration,
-        use_telegram=args.telegram,
-    ).run()
+def record_user(
+    user, url, room_id, mode, interval, proxy, output, duration,
+    use_telegram
+):
+    try:
+        cookies = read_cookies()
+        TikTokRecorder(
+            url=url,
+            user=user,
+            room_id=room_id,
+            mode=mode,
+            automatic_interval=interval,
+            cookies=cookies,
+            proxy=proxy,
+            output=output,
+            duration=duration,
+            use_telegram=use_telegram,
+        ).run()
+    except Exception as e:
+        logger.error(f"Error in subprocess for @{user}: {e}")
 
-def run_recordings(args, mode, cookies):
+
+def run_recordings(args, mode):
     if isinstance(args.user, list):
         processes = []
         for user in args.user:
-            args.user = user # set argument user to string for TikTokRecorder to use
-            
             p = multiprocessing.Process(
                 target=record_user,
-                args=(args, mode, cookies)
+                args=(
+                    user,
+                    args.url,
+                    args.room_id,
+                    mode,
+                    args.automatic_interval,
+                    args.proxy,
+                    args.output,
+                    args.duration,
+                    args.telegram
+                )
             )
             p.start()
             processes.append(p)
         for p in processes:
             p.join()
     else:
-        record_user(args, mode, cookies)
+        record_user(
+            args.user,
+            args.url,
+            args.room_id,
+            mode,
+            args.automatic_interval,
+            args.proxy,
+            args.output,
+            args.duration,
+            args.telegram
+        )
 
 
 def main():
@@ -68,10 +90,7 @@ def main():
         else:
             logger.info("Skipped update check\n")
 
-        # read cookies from file
-        cookies = read_cookies()
-
-        run_recordings(args, mode, cookies)
+        run_recordings(args, mode)
 
     except TikTokRecorderError as ex:
         logger.error(f"Application Error: {ex}")
@@ -81,4 +100,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()  # NECESSARIO SU WINDOWS
     main()
