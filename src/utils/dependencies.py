@@ -4,7 +4,6 @@ import platform
 from subprocess import SubprocessError
 
 from .logger_manager import logger
-from .utils import is_termux
 
 
 def check_ffmpeg_binary():
@@ -82,6 +81,7 @@ def check_argparse_library():
 
 def check_curl_cffi_library():
     try:
+        from .utils import is_termux
         if is_termux():
             return True
 

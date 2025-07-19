@@ -1,8 +1,5 @@
 import json
 import os
-import platform
-
-import distro
 
 from utils.enums import Info
 
@@ -40,4 +37,6 @@ def is_termux() -> bool:
     Returns:
         bool: True if running in Termux, False otherwise.
     """
+    import distro
+    import platform
     return platform.system().lower() == "linux" and distro.like() == ""
