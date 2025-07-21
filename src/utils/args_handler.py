@@ -103,6 +103,16 @@ def parse_args():
         )
     )
 
+    parser.add_argument(
+        "-no-dependencies-check",
+        dest="dependencies_check",
+        action="store_false",
+        help=(
+            "Disable the check and installation for dependencies before running the program.\n"
+            "By default, dependencies checking and installation is enabled."
+        )
+    )
+
     args = parser.parse_args()
 
     return args

@@ -6,8 +6,6 @@ banner()
 # check and install dependencies
 from utils.dependencies import check_and_install_dependencies
 
-check_and_install_dependencies()
-
 from check_updates import check_updates
 
 import sys
@@ -67,7 +65,13 @@ def main():
                 exit()
         else:
             logger.info("Skipped update check\n")
-
+        
+        # check for dependencies
+        if args.dependencies_check is True:
+            check_and_install_dependencies()
+        else:
+            logger.info("Skipped dependencies check and installation\n")
+            
         # read cookies from file
         cookies = read_cookies()
 
