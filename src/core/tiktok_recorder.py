@@ -43,6 +43,9 @@ class TikTokRecorder:
         self.duration = duration
         self.output = output
 
+        # Presave user specified output path in case it contains placeholders
+        self.dynamic_output = output
+
         # Upload Settings
         self.use_telegram = use_telegram
 
@@ -185,6 +188,27 @@ class TikTokRecorder:
         live_url = self.tiktok.get_live_url(room_id)
         if not live_url:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
+
+        # If dynamic_output contains placeholders, replace them with appropriate values
+        current_year = time.strftime("%Y", time.localtime())
+        current_month = time.strftime("%m", time.localtime())
+        current_day = time.strftime("%d", time.localtime())
+        current_hour = time.strftime("%H", time.localtime())
+        current_minute = time.strftime("%M", time.localtime())
+        current_second = time.strftime("%S", time.localtime())
+
+        try:
+            self.output = self.dynamic_output.format(YYYY=current_year, MM=current_month, DD=current_day, hh=current_hour, mm=current_minute, ss=current_second, user=user)
+        except:
+            self.logger.info("Output contains undefined placeholder(s). Leaving output unchanged.")
+
+        # Try to create a new directory
+        try:
+            if not os.path.exists(self.output):
+                os.makedirs(self.output)
+                self.logger.info("Creating a new directory '{}'".format(self.output))
+        except:
+            self.logger.error("Could not create a directory '{}'".format(self.output))
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 

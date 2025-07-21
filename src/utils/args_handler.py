@@ -72,6 +72,14 @@ def parse_args():
         dest="output",
         help=(
             "Specify the output directory where recordings will be saved.\n"
+            "Output may contain placeholders to make dynamic path:\n"
+            "    {YYYY} - year; {MM} - month; {DD} - day.\n"
+            "    {hh} - hour; {mm} - minute; {ss} - second.\n"
+            "    {user} - username.\n"
+            "Static path examples:\n"
+            "    /output, /my-recordings or /recordings/tiktok\n"
+            "Dynamic path examples:\n"
+            "    /output/{YYYY}{MM}{DD}, /{YYYY}/{MM}/{DD} or /{user}/{YYYY}-{MM}-{DD}\n"
         ),
         action='store'
     )
