@@ -198,8 +198,10 @@ class TikTokRecorder:
         current_second = time.strftime("%S", time.localtime())
 
         try:
-            self.output = self.dynamic_output.format(YYYY=current_year, MM=current_month, DD=current_day, hh=current_hour, mm=current_minute, ss=current_second, user=user)
-        except:
+            self.output = self.dynamic_output.format(YYYY=current_year, MM=current_month, DD=current_day,
+                                                     hh=current_hour, mm=current_minute, ss=current_second,
+                                                     user=user)
+        except (KeyError, ValueError):
             self.logger.info("Output contains undefined placeholder(s). Leaving output unchanged.")
 
         # Try to create a new directory
