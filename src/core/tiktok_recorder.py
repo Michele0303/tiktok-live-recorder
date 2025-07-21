@@ -206,11 +206,10 @@ class TikTokRecorder:
 
         # Try to create a new directory
         try:
-            if not os.path.exists(self.output):
-                os.makedirs(self.output)
-                self.logger.info("Creating a new directory '{}'".format(self.output))
-        except:
-            self.logger.error("Could not create a directory '{}'".format(self.output))
+            os.makedirs(self.output, exist_ok=True)
+            self.logger.info("Creating a new directory '{}'".format(self.output))
+        except (OSError, PermissionError) as e:
+            self.logger.error("Could not create a directory '{}': {}".format(self.output, e))
 
         current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
 
