@@ -39,9 +39,10 @@ def parse_args():
         "-mode",
         dest="mode",
         help=(
-            "Recording mode: (manual, automatic) [Default: manual]\n"
+            "Recording mode: (manual, automatic, followers) [Default: manual]\n"
             "[manual] => Manual live recording.\n"
-            "[automatic] => Automatic live recording when the user is live."
+            "[automatic] => Automatic live recording when the user is live.\n"
+            "[followers] => Automatic live recording of followed users."
         ),
         default="manual",
         action='store'
@@ -114,7 +115,7 @@ def validate_and_parse_args():
     if not args.mode:
         raise ArgsParseError("Missing mode value. Please specify the mode (manual, automatic or followers).")
     if args.mode not in ["manual", "automatic", "followers"]:
-        raise ArgsParseError("Incorrect mode value. Choose between 'manual' and 'automatic'.")
+        raise ArgsParseError("Incorrect mode value. Choose between 'manual', 'automatic' or 'followers'.")
 
     if args.mode in ["manual", "automatic"]:
         if not args.user and not args.room_id and not args.url:

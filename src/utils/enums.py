@@ -112,10 +112,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Fixed termux compatibility",
+        "Fixed windows compatibility",
     ]
 
-    VERSION = 6.6
+    VERSION = 6.7
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
