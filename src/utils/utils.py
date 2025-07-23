@@ -50,3 +50,13 @@ def is_windows() -> bool:
     """
     import platform
     return platform.system().lower() == "windows"
+
+def is_linux() -> bool:
+    """
+    Checks if the script is running on Linux.
+
+    Returns:
+        bool: True if running on Linux, False otherwise.
+    """
+    import platform
+    return platform.system().lower() == "linux"
