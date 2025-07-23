@@ -1,19 +1,14 @@
-from utils.utils import banner
-banner()
-
-from utils.dependencies import check_and_install_dependencies
-check_and_install_dependencies()
-
-from check_updates import check_updates
-
 import sys
 import os
 import multiprocessing
 
+from utils.utils import banner, read_cookies
+from utils.dependencies import check_and_install_dependencies
 from utils.args_handler import validate_and_parse_args
-from utils.utils import read_cookies
 from utils.logger_manager import logger
 from utils.custom_exceptions import TikTokRecorderError
+
+from check_updates import check_updates
 
 from core.tiktok_recorder import TikTokRecorder
 
@@ -101,4 +96,6 @@ def main():
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()  # NECESSARIO SU WINDOWS
+    banner()
+    check_and_install_dependencies()
     main()
