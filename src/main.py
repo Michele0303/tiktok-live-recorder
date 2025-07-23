@@ -18,10 +18,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def record_user(
     user, url, room_id, mode, interval, proxy, output, duration,
-    use_telegram
+    use_telegram, cookies
 ):
     try:
-        cookies = read_cookies()
         TikTokRecorder(
             url=url,
             user=user,
@@ -38,7 +37,7 @@ def record_user(
         logger.error(f"Error in subprocess for @{user}: {e}")
 
 
-def run_recordings(args, mode):
+def run_recordings(args, mode, cookies):
     if isinstance(args.user, list):
         processes = []
         for user in args.user:
@@ -53,7 +52,8 @@ def run_recordings(args, mode):
                     args.proxy,
                     args.output,
                     args.duration,
-                    args.telegram
+                    args.telegram,
+                    cookies
                 )
             )
             p.start()
@@ -70,7 +70,8 @@ def run_recordings(args, mode):
             args.proxy,
             args.output,
             args.duration,
-            args.telegram
+            args.telegram,
+            cookies
         )
 
 
@@ -86,7 +87,8 @@ def main():
         else:
             logger.info("Skipped update check\n")
 
-        run_recordings(args, mode)
+        cookies = read_cookies()
+        run_recordings(args, mode, cookies)
 
     except TikTokRecorderError as ex:
         logger.error(f"Application Error: {ex}")
@@ -95,14 +97,11 @@ def main():
         logger.critical(f"Generic Error: {ex}", exc_info=True)
 
 
-def handle_sigint(sig, frame):
-    print("\nInterruzione manuale ricevuta. Terminazione pulita in corso...")
-    sys.exit(0)
-
-
 if __name__ == "__main__":
-    signal.signal(signal.SIGINT, handle_sigint)
-    multiprocessing.freeze_support()  # NECESSARIO SU WINDOWS
+    signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
+    multiprocessing.freeze_support()
+
     banner()
     check_and_install_dependencies()
+
     main()
