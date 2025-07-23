@@ -117,6 +117,11 @@ class TikTokRecorder:
                 logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
+            except LiveNotFound as ex:
+                logger.error(f"Live not found: {ex}")
+                logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
+                time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
+
             except ConnectionError:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
