@@ -40,3 +40,13 @@ def is_termux() -> bool:
     import distro
     import platform
     return platform.system().lower() == "linux" and distro.like() == ""
+
+def is_windows() -> bool:
+    """
+    Checks if the script is running on Windows.
+
+    Returns:
+        bool: True if running on Windows, False otherwise.
+    """
+    import platform
+    return platform.system().lower() == "windows"

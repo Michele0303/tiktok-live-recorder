@@ -4,6 +4,7 @@ import platform
 from subprocess import SubprocessError
 
 from .logger_manager import logger
+from .utils import is_windows
 
 
 def check_ffmpeg_binary():
@@ -115,7 +116,11 @@ def install_requirements():
         print()
         logger.error('Installing requirements...\n')
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--break-system-packages"],
+            [
+                sys.executable, "-m", "pip", "install", "-r",
+                "requirements.txt",
+                "--break-system-packages" if not is_windows() else "",
+            ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
