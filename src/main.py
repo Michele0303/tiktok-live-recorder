@@ -77,7 +77,14 @@ def run_recordings(args, mode, cookies):
 
 def main():
     try:
+        # print the banner
+        banner()
+
+        # validate and parse command line arguments
         args, mode = validate_and_parse_args()
+
+        # check and install dependencies
+        check_and_install_dependencies()
 
         # check for updates
         if args.update_check is True:
@@ -87,7 +94,10 @@ def main():
         else:
             logger.info("Skipped update check\n")
 
+        # read cookies from the config file
         cookies = read_cookies()
+
+        # run the recordings based on the parsed arguments
         run_recordings(args, mode, cookies)
 
     except TikTokRecorderError as ex:
@@ -100,8 +110,5 @@ def main():
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
     multiprocessing.freeze_support()
-
-    banner()
-    check_and_install_dependencies()
 
     main()
