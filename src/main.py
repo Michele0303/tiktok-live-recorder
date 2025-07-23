@@ -3,16 +3,6 @@ import sys
 import os
 import multiprocessing
 
-from utils.utils import banner, read_cookies
-from utils.dependencies import check_and_install_dependencies
-from utils.args_handler import validate_and_parse_args
-from utils.logger_manager import logger
-from utils.custom_exceptions import TikTokRecorderError
-
-from check_updates import check_updates
-
-from core.tiktok_recorder import TikTokRecorder
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -20,6 +10,8 @@ def record_user(
     user, url, room_id, mode, interval, proxy, output, duration,
     use_telegram, cookies
 ):
+    from core.tiktok_recorder import TikTokRecorder
+    from utils.logger_manager import logger
     try:
         TikTokRecorder(
             url=url,
@@ -76,15 +68,15 @@ def run_recordings(args, mode, cookies):
 
 
 def main():
-    try:
-        # print the banner
-        banner()
+    from utils.args_handler import validate_and_parse_args
+    from utils.utils import read_cookies
+    from utils.logger_manager import logger
+    from utils.custom_exceptions import TikTokRecorderError
+    from check_updates import check_updates
 
+    try:
         # validate and parse command line arguments
         args, mode = validate_and_parse_args()
-
-        # check and install dependencies
-        check_and_install_dependencies()
 
         # check for updates
         if args.update_check is True:
@@ -108,7 +100,17 @@ def main():
 
 
 if __name__ == "__main__":
+    # print the banner
+    from utils.utils import banner
+    banner()
+
+    # check and install dependencies
+    from utils.dependencies import check_and_install_dependencies
+    check_and_install_dependencies()
+
+    # set up signal handling for graceful shutdown
     signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
     multiprocessing.freeze_support()
 
+    # run
     main()

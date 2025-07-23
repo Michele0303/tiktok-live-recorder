@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import requests
 import zipfile
 import shutil
 
@@ -36,7 +37,6 @@ def download_file(url: str, file_name: str) -> None:
         url (str): URL to download the file from.
         file_name (str): Name of the file to save.
     """
-    import requests
     response = requests.get(url, stream=True)
 
     if response.status_code == 200:

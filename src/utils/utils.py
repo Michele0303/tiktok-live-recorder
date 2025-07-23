@@ -8,7 +8,7 @@ def banner() -> None:
     """
     Prints a banner with the name of the tool and its version number.
     """
-    print(Info.BANNER)
+    print(Info.BANNER, flush=True)
 
 
 def read_cookies():
