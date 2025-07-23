@@ -1,3 +1,4 @@
+import signal
 import sys
 import os
 import multiprocessing
@@ -94,7 +95,13 @@ def main():
         logger.critical(f"Generic Error: {ex}", exc_info=True)
 
 
+def handle_sigint(sig, frame):
+    print("\nInterruzione manuale ricevuta. Terminazione pulita in corso...")
+    sys.exit(0)
+
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, handle_sigint)
     multiprocessing.freeze_support()  # NECESSARIO SU WINDOWS
     banner()
     check_and_install_dependencies()
