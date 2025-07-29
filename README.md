@@ -17,11 +17,11 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
   <h1> How To Use </h1>
 
-- [Install on Windows & Linux 💻](#install-on-windows--linux-)
+- [Install on Windows & Linux 💻](#install-on-windows-)
+- [Install on Linux 💻](#install-on-linux-)
 - [Install on Android 📱](#install-on-android-)
 
 </div>
-
 
 ## Install on Windows 💻
 
@@ -46,9 +46,9 @@ $ pip install -r requirements.txt
 $ python main.py -h
   ```
 
-## Install on Linux 💻
+## Install on Linux 🐧
 
-To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
+To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://ffmpeg.org/download.html#build-linux) installed on your computer. From your command line:
 
 <!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
 
