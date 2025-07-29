@@ -23,7 +23,30 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 </div>
 
 
-## Install on Windows & Linux 💻
+## Install on Windows 💻
+
+To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
+
+<!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
+
+<be>
+
+</div>
+
+  ```bash
+# Clone this repository
+$ git clone https://github.com/Michele0303/tiktok-live-recorder
+# Go into the repository
+$ cd tiktok-live-recorder
+# Go into the source code
+$ cd src
+# Install dependencies
+$ pip install -r requirements.txt
+# Run the app on windows
+$ python main.py -h
+  ```
+
+## Install on Linux 💻
 
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
 
@@ -42,8 +65,6 @@ $ cd tiktok-live-recorder
 $ cd src
 # Install dependencies
 $ pip install -r requirements.txt --break-system-packages
-# Run the app on windows
-$ python main.py -h
 # Run the app on linux
 $ python3 main.py -h
   ```
