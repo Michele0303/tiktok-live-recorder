@@ -13,6 +13,7 @@ class TikTokAPI:
     def __init__(self, proxy, cookies):
         self.BASE_URL = 'https://www.tiktok.com'
         self.WEBCAST_URL = 'https://webcast.tiktok.com'
+        self.API_URL = 'https://www.tiktok.com/api-live/user/room/'
 
         self.http_client = HttpClient(proxy, cookies).req
         self._http_client_stream = HttpClient(proxy, cookies).req_stream
@@ -119,38 +120,24 @@ class TikTokAPI:
         """
         Given a username, I get the room_id
         """
-        content = self.http_client.get(
-            url=f'https://www.tiktok.com/@{user}/live'
-        ).text
-
-        if 'Please wait...' in content:
-            content = self.http_client.get(
-                url=f'https://www.tiktok.com/@{user}/live/'
-            ).text
-
-            if 'Please wait...' in content:
-                raise IPBlockedByWAF
-
-        pattern = re.compile(
-            r'<script id="SIGI_STATE" type="application/json">(.*?)</script>',
-            re.DOTALL)
-        match = pattern.search(content)
-
-        if match is None:
+        response = self.http_client.get(self.API_URL, params={
+            "uniqueId": user,
+            "sourceType": 54,
+            "aid": 1988
+        })
+        
+        if response.status_code != 200:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
-        data = json.loads(match.group(1))
-
-        if 'LiveRoom' not in data and 'CurrentRoom' in data:
-            return ""
-
-        room_id = data.get('LiveRoom', {}).get('liveRoomUserInfo', {}).get(
-            'user', {}).get('roomId', None)
-
-        if room_id is None:
+        data = response.json()
+            
+        if (data.get('data') and 
+            data['data'].get('user') and 
+            data['data']['user'].get('roomId')):
+            room_id = data['data']['user']['roomId']
+            return room_id
+        else:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
-
-        return room_id
 
     def get_followers_list(self, sec_uid) -> list:
         """
