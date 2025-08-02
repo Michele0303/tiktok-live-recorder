@@ -26,7 +26,7 @@ def record_user(
             use_telegram=use_telegram,
         ).run()
     except Exception as e:
-        logger.error(f"Error in subprocess for @{user}: {e}")
+        logger.error(f"{e}")
 
 
 def run_recordings(args, mode, cookies):

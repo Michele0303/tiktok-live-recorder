@@ -1,6 +1,7 @@
 import json
 import re
 
+from core.tiktok_waf_solver import WAFSolver
 from http_utils.http_client import HttpClient
 from utils.enums import StatusCode, TikTokError
 from utils.logger_manager import logger
@@ -120,14 +121,16 @@ class TikTokAPI:
         Given a username, I get the room_id
         """
         content = self.http_client.get(
-            url=f'https://www.tiktok.com/@{user}/live'
+            url=f'https://www.tiktok.com/@{user}/live/'
         ).text
 
         if 'Please wait...' in content:
+            waf_cookies = WAFSolver().solve(content)
+            self.http_client.cookies.update(waf_cookies)
+
             content = self.http_client.get(
                 url=f'https://www.tiktok.com/@{user}/live/'
             ).text
-
             if 'Please wait...' in content:
                 raise IPBlockedByWAF
 
