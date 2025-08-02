@@ -125,15 +125,15 @@ class TikTokAPI:
             "sourceType": 54,
             "aid": 1988
         })
-        
+
         if response.status_code != 200:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
         data = response.json()
-            
-        if (data.get('data') and 
-            data['data'].get('user') and 
-            data['data']['user'].get('roomId')):
+
+        if (data.get('data') and
+                data['data'].get('user') and
+                data['data']['user'].get('roomId')):
             room_id = data['data']['user']['roomId']
             return room_id
         else:
