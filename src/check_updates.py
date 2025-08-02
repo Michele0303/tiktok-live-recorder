@@ -70,7 +70,6 @@ def check_updates() -> bool:
         return False
 
     if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
-        print(Info.BANNER)
         print(f"Current version: {InfoOld.__str__(InfoOld.VERSION)}\nNew version available: {Info.__str__(Info.VERSION)}")
         print("\nNew features:")
         for feature in Info.NEW_FEATURES:
