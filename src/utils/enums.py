@@ -112,10 +112,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Implement WAF solver to bypass TikTok's WAF restrictions.",
+        "Fixed IP blocked by WAF using alternative API endpoint",
     ]
 
-    VERSION = 6.8
+    VERSION = 6.9
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
