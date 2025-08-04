@@ -115,7 +115,7 @@ class Info(Enum):
         "Implement WAF solver to bypass TikTok's WAF restrictions.",
     ]
 
-    VERSION = 6.8
+    VERSION = 6.9
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
