@@ -50,8 +50,19 @@ def run_recordings(args, mode, cookies):
             )
             p.start()
             processes.append(p)
-        for p in processes:
-            p.join()
+        try:
+            for p in processes:
+                p.join()
+        except KeyboardInterrupt:
+            print("\n[!] Ctrl-C detected.")
+            try:
+                for p in processes:
+                    p.join()
+            except KeyboardInterrupt:
+                print("\n[!] Forcefully terminating all processes.")
+                for p in processes:
+                    if p.is_alive():
+                        p.terminate()
     else:
         record_user(
             args.user,
@@ -109,7 +120,6 @@ if __name__ == "__main__":
     check_and_install_dependencies()
 
     # set up signal handling for graceful shutdown
-    signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
     multiprocessing.freeze_support()
 
     # run
