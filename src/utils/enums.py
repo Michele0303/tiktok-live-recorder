@@ -112,10 +112,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Fixed IP blocked by WAF using alternative API endpoint",
+        "Fixed interrupt issue when using Ctrl+C",
     ]
 
-    VERSION = 6.9
+    VERSION = 7.0
     BANNER = fr"""
 
   _____ _ _   _____    _     _    _           ___                   _         
