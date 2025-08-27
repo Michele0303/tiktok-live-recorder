@@ -12,5 +12,4 @@ EOF
 fi
 
 # Execute main.py with all passed arguments
-# TODO: Skip update checks
 exec python3 main.py -no-update-check "$@"
