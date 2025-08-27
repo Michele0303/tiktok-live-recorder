@@ -35,7 +35,7 @@ jobs:
           else
             BRANCH_NAME=$(echo "${{ github.ref }}" | sed 's#refs/heads/##' | sed 's#/#-#g')
             SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-            echo "TAGS=robinmeis/tiktok-live-recorder:${SHORT_SHA},robinmeis/tiktok-live-recorder:${BRANCH_NAME}" >> $GITHUB_ENV
+            echo "TAGS=robinmeis/tiktok-live-recorder:${BRANCH_NAME}-${SHORT_SHA},robinmeis/tiktok-live-recorder:${BRANCH_NAME}" >> $GITHUB_ENV
           fi
 
       - name: Build and push Docker image
