@@ -1,4 +1,3 @@
-import signal
 import sys
 import os
 import multiprocessing
@@ -7,11 +6,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def record_user(
-    user, url, room_id, mode, interval, proxy, output, duration,
-    use_telegram, cookies
+    user, url, room_id, mode, interval, proxy, output, duration, use_telegram, cookies
 ):
     from core.tiktok_recorder import TikTokRecorder
     from utils.logger_manager import logger
+
     try:
         TikTokRecorder(
             url=url,
@@ -45,8 +44,8 @@ def run_recordings(args, mode, cookies):
                     args.output,
                     args.duration,
                     args.telegram,
-                    cookies
-                )
+                    cookies,
+                ),
             )
             p.start()
             processes.append(p)
@@ -74,7 +73,7 @@ def run_recordings(args, mode, cookies):
             args.output,
             args.duration,
             args.telegram,
-            cookies
+            cookies,
         )
 
 
@@ -113,10 +112,12 @@ def main():
 if __name__ == "__main__":
     # print the banner
     from utils.utils import banner
+
     banner()
 
     # check and install dependencies
     from utils.dependencies import check_and_install_dependencies
+
     check_and_install_dependencies()
 
     # set up signal handling for graceful shutdown
