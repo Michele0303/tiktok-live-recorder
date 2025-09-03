@@ -87,8 +87,11 @@ class TikTokRecorder:
         If the mode is AUTOMATIC, it continuously checks if the user is live
         and if not, waits for the specified timeout before rechecking.
         If the user is live, it starts recording.
-        """
 
+        if the mode is FOLLOWERS, it continuously checks the followers of
+        the authenticated user. If any follower is live, it starts recording
+        their live stream in a separate process.
+        """
         if self.mode == Mode.MANUAL:
             self.manual_mode()
 
