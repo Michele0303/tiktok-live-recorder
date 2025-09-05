@@ -115,7 +115,14 @@ class TikTokAPI:
         Given a username, I get the room_id
         """
         response = self.http_client.get(
-            self.API_URL, params={"uniqueId": user, "sourceType": 54, "aid": 1988}
+            self.API_URL,
+            params={
+                "uniqueId": user,
+                "sourceType": 54,
+                "aid": 1988,
+                "X-Bogus": "",
+                "X-Gnarly": "",
+            },
         )
 
         if response.status_code != 200:
