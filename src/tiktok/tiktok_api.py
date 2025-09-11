@@ -2,6 +2,7 @@ import json
 import re
 
 from http_utils.http_client import HttpClient
+from tiktok.tiktok_crypto import sign_params
 from utils.enums import StatusCode, TikTokError
 from utils.logger_manager import logger
 from utils.custom_exceptions import (
@@ -18,8 +19,12 @@ class TikTokAPI:
         self.API_URL = "https://www.tiktok.com/api-live/user/room/"
         self.EULER_API = "https://tiktok.eulerstream.com"
 
-        self.http_client = HttpClient(proxy, cookies).req
-        self._http_client_stream = HttpClient(proxy, cookies).req_stream
+        self.USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.127 Safari/537.36"
+
+        self.http_client = HttpClient(self.USER_AGENT, proxy, cookies).req
+        self._http_client_stream = HttpClient(
+            self.USER_AGENT, proxy, cookies
+        ).req_stream
 
     def _is_authenticated(self) -> bool:
         response = self.http_client.get(f"{self.BASE_URL}/foryou")
@@ -111,13 +116,13 @@ class TikTokAPI:
 
         return user, room_id
 
-    def get_room_id_from_user(self, user: str) -> str:
+    def _get_room_id_from_user(self, user: str) -> str:
         params = {"uniqueId": user, "giftInfo": "false"}
 
         response = self.http_client.get(
             f"{self.EULER_API}/webcast/room_info",
             params=params,
-            headers={"x-api-key": ""},
+            headers={"x-api-key": "N/A"},
         )
 
         if response.status_code != 200:
@@ -131,25 +136,28 @@ class TikTokAPI:
 
         return room_id
 
-    def _old_get_room_id_from_user(self, user: str) -> str:
-        """
-        Given a username, I get the room_id
-        """
-        response = self.http_client.get(
-            self.API_URL,
-            params={
+    def get_room_id_from_user(self, user: str) -> str:
+        """Retrieve the room ID associated with the given username."""
+        params_data = {
+            "params": {
                 "uniqueId": user,
                 "sourceType": 54,
                 "aid": 1988,
-                "X-Bogus": "",
-                "X-Gnarly": "",
             },
-        )
+            "url": self.API_URL,
+        }
+
+        signed_url = sign_params(params_data, self.USER_AGENT)
+        response = self.http_client.get(signed_url)
 
         if response.status_code != 200:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
         data = response.json()
+
+        message = data.get("message")
+        if message and message == "user_not_found":
+            raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         if (
             data.get("data")
