@@ -16,6 +16,7 @@ class TikTokAPI:
         self.BASE_URL = "https://www.tiktok.com"
         self.WEBCAST_URL = "https://webcast.tiktok.com"
         self.API_URL = "https://www.tiktok.com/api-live/user/room/"
+        self.EULER_API = "https://tiktok.eulerstream.com"
 
         self.http_client = HttpClient(proxy, cookies).req
         self._http_client_stream = HttpClient(proxy, cookies).req_stream
@@ -111,6 +112,26 @@ class TikTokAPI:
         return user, room_id
 
     def get_room_id_from_user(self, user: str) -> str:
+        params = {"uniqueId": user, "giftInfo": "false"}
+
+        response = self.http_client.get(
+            f"{self.EULER_API}/webcast/room_info",
+            params=params,
+            headers={"x-api-key": ""},
+        )
+
+        if response.status_code != 200:
+            raise UserLiveError(TikTokError.ROOM_ID_ERROR)
+
+        data = response.json()
+
+        room_id = data.get("data", {}).get("room_info", {}).get("id")
+        if not room_id:
+            raise UserLiveError(TikTokError.ROOM_ID_ERROR)
+
+        return room_id
+
+    def _old_get_room_id_from_user(self, user: str) -> str:
         """
         Given a username, I get the room_id
         """
