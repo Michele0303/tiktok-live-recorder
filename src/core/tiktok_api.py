@@ -151,6 +151,10 @@ class TikTokAPI:
 
         data = response.json()
 
+        message = data.get("message")
+        if message and message == "user_not_found":
+            raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
+
         if (
             data.get("data")
             and data["data"].get("user")
