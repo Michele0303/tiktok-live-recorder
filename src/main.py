@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def record_user(
     user, url, room_id, mode, interval, proxy, output, duration, use_telegram, cookies
 ):
-    from core.tiktok_recorder import TikTokRecorder
+    from tiktok.tiktok_recorder import TikTokRecorder
     from utils.logger_manager import logger
 
     try:

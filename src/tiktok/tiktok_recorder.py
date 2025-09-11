@@ -5,7 +5,7 @@ from multiprocessing import Process
 
 from requests import RequestException
 
-from core.tiktok_api import TikTokAPI
+from tiktok.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
 from utils.video_management import VideoManagement
 from upload.telegram import Telegram

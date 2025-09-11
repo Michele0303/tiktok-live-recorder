@@ -6,7 +6,7 @@ from utils.utils import is_termux
 
 
 class HttpClient:
-    def __init__(self, proxy=None, cookies=None):
+    def __init__(self, user_agent, proxy=None, cookies=None):
         self.req = None
         self.req_stream = requests
 
@@ -18,7 +18,7 @@ class HttpClient:
             "Sec-Ch-Ua-Platform": '"Windows"',
             "Accept-Language": "en-US",
             "Upgrade-Insecure-Requests": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.127 Safari/537.36",
+            "User-Agent": user_agent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,application/json,text/plain,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "Sec-Fetch-Site": "none",
             "Sec-Fetch-Mode": "navigate",
@@ -30,6 +30,10 @@ class HttpClient:
         }
 
         self.configure_session()
+
+    @property
+    def get_user_agent(self) -> str:
+        return self.headers["User-Agent"]
 
     def configure_session(self) -> None:
         self.req_stream = requests.Session()
