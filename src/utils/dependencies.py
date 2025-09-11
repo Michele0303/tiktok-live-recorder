@@ -22,27 +22,29 @@ def check_ffmpeg_binary():
 
 def install_ffmpeg_binary():
     try:
-        logger.error('Please, install FFmpeg with this command:')
+        logger.error("Please, install FFmpeg with this command:")
         if platform.system().lower() == "linux":
-
             import distro
+
             linux_family = distro.like()
             if linux_family == "debian":
-                logger.info('sudo apt install ffmpeg')
+                logger.info("sudo apt install ffmpeg")
             elif linux_family == "redhat":
-                logger.info('sudo dnf install ffmpeg / sudo yum install ffmpeg')
+                logger.info("sudo dnf install ffmpeg / sudo yum install ffmpeg")
             elif linux_family == "arch":
-                logger.info('sudo pacman -S ffmpeg')
+                logger.info("sudo pacman -S ffmpeg")
             elif linux_family == "":  # Termux
-                logger.info('pkg install ffmpeg')
+                logger.info("pkg install ffmpeg")
             else:
                 logger.info(f"Distro linux not supported (family: {linux_family})")
 
         elif platform.system().lower() == "windows":
-            logger.info('choco install ffmpeg or follow: https://phoenixnap.com/kb/ffmpeg-windows')
+            logger.info(
+                "choco install ffmpeg or follow: https://phoenixnap.com/kb/ffmpeg-windows"
+            )
 
         elif platform.system().lower() == "darwin":
-            logger.info('brew install ffmpeg')
+            logger.info("brew install ffmpeg")
 
         else:
             logger.info(f"OS not supported: {platform}")
@@ -56,6 +58,9 @@ def install_ffmpeg_binary():
 def check_distro_library():
     try:
         import distro
+
+        _ = distro  # to avoid linting issues
+
         return True
     except ModuleNotFoundError:
         logger.error("distro library is not installed")
@@ -65,6 +70,9 @@ def check_distro_library():
 def check_ffmpeg_library():
     try:
         import ffmpeg
+
+        _ = ffmpeg  # to avoid linting issues
+
         return True
     except ModuleNotFoundError:
         logger.error("ffmpeg-python library is not installed")
@@ -74,6 +82,9 @@ def check_ffmpeg_library():
 def check_argparse_library():
     try:
         import argparse
+
+        _ = argparse  # to avoid linting issues
+
         return True
     except ModuleNotFoundError:
         logger.error("argparse library is not installed")
@@ -83,10 +94,14 @@ def check_argparse_library():
 def check_curl_cffi_library():
     try:
         from .utils import is_termux
+
         if is_termux():
             return True
 
         import curl_cffi
+
+        _ = curl_cffi  # to avoid linting issues
+
         return True
     except ModuleNotFoundError:
         logger.error("curl_cffi library is not installed")
@@ -96,6 +111,9 @@ def check_curl_cffi_library():
 def check_requests_library():
     try:
         import requests
+
+        _ = requests  # to avoid linting issues
+
         return True
     except ModuleNotFoundError:
         logger.error("requests library is not installed")
@@ -105,6 +123,9 @@ def check_requests_library():
 def check_pyrogram_library():
     try:
         import pyrogram
+
+        _ = pyrogram  # to avoid linting issues
+
         return True
     except ModuleNotFoundError:
         logger.error("pyrogram library is not installed")
@@ -114,11 +135,9 @@ def check_pyrogram_library():
 def install_requirements():
     try:
         print()
-        logger.error('Installing requirements...\n')
+        logger.error("Installing requirements...\n")
 
-        cmd = [
-            sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
-        ]
+        cmd = [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
         if is_linux():
             cmd.append("--break-system-packages")
 

@@ -101,6 +101,9 @@ $ python main.py -h
 
 <div align="left">
 
+## Docker
+ToDo
+
 ## Guide
 
 - <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies">How to set cookies in cookies.json</a> 

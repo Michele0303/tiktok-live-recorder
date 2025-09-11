@@ -30,6 +30,7 @@ def read_telegram_config():
     with open(config_path, "r") as f:
         return json.load(f)
 
+
 def is_termux() -> bool:
     """
     Checks if the script is running in Termux.
@@ -39,7 +40,9 @@ def is_termux() -> bool:
     """
     import distro
     import platform
+
     return platform.system().lower() == "linux" and distro.like() == ""
+
 
 def is_windows() -> bool:
     """
@@ -49,7 +52,9 @@ def is_windows() -> bool:
         bool: True if running on Windows, False otherwise.
     """
     import platform
+
     return platform.system().lower() == "windows"
+
 
 def is_linux() -> bool:
     """
@@ -59,4 +64,5 @@ def is_linux() -> bool:
         bool: True if running on Linux, False otherwise.
     """
     import platform
+
     return platform.system().lower() == "linux"
