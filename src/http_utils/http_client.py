@@ -31,10 +31,6 @@ class HttpClient:
 
         self.configure_session()
 
-    @property
-    def get_user_agent(self) -> str:
-        return self.headers["User-Agent"]
-
     def configure_session(self) -> None:
         self.req_stream = requests.Session()
 
