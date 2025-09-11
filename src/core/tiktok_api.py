@@ -111,7 +111,7 @@ class TikTokAPI:
 
         return user, room_id
 
-    def get_room_id_from_user(self, user: str) -> str:
+    def _old_get_room_id_from_user(self, user: str) -> str:
         params = {"uniqueId": user, "giftInfo": "false"}
 
         response = self.http_client.get(
@@ -131,7 +131,7 @@ class TikTokAPI:
 
         return room_id
 
-    def _old_get_room_id_from_user(self, user: str) -> str:
+    def get_room_id_from_user(self, user: str) -> str:
         """
         Given a username, I get the room_id
         """
@@ -150,6 +150,10 @@ class TikTokAPI:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
         data = response.json()
+
+        message = data.get("message")
+        if message and message == "user_not_found":
+            raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         if (
             data.get("data")
