@@ -119,10 +119,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Fixed interrupt issue when using Ctrl+C",
+        "Resolved issues when retrieving room ID from username.",
     ]
 
-    VERSION = 7.0
+    VERSION = 7.1
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
