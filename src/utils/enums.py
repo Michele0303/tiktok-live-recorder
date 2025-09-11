@@ -119,10 +119,11 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Fixed interrupt issue when using Ctrl+C",
+        "Implement X-Gnarly and X-Bogus signature generation for API requests",
+        "Fixed issues with room id retrieval",
     ]
 
-    VERSION = 7.0
+    VERSION = 7.1
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
