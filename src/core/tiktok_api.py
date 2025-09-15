@@ -132,27 +132,29 @@ class TikTokAPI:
 
         return room_id
 
-    def _tikrec_get_room_id_from_user(self, user: str) -> str:
+    def _tikrec_get_room_id_signed_url(self, user: str) -> str:
         response = self.http_client.get(
-            f"{self.TIKREC_API}/tiktok/room/info",
+            f"{self.TIKREC_API}/tiktok/room/api/sign",
             params={"unique_id": user},
         )
 
         data = response.json()
 
-        room_id = data.get("room_id")
-        return room_id
+        signed_url = data.get("signed_url")
+        return signed_url
 
     def get_room_id_from_user(self, user: str) -> str | None:
-        """
-        Given a username, get the room_id.
-        """
-        try:
-            room_id = self._tikrec_get_room_id_from_user(user)
-            return room_id
-        except Exception as e:
-            logger.error(f"Get Room ID TikRec API failed: {e}")
-            return None
+        """Given a username, get the room_id."""
+        signed_url = self._tikrec_get_room_id_signed_url(user)
+
+        response = self.http_client.get(signed_url)
+        content = response.text
+
+        if not content or "Please wait" in content:
+            raise UserLiveError(TikTokError.WAF_BLOCKED)
+
+        data = response.json()
+        return (data.get("data") or {}).get("user", {}).get("roomId")
 
     def get_followers_list(self, sec_uid) -> list:
         """
