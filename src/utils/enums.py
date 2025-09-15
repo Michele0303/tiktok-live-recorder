@@ -119,10 +119,10 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
-        "Resolved issues when retrieving room ID from username.",
+        "Added Tikrec API Integration to retrive room id",
     ]
 
-    VERSION = 7.2
+    VERSION = 7.3
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
