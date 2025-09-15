@@ -17,7 +17,7 @@ class TikTokAPI:
         self.WEBCAST_URL = "https://webcast.tiktok.com"
         self.API_URL = "https://www.tiktok.com/api-live/user/room/"
         self.EULER_API = "https://tiktok.eulerstream.com"
-        self.TIKREC_API = 'https://tikrec.com'
+        self.TIKREC_API = "https://tikrec.com"
 
         self.http_client = HttpClient(proxy, cookies).req
         self._http_client_stream = HttpClient(proxy, cookies).req_stream
@@ -134,13 +134,13 @@ class TikTokAPI:
 
     def _tikrec_get_room_id_from_user(self, user: str) -> str:
         response = self.http_client.get(
-            f'{self.TIKREC_API}/tiktok/room/info',
+            f"{self.TIKREC_API}/tiktok/room/info",
             params={"unique_id": user},
         )
 
         data = response.json()
 
-        room_id = data.get('room_id')
+        room_id = data.get("room_id")
         return room_id
 
     def get_room_id_from_user(self, user: str) -> str | None:
