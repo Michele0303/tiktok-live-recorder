@@ -68,10 +68,11 @@ class TikTokRecorder:
                 self.room_id = self.tiktok.get_room_id_from_user(self.user)
 
             logger.info(f"USERNAME: {self.user}" + ("\n" if not self.room_id else ""))
-            logger.info(
-                f"ROOM_ID:  {self.room_id}"
-                + ("\n" if not self.tiktok.is_room_alive(self.room_id) else "")
-            )
+            if self.room_id:
+                logger.info(
+                    f"ROOM_ID:  {self.room_id}"
+                    + ("\n" if not self.tiktok.is_room_alive(self.room_id) else "")
+                )
 
         # If proxy is provided, set up the HTTP client without the proxy
         if proxy:

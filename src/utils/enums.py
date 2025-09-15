@@ -122,7 +122,7 @@ class Info(Enum):
         "Resolved issues when retrieving room ID from username.",
     ]
 
-    VERSION = 7.1
+    VERSION = 7.2
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
