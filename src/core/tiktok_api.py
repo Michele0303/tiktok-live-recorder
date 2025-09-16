@@ -140,8 +140,8 @@ class TikTokAPI:
 
         data = response.json()
 
-        signed_url = data.get("signed_url")
-        return signed_url
+        signed_path = data.get("signed_path")
+        return f"{self.BASE_URL}{signed_path}"
 
     def get_room_id_from_user(self, user: str) -> str | None:
         """Given a username, get the room_id."""
