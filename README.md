@@ -103,10 +103,10 @@ $ python main.py -h
 
 ## Docker
 TikTok Live Recorder can easily be run using Docker.  
-The example below saves recordings into a local `output` folder (created if it doesn’t exist):
+The example below saves recordings into a local `./output` folder (created if it doesn’t exist):
 
 ```bash
-sudo docker run \
+$ sudo docker run \
   -v ./output:/output \
   michele0303/tiktok-live-recorder:latest \
   -output /output \
