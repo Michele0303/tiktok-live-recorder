@@ -5,7 +5,9 @@ import zipfile
 import shutil
 
 URL = "https://raw.githubusercontent.com/Michele0303/tiktok-live-recorder/main/src/utils/enums.py"
-URL_REPO = "https://github.com/Michele0303/tiktok-live-recorder/archive/refs/heads/main.zip"
+URL_REPO = (
+    "https://github.com/Michele0303/tiktok-live-recorder/archive/refs/heads/main.zip"
+)
 FILE_TEMP = "enums_temp.py"
 FILE_NAME_UPDATE = URL_REPO.split("/")[-1]
 
@@ -13,8 +15,9 @@ FILE_NAME_UPDATE = URL_REPO.split("/")[-1]
 def delete_tmp_file():
     try:
         os.remove(FILE_TEMP)
-    except:
-        pass
+    except Exception as ex:
+        print(ex)
+
 
 def check_file(path: str) -> bool:
     """
@@ -70,7 +73,9 @@ def check_updates() -> bool:
         return False
 
     if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
-        print(f"Current version: {InfoOld.__str__(InfoOld.VERSION)}\nNew version available: {Info.__str__(Info.VERSION)}")
+        print(
+            f"Current version: {InfoOld.__str__(InfoOld.VERSION)}\nNew version available: {Info.__str__(Info.VERSION)}"
+        )
         print("\nNew features:")
         for feature in Info.NEW_FEATURES:
             print("*", feature)
@@ -106,7 +111,7 @@ def check_updates() -> bool:
             shutil.copy2(source, destination)
         # If it's a directory, copy its contents file by file
         elif source.is_dir():
-            for sub_item in source.rglob('*'):
+            for sub_item in source.rglob("*"):
                 sub_destination = destination / sub_item.relative_to(source)
                 if sub_item.is_file():
                     sub_destination.parent.mkdir(parents=True, exist_ok=True)

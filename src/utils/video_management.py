@@ -7,7 +7,6 @@ from utils.logger_manager import logger
 
 
 class VideoManagement:
-
     @staticmethod
     def wait_for_file_release(file, timeout=10):
         """
@@ -16,7 +15,7 @@ class VideoManagement:
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
-                with open(file, 'ab'):
+                with open(file, "ab"):
                     return True
             except PermissionError:
                 time.sleep(0.5)
@@ -30,17 +29,21 @@ class VideoManagement:
         logger.info("Converting {} to MP4 format...".format(file))
 
         if not VideoManagement.wait_for_file_release(file):
-            logger.error(f"File {file} is still locked after waiting. Skipping conversion.")
+            logger.error(
+                f"File {file} is still locked after waiting. Skipping conversion."
+            )
             return
 
         try:
             ffmpeg.input(file).output(
-                file.replace('_flv.mp4', '.mp4'),
-                c='copy',
-                y='-y',
+                file.replace("_flv.mp4", ".mp4"),
+                c="copy",
+                y="-y",
             ).run(quiet=True)
         except ffmpeg.Error as e:
-            logger.error(f"ffmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}")
+            logger.error(
+                f"ffmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"
+            )
 
         os.remove(file)
 
