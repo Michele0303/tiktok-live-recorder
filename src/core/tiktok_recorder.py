@@ -1,7 +1,7 @@
 import os
 import time
 from http.client import HTTPException
-from multiprocessing import Process
+from threading import Thread
 
 from requests import RequestException
 
@@ -159,11 +159,13 @@ class TikTokRecorder:
 
                         logger.info(f"@{follower} is live. Starting recording...")
 
-                        process = Process(
-                            target=self.start_recording, args=(follower, room_id)
+                        thread = Thread(
+                            target=self.start_recording,
+                            args=(follower, room_id),
+                            daemon=True,
                         )
-                        process.start()
-                        active_recordings[follower] = process
+                        thread.start()
+                        active_recordings[follower] = thread
 
                         time.sleep(2.5)
 
