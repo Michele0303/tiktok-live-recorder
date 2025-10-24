@@ -27,7 +27,7 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 ## Install on Windows 💻
 
-To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
+To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3.11+](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
 
 <!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
 
@@ -50,7 +50,7 @@ $ python main.py -h
 
 ## Install on Linux 🐧
 
-To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3](https://www.python.org/downloads/) and [FFmpeg](https://ffmpeg.org/download.html#build-linux) installed on your computer. From your command line:
+To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3.11+](https://www.python.org/downloads/) and [FFmpeg](https://ffmpeg.org/download.html#build-linux) installed on your computer. From your command line:
 
 <!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
 
@@ -102,7 +102,16 @@ $ python main.py -h
 <div align="left">
 
 ## Docker
-ToDo
+TikTok Live Recorder can easily be run using Docker.  
+The example below saves recordings into a local `./output` folder (created if it doesn’t exist):
+
+```bash
+$ sudo docker run \
+  -v ./output:/output \
+  michele0303/tiktok-live-recorder:latest \
+  -output /output \
+  -user <username>
+```
 
 ## Guide
 
