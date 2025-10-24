@@ -37,9 +37,13 @@ class HttpClient:
         if is_termux():
             self.req = self.req_stream
         else:
-            from curl_cffi import Session
+            from curl_cffi import Session, CurlSslVersion, CurlOpt
 
-            self.req = Session(impersonate="chrome136")
+            self.req = Session(
+                impersonate="chrome136",
+                http_version="v1",
+                curl_options={CurlOpt.SSLVERSION: CurlSslVersion.TLSv1_2},
+            )
 
         self.req.headers.update(self.headers)
         self.req_stream.headers.update(self.headers)

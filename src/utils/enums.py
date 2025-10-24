@@ -60,26 +60,26 @@ class TikTokError(Enum):
     COUNTRY_BLACKLISTED = (
         "Captcha required or country blocked. "
         "Use a VPN, room_id, or authenticate with cookies.\n"
-        "How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n"
-        "How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/GUIDE.md#how-to-get-room_id\n"
+        "How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies\n"
+        "How to get room_id: https://github.com/Michele0303/TikTok-Live-Recorder/blob/main/docs/GUIDE.md#how-to-get-room_id\n"
     )
 
     COUNTRY_BLACKLISTED_AUTO_MODE = (
         "Automatic mode is available only in unblocked countries. "
         "Use a VPN or authenticate with cookies.\n"
-        "How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n"
+        "How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies\n"
     )
 
     COUNTRY_BLACKLISTED_FOLLOWERS_MODE = (
         "Followers mode is available only in unblocked countries. "
         "Use a VPN or authenticate with cookies.\n"
-        "How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies\n"
+        "How to set cookies: https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies\n"
     )
 
     ACCOUNT_PRIVATE = (
         "Account is private, login required. "
         "Please add your cookies to cookies.json "
-        "https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies"
+        "https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies"
     )
 
     ACCOUNT_PRIVATE_FOLLOW = (
@@ -89,7 +89,7 @@ class TikTokError(Enum):
     LIVE_RESTRICTION = (
         "Live is private, login required. "
         "Please add your cookies to cookies.json"
-        "https://github.com/Michele0303/tiktok-live-recorder/blob/main/GUIDE.md#how-to-set-cookies"
+        "https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies"
     )
 
     USERNAME_ERROR = "Username / RoomID not found or the user has never been in live."
@@ -118,11 +118,9 @@ class Info(Enum):
     def __iter__(self):
         return iter(self.value)
 
-    NEW_FEATURES = [
-        "Added Tikrec API Integration to retrive room id",
-    ]
+    NEW_FEATURES = ["Fixed followers mode", "Minor"]
 
-    VERSION = 7.3
+    VERSION = 7.4
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         

@@ -140,8 +140,8 @@ class TikTokAPI:
 
         data = response.json()
 
-        signed_url = data.get("signed_url")
-        return signed_url
+        signed_path = data.get("signed_path")
+        return f"{self.BASE_URL}{signed_path}"
 
     def get_room_id_from_user(self, user: str) -> str | None:
         """Given a username, get the room_id."""
@@ -164,22 +164,36 @@ class TikTokAPI:
         cursor = 0
         has_more = True
 
+        ms_token = self.http_client.get(
+            f"{self.BASE_URL}/api/user/list/?"
+            "WebIdLastTime=1747672102&aid=1988&app_language=it-IT&app_name=tiktok_web&"
+            "browser_language=it-IT&browser_name=Mozilla&browser_online=true&"
+            "browser_platform=Linux%20x86_64&"
+            "browser_version=5.0%20%28X11%3B%20Linux%20x86_64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F140.0.0.0%20Safari%2F537.36&"
+            "channel=tiktok_web&cookie_enabled=true&count=5&data_collection_enabled=true&"
+            "device_id=7506194516308166166&device_platform=web_pc&focus_state=true&"
+            "from_page=user&history_len=3&is_fullscreen=false&is_page_visible=true&"
+            "maxCursor=0&minCursor=0&odinId=7246312836442604570&os=linux&priority_region=IT&"
+            "referer=&region=IT&root_referer=https%3A%2F%2Fwww.tiktok.com%2Flive&scene=21&"
+            "screen_height=1080&screen_width=1920&tz_name=Europe%2FRome&user_is_login=true&"
+            "verifyFp=verify_mh4yf0uq_rdjp1Xwt_OoTk_4Jrf_AS8H_sp31opbnJFre&webcast_language=it-IT&"
+            "msToken=GphHoLvRR4QxA5AWVwDkrs3AbumoK5H8toE8LVHtj6cce3ToGdXhMfvDWzOXG-0GXUWoaGVHrwGNA4k_NnjuFFnHgv2S5eMjsvtkAhwMPa13xLmvP7tumx0KreFjPwTNnOj-BvAkPdO5Zrev3hoFBD9lHVo=&X-Bogus=&X-Gnarly="
+        ).cookies["msToken"]
+
         while has_more:
             url = (
-                f"{self.BASE_URL}/api/user/list/"
-                "?WebIdLastTime=1747672102"
-                "&aid=1988&app_language=it-IT&app_name=tiktok_web"
+                "https://www.tiktok.com/api/user/list/?"
+                "WebIdLastTime=1747672102&aid=1988&app_language=it-IT&app_name=tiktok_web"
                 "&browser_language=it-IT&browser_name=Mozilla&browser_online=true"
-                "&browser_platform=Linux%20x86_64"
-                "&browser_version=5.0%20%28X11%3B%20Linux%20x86_64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F136.0.0.0%20Safari%2F537.36"
-                "&channel=tiktok_web&cookie_enabled=true&count=30&data_collection_enabled=true"
-                "&device_id=7506194516308166166&device_platform=web_pc&focus_state=true"
-                "&from_page=user&history_len=2&is_fullscreen=false&is_page_visible=true"
-                f"&maxCursor={cursor}&minCursor={cursor}"
-                "&odinId=7246312836442604570&os=linux&priority_region=IT"
-                "&referer=&region=IT&scene=21&screen_height=1080&screen_width=1920"
-                f"&secUid={sec_uid}&tz_name=Europe%2FRome&user_is_login=true"
-                "&webcast_language=it-IT&msToken=&X-Bogus=&X-Gnarly="
+                "&browser_platform=Linux%20x86_64&browser_version=5.0%20%28X11%3B%20Linux%20x86_64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F140.0.0.0%20Safari%2F537.36&channel=tiktok_web&"
+                "cookie_enabled=true&count=5&data_collection_enabled=true&device_id=7506194516308166166"
+                "&device_platform=web_pc&focus_state=true&from_page=user&history_len=3&"
+                f"is_fullscreen=false&is_page_visible=true&maxCursor={cursor}&minCursor={cursor}&"
+                "odinId=7246312836442604570&os=linux&priority_region=IT&referer=&"
+                "region=IT&scene=21&screen_height=1080&screen_width=1920"
+                "&tz_name=Europe%2FRome&user_is_login=true&"
+                f"secUid={sec_uid}&verifyFp=verify_mh4yf0uq_rdjp1Xwt_OoTk_4Jrf_AS8H_sp31opbnJFre&"
+                f"webcast_language=it-IT&msToken={ms_token}&X-Bogus=&X-Gnarly="
             )
 
             response = self.http_client.get(url)
