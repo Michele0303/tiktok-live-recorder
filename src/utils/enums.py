@@ -118,11 +118,9 @@ class Info(Enum):
     def __iter__(self):
         return iter(self.value)
 
-    NEW_FEATURES = [
-        "Added Tikrec API Integration to retrive room id",
-    ]
+    NEW_FEATURES = ["Fixed followers mode", "Minor"]
 
-    VERSION = 7.3
+    VERSION = 7.4
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
