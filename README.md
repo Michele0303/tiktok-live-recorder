@@ -22,6 +22,7 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 - [Install on Windows & Linux 💻](#install-on-windows-)
 - [Install on Linux 💻](#install-on-linux-)
 - [Install on Android 📱](#install-on-android-)
+- [Docker 🐋](#docker-)
 
 </div>
 
@@ -101,17 +102,25 @@ $ python main.py -h
 
 <div align="left">
 
-## Docker
+## Docker 🐋
 TikTok Live Recorder can easily be run using Docker.  
 The example below saves recordings into a local `./output` folder (created if it doesn’t exist):
 
 ```bash
 $ sudo docker run \
+  -e SESSIONID_SS=<session_id>
   -v ./output:/output \
   michele0303/tiktok-live-recorder:latest \
   -output /output \
   -user <username>
 ```
+
+### Environment variables
+The following environment variables can be used to create cookies.json on container startup:
+- `SESSIONID_SS` - Your session id
+- `TT_TARGET_IDC` (optional) - defaults to `useast2a` if not specified
+
+Retrieve the session id as described <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies">here</a>.
 
 ## Guide
 
