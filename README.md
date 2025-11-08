@@ -122,6 +122,9 @@ The following environment variables can be used to create cookies.json on contai
 
 Retrieve the session id as described <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies">here</a>.
 
+### Configuration volume
+Configuration files are stored in `/config` by default. Mount a volume using `-v ./config:/config` to provide the <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies">cookies.json</a> as a file.
+
 ## Guide
 
 - <a href="https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies">How to set cookies in cookies.json</a>
