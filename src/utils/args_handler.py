@@ -101,6 +101,14 @@ def parse_args():
         ),
     )
 
+    parser.add_argument(
+        "-config-path",
+        dest="config_path",
+        help=("Overwrite the default config path."),
+        default=None,
+        action="store",
+    )
+
     args = parser.parse_args()
 
     return args

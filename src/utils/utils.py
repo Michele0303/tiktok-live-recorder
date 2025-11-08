@@ -11,12 +11,14 @@ def banner() -> None:
     print(Info.BANNER, flush=True)
 
 
-def read_cookies():
+def read_cookies(config_path=None):
     """
     Loads the config file and returns it.
     """
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(script_dir, "..", "cookies.json")
+    if config_path is None:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(script_dir, "..", "cookies.json")
+        
     with open(config_path, "r") as f:
         return json.load(f)
 

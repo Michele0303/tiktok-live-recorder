@@ -97,7 +97,7 @@ def main():
             logger.info("Skipped update check\n")
 
         # read cookies from the config file
-        cookies = read_cookies()
+        cookies = read_cookies(args.config_path)
 
         # run the recordings based on the parsed arguments
         run_recordings(args, mode, cookies)
