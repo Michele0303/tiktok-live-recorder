@@ -48,5 +48,8 @@ COPY --from=builder /app /app
 # Make entrypoint executable
 RUN chmod +x /app/entrypoint.sh
 
+# Create a writable /config directory
+RUN mkdir -p /config && chmod 777 /config
+
 # Set entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
