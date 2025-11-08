@@ -18,7 +18,9 @@ def read_cookies(config_path=None):
     if config_path is None:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(script_dir, "..", "cookies.json")
-        
+    else:
+        config_path = os.path.join(config_path, "cookies.json")
+
     with open(config_path, "r") as f:
         return json.load(f)
 
