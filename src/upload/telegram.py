@@ -1,7 +1,7 @@
+import asyncio
 from pathlib import Path
 
-from pyrogram import Client
-from pyrogram.enums import ParseMode
+from telethon import TelegramClient
 
 from utils.logger_manager import logger
 from utils.utils import read_telegram_config
@@ -17,58 +17,71 @@ class Telegram:
 
         self.api_id = config["api_id"]
         self.api_hash = config["api_hash"]
-        self.bot_token = config["bot_token"]
         self.chat_id = config["chat_id"]
 
-        self.app = Client(
-            "telegram_session",
+        self.client = TelegramClient(
+            "tiktok_live_recorder_session",
             api_id=self.api_id,
             api_hash=self.api_hash,
-            bot_token=self.bot_token,
         )
 
     def upload(self, file_path: str):
         """
-        Upload a file to the bot's own chat (saved messages).
+        Upload a file to the user's Saved Messages via Telethon.
         """
-        try:
-            self.app.start()
 
-            me = self.app.get_me()
-            is_premium = me.is_premium
-            max_size = (
-                PREMIUM_USER_MAX_FILE_SIZE if is_premium else FREE_USER_MAX_FILE_SIZE
-            )
+        async def _upload():
+            try:
+                await self.client.connect()
 
-            file_size = Path(file_path).stat().st_size
-            logger.info(
-                f"File to upload: {Path(file_path).name} "
-                f"({round(file_size / (1024 * 1024))} MB)"
-            )
+                if not await self.client.is_user_authorized():
+                    await self.client.start()
 
-            if file_size > max_size:
-                logger.warning(
-                    "The file is too large to be uploaded with this type of account."
+                me = await self.client.get_me()
+                is_premium = me.premium
+                max_size = (
+                    PREMIUM_USER_MAX_FILE_SIZE
+                    if is_premium
+                    else FREE_USER_MAX_FILE_SIZE
                 )
-                return
 
-            logger.info(
-                "Uploading video on Telegram... This may take a while depending on the file size."
-            )
-            self.app.send_document(
-                chat_id=self.chat_id,
-                document=file_path,
-                caption=(
-                    '🎥 <b>Video recorded via <a href="https://github.com/Michele0303/tiktok-live-recorder">'
-                    "TikTok Live Recorder</a></b>"
-                ),
-                parse_mode=ParseMode.HTML,
-                force_document=True,
-            )
-            logger.info("File successfully uploaded to Telegram.\n")
+                file_size = Path(file_path).stat().st_size
+                logger.info(
+                    f"File to upload: {Path(file_path).name} "
+                    f"({round(file_size / (1024 * 1024))} MB)"
+                )
 
-        except Exception as e:
-            logger.error(f"Error during Telegram upload: {e}\n")
+                if file_size > max_size:
+                    logger.warning(
+                        "The file is too large to be uploaded "
+                        "with this type of account."
+                    )
+                    return
 
-        finally:
-            self.app.stop()
+                logger.info(
+                    "Uploading video on Telegram... "
+                    "This may take a while depending on file size."
+                )
+
+                await self.client.send_file(
+                    entity=self.chat_id,
+                    file=file_path,
+                    caption=(
+                        "🎥 <b>Video recorded via "
+                        '<a href="https://github.com/Michele0303/'
+                        'tiktok-live-recorder">'
+                        "TikTok Live Recorder</a></b>"
+                    ),
+                    parse_mode="html",
+                    force_document=True,
+                )
+
+                logger.info("File successfully uploaded to Telegram.\n")
+
+            except Exception as e:
+                logger.error(f"Error during Telegram upload: {e}\n")
+
+            finally:
+                await self.client.disconnect()
+
+        asyncio.run(_upload())
