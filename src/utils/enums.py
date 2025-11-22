@@ -118,9 +118,13 @@ class Info(Enum):
     def __iter__(self):
         return iter(self.value)
 
-    NEW_FEATURES = ["Fixed followers mode", "Minor"]
+    NEW_FEATURES = [
+        "Replaced pyrogram to telethon library.",
+        "Fixed termux dependencies error.",
+        "Minor.",
+    ]
 
-    VERSION = 7.4
+    VERSION = 7.5
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
