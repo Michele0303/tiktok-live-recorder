@@ -1,5 +1,6 @@
 import os
 import time
+import subprocess
 from http.client import HTTPException
 from threading import Thread
 
@@ -194,79 +195,68 @@ class TikTokRecorder:
 
     def start_recording(self, user, room_id):
         """
-        Start recording live
+        Starts recording the livestream directly with FFmpeg for more stability.
         """
-        live_url = self.tiktok.get_live_url(room_id)
-        if not live_url:
-            raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
+        try:
+            live_url = self.tiktok.get_live_url(room_id)
+            if not live_url:
+                raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
-        current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
+            current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
+            
+            # Prepare file path
+            output_folder = self.output or ""
+            if output_folder and not output_folder.endswith(("/", "\\")):
+                output_folder += os.path.sep
 
-        if isinstance(self.output, str) and self.output != "":
-            if not (self.output.endswith("/") or self.output.endswith("\\")):
-                if os.name == "nt":
-                    self.output = self.output + "\\"
-                else:
-                    self.output = self.output + "/"
+            # Filename without "_flv" as we are creating an MP4 directly
+            output_filename = f"{output_folder}TK_{user}_{current_date}.mp4"
 
-        output = f"{self.output if self.output else ''}TK_{user}_{current_date}_flv.mp4"
+            logger.info(f"Starting FFmpeg recording for @{user}...")
+            logger.info(f"Stream URL: {live_url}")
+            logger.info(f"Output file: {output_filename}")
+            logger.info("[PRESS CTRL + C TO STOP RECORDING]")
 
-        if self.duration:
-            logger.info(f"Started recording for {self.duration} seconds ")
+            # Assemble FFmpeg command for robust re-encoding
+            ffmpeg_command = [
+                "ffmpeg",
+                "-hide_banner",
+                "-loglevel", "error",
+                "-i", live_url,
+                "-c:v", "libx264",           # Re-encode video to fix stream errors
+                "-preset", "veryfast",       # Good compromise between CPU load & quality
+                "-crf", "23",                # Quality (18=better/larger, 28=worse/smaller)
+                "-c:a", "copy",              # Copy audio stream directly (it's usually stable)
+                "-bsf:a", "aac_adtstoasc",    # Important for MP4 compatibility
+                output_filename
+            ]
+
+            # Start the FFmpeg process and wait for it to complete
+            process = subprocess.Popen(ffmpeg_command)
+            process.wait()
+
+        except KeyboardInterrupt:
+            logger.info("Recording stopped by user.")
+            if 'process' in locals() and process.poll() is None:
+                process.terminate()
+                process.wait()
+                
+        except LiveNotFound as ex:
+            logger.error(f"Error: {ex}")
+            return # Exit the method if the live URL was not found
+
+        except Exception as ex:
+            logger.error(f"Unexpected error during recording: {ex}")
+            return
+
+        # Check if the recording was successful (file exists and is not empty)
+        if os.path.exists(output_filename) and os.path.getsize(output_filename) > 0:
+            logger.info(f"Recording finished: {output_filename}\n")
+            if self.use_telegram:
+                Telegram().upload(output_filename)
         else:
-            logger.info("Started recording...")
+            logger.warning("Recording failed. The output file was not created or is empty.")
 
-        buffer_size = 512 * 1024  # 512 KB buffer
-        buffer = bytearray()
-
-        logger.info("[PRESS CTRL + C ONCE TO STOP]")
-        with open(output, "wb") as out_file:
-            stop_recording = False
-            while not stop_recording:
-                try:
-                    if not self.tiktok.is_room_alive(room_id):
-                        logger.info("User is no longer live. Stopping recording.")
-                        break
-
-                    start_time = time.time()
-                    for chunk in self.tiktok.download_live_stream(live_url):
-                        buffer.extend(chunk)
-                        if len(buffer) >= buffer_size:
-                            out_file.write(buffer)
-                            buffer.clear()
-
-                        elapsed_time = time.time() - start_time
-                        if self.duration and elapsed_time >= self.duration:
-                            stop_recording = True
-                            break
-
-                except ConnectionError:
-                    if self.mode == Mode.AUTOMATIC:
-                        logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                        time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
-
-                except (RequestException, HTTPException):
-                    time.sleep(2)
-
-                except KeyboardInterrupt:
-                    logger.info("Recording stopped by user.")
-                    stop_recording = True
-
-                except Exception as ex:
-                    logger.error(f"Unexpected error: {ex}\n")
-                    stop_recording = True
-
-                finally:
-                    if buffer:
-                        out_file.write(buffer)
-                        buffer.clear()
-                    out_file.flush()
-
-        logger.info(f"Recording finished: {output}\n")
-        VideoManagement.convert_flv_to_mp4(output)
-
-        if self.use_telegram:
-            Telegram().upload(output.replace("_flv.mp4", ".mp4"))
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
