@@ -1,0 +1,32 @@
+**Key Changes & Improvements:**
+
+1.  **Enhanced File Integrity Validation (FFprobe):**
+    *   Integrated `ffprobe` (with `-count_packets`) to perform deep validation of recorded and converted video files. This ensures that only valid files are processed further (e.g., used for deletion of originals), significantly reducing the risk of data loss from corrupted recordings.
+    *   The raw FLV file is validated immediately after recording.
+    *   The converted MP4 file is validated before confirming success.
+
+2.  **Flexible Interactive Post-Processing on Manual Interruption (Ctrl+C):**
+    *   When recording is stopped manually by `Ctrl+C`, the user is now presented with a series of interactive prompts:
+        *   Choice to re-encode (slower, fixes glitches) or quickly remux (copy streams) to MP4. This decision can now be made on-the-fly, overriding initial CLI arguments if desired.
+        *   Choice to delete the original FLV file (unless `--keep-flv` is specified).
+    *   This provides granular control when user attention is available, balancing speed and file quality needs.
+
+3.  **Automatic Post-Processing for Unattended Operations:**
+    *   In `automatic` and `followers` modes, when a recording ends naturally (streamer disconnects, `duration` reached), the post-processing (conversion to MP4, deletion of original FLV) is performed entirely without user intervention.
+    *   Introduced `--keep-flv` flag to allow users to retain the original FLV file after automatic conversion, preventing automatic deletion in unattended modes.
+
+4.  **Dedicated Video Repair Utility (`-repair`):**
+    *   Added a new command-line argument `-repair <file_path>` that allows users to re-encode and repair a specific corrupted video file using advanced `ffmpeg` flags (`-fflags +genpts`, `-avoid_negative_ts make_zero`, `-ignore_unknown`).
+    *   This is a standalone tool for salvaging damaged recordings.
+
+5.  **Improved Verbose Logging (`-v`):**
+    *   Enhanced the `--verbose` (`-v`) flag to provide detailed step-by-step logs, including API calls, FFmpeg commands, file validation statuses, and buffering information. This greatly aids in debugging and understanding program flow.
+    *   FFmpeg output is now displayed in verbose mode.
+
+6.  **Robust Program Termination:**
+    *   Fixed an issue where `Ctrl+C` in `automatic` or `followers` mode would restart the monitoring loop instead of exiting the program. `Ctrl+C` now reliably terminates the entire application.
+
+7.  **Enhanced Compatibility:**
+    *   Removed internal `keyboard` library dependency, resolving `UserWarning` and potential `AssertionError` crashes on systems with restricted input device access (e.g., WSL, Docker environments).
+
+These changes collectively make the TikTok Live Recorder more resilient, user-friendly, and powerful, offering greater control and reliability in various operating scenarios.

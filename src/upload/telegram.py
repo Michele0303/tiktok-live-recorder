@@ -3,7 +3,7 @@ from pathlib import Path
 
 from telethon import TelegramClient
 
-from utils.logger_manager import logger
+from utils.logger_manager import LoggerManager
 from utils.utils import read_telegram_config
 
 
@@ -46,19 +46,19 @@ class Telegram:
                 )
 
                 file_size = Path(file_path).stat().st_size
-                logger.info(
+                LoggerManager().logger.info(
                     f"File to upload: {Path(file_path).name} "
                     f"({round(file_size / (1024 * 1024))} MB)"
                 )
 
                 if file_size > max_size:
-                    logger.warning(
+                    LoggerManager().logger.warning(
                         "The file is too large to be uploaded "
                         "with this type of account."
                     )
                     return
 
-                logger.info(
+                LoggerManager().logger.info(
                     "Uploading video on Telegram... "
                     "This may take a while depending on file size."
                 )
@@ -76,10 +76,10 @@ class Telegram:
                     force_document=True,
                 )
 
-                logger.info("File successfully uploaded to Telegram.\n")
+                LoggerManager().logger.info("File successfully uploaded to Telegram.\n")
 
             except Exception as e:
-                logger.error(f"Error during Telegram upload: {e}\n")
+                LoggerManager().logger.error(f"Error during Telegram upload: {e}\n")
 
             finally:
                 await self.client.disconnect()

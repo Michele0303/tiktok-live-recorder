@@ -101,6 +101,35 @@ def parse_args():
         ),
     )
 
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Enable verbose logging.",
+    )
+
+    parser.add_argument(
+        "-ffmpeg-encode",
+        dest="ffmpeg_encode",
+        action="store_true",
+        help="Re-encode the video using libx264/aac instead of copying the stream. Fixes video corruption issues but takes longer.",
+    )
+
+    parser.add_argument(
+        "--keep-flv",
+        dest="keep_flv",
+        action="store_true",
+        help="Keep the original FLV file after successful conversion.",
+    )
+
+    parser.add_argument(
+        "-repair",
+        dest="repair",
+        help="Repair/Re-encode a specific video file (fixes corruption).",
+        action="store",
+    )
+
     args = parser.parse_args()
 
     return args
@@ -108,6 +137,10 @@ def parse_args():
 
 def validate_and_parse_args():
     args = parse_args()
+
+    # If repair mode is selected, skip other validations
+    if args.repair:
+        return args, Mode.MANUAL # Return dummy mode
 
     if not args.mode:
         raise ArgsParseError(
