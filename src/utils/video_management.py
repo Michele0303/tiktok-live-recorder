@@ -129,9 +129,5 @@ class VideoManagement:
                 return None
 
         except ffmpeg.Error as e:
-            LoggerManager().logger.error(
-                f"ffmpeg error: {
-                    e.stderr.decode() if hasattr(
-                        e, 'stderr') else str(e)}"
-            )
+            LoggerManager().logger.error(f"ffmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}")
             return None

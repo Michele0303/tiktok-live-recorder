@@ -132,18 +132,12 @@ class TikTokRecorder:
 
             except UserLiveError as ex:
                 self.logger.info(ex)
-                self.logger.info(
-                    f"Waiting {
-                        self.automatic_interval} minutes before recheck\n"
-                )
+                self.logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
             except LiveNotFound as ex:
                 self.logger.error(f"Live not found: {ex}")
-                self.logger.info(
-                    f"Waiting {
-                        self.automatic_interval} minutes before recheck\n"
-                )
+                self.logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
             except ConnectionError:
@@ -219,10 +213,7 @@ class TikTokRecorder:
 
             except UserLiveError as ex:
                 self.logger.info(ex)
-                self.logger.info(
-                    f"Waiting {
-                        self.automatic_interval} minutes before recheck\n"
-                )
+                self.logger.info(f"Waiting {self.automatic_interval} minutes before recheck\n")
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
             except ConnectionError:
@@ -257,8 +248,7 @@ class TikTokRecorder:
                 else:
                     self.output = self.output + "/"
 
-        output = f"{
-            self.output if self.output else ''}TK_{user}_{current_date}_flv.mp4"
+        output = f"{self.output if self.output else ''}TK_{user}_{current_date}_flv.mp4"
 
         if self.duration:
             self.logger.info(f"Started recording for {self.duration} seconds ")
@@ -287,9 +277,7 @@ class TikTokRecorder:
                     for chunk in self.tiktok.download_live_stream(live_url):
                         buffer.extend(chunk)
                         if len(buffer) >= buffer_size:
-                            self.logger.debug(
-                                f"Flushing buffer to disk: {
-                                    len(buffer)} bytes")
+                            self.logger.debug(f"Flushing buffer to disk: {len(buffer)} bytes")
                             out_file.write(buffer)
                             buffer.clear()
 
