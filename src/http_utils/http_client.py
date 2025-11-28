@@ -4,6 +4,7 @@ from utils.enums import StatusCode
 from utils.logger_manager import LoggerManager
 from utils.utils import is_termux
 
+
 class HttpClient:
     def __init__(self, proxy=None, cookies=None):
         self.req = None
@@ -60,7 +61,10 @@ class HttpClient:
         LoggerManager().logger.info(f"Testing {self.proxy}...")
         proxies = {"http": self.proxy, "https": self.proxy}
 
-        response = requests.get("https://ifconfig.me/ip", proxies=proxies, timeout=10)
+        response = requests.get(
+            "https://ifconfig.me/ip",
+            proxies=proxies,
+            timeout=10)
 
         if response.status_code == StatusCode.OK:
             self.req.proxies.update(proxies)

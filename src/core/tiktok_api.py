@@ -33,7 +33,8 @@ class TikTokAPI:
         """
         Checks if the user is in a blacklisted country that requires login
         """
-        response = self.http_client.get(f"{self.BASE_URL}/live", allow_redirects=False)
+        response = self.http_client.get(
+            f"{self.BASE_URL}/live", allow_redirects=False)
 
         return response.status_code == StatusCode.REDIRECT
 
@@ -49,7 +50,7 @@ class TikTokAPI:
             f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
         )
         LoggerManager().logger.debug(f"Checking room status: {url}")
-        
+
         data = self.http_client.get(url).json()
 
         if "data" not in data or len(data["data"]) == 0:
@@ -57,7 +58,8 @@ class TikTokAPI:
             return False
 
         is_alive = data["data"][0].get("alive", False)
-        LoggerManager().logger.debug(f"Room {room_id} alive status: {is_alive}")
+        LoggerManager().logger.debug(
+            f"Room {room_id} alive status: {is_alive}")
         return is_alive
 
     def get_sec_uid(self):
@@ -111,12 +113,15 @@ class TikTokAPI:
             user = matches[0]
 
         # https://www.tiktok.com/@<username>/live
-        match = re.match(r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live", live_url)
+        match = re.match(
+            r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live",
+            live_url)
         if match:
             user = match.group(1)
 
         room_id = self.get_room_id_from_user(user)
-        LoggerManager().logger.debug(f"Resolved: User={user}, RoomID={room_id}")
+        LoggerManager().logger.debug(
+            f"Resolved: User={user}, RoomID={room_id}")
 
         return user, room_id
 
@@ -275,7 +280,8 @@ class TikTokAPI:
             .get("qualities", [])
         )
         if not qualities:
-            LoggerManager().logger.warning("No qualities found in the stream data. Returning None.")
+            LoggerManager().logger.warning(
+                "No qualities found in the stream data. Returning None.")
             return None
         level_map = {q["sdk_key"]: q["level"] for q in qualities}
 
@@ -290,8 +296,9 @@ class TikTokAPI:
 
         if not best_flv and data.get("status_code") == 4003110:
             raise UserLiveError(TikTokError.LIVE_RESTRICTION)
-            
-        LoggerManager().logger.debug(f"Found Best FLV URL (Level {best_level}): {best_flv}")
+
+        LoggerManager().logger.debug(
+            f"Found Best FLV URL (Level {best_level}): {best_flv}")
 
         return best_flv
 

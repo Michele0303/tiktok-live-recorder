@@ -140,7 +140,7 @@ def validate_and_parse_args():
 
     # If repair mode is selected, skip other validations
     if args.repair:
-        return args, Mode.MANUAL # Return dummy mode
+        return args, Mode.MANUAL  # Return dummy mode
 
     if not args.mode:
         raise ArgsParseError(
@@ -158,7 +158,8 @@ def validate_and_parse_args():
             )
 
     if args.user:
-        args.user = [u.lstrip("@").strip() for u in args.user.split(",") if u.strip()]
+        args.user = [u.lstrip("@").strip()
+                     for u in args.user.split(",") if u.strip()]
 
     if args.user and len(args.user) > 1 and (args.room_id or args.url):
         raise ArgsParseError(
@@ -175,7 +176,8 @@ def validate_and_parse_args():
         or (args.user and args.url)
         or (args.room_id and args.url)
     ):
-        raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+        raise ArgsParseError(
+            "Please provide only one among username, room ID, or URL.")
 
     # Edit: now arg.user is a list
     if args.user and len(args.user) == 1:
@@ -186,7 +188,8 @@ def validate_and_parse_args():
         or (isinstance(args.user, str) and args.user and args.url)
         or (args.room_id and args.url)
     ):
-        raise ArgsParseError("Please provide only one among username, room ID, or URL.")
+        raise ArgsParseError(
+            "Please provide only one among username, room ID, or URL.")
 
     if args.automatic_interval < 1:
         raise ArgsParseError(

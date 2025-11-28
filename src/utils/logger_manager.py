@@ -21,14 +21,14 @@ class LoggerManager:
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(LoggerManager, cls).__new__(cls)
-            cls._instance.logger = None # Initialize the attribute
-            cls._instance._init_logger_if_needed() # Ensure logger is set up
+            cls._instance.logger = None  # Initialize the attribute
+            cls._instance._init_logger_if_needed()  # Ensure logger is set up
         return cls._instance
 
     def _init_logger_if_needed(self):
         if self.logger is None:
             self.logger = logging.getLogger("logger")
-            self.logger.setLevel(logging.INFO) # Default to INFO
+            self.logger.setLevel(logging.INFO)  # Default to INFO
 
             # Add a basic stream handler if no handlers are present
             if not self.logger.handlers:
@@ -38,9 +38,10 @@ class LoggerManager:
                 self.logger.addHandler(handler)
 
     def setup_logger(self, verbose: bool = False):
-        self._init_logger_if_needed() # Ensure base logger exists
+        self._init_logger_if_needed()  # Ensure base logger exists
 
-        # Clear existing handlers to prevent duplicates if called multiple times
+        # Clear existing handlers to prevent duplicates if called multiple
+        # times
         if self.logger.handlers:
             for handler in self.logger.handlers[:]:
                 self.logger.removeHandler(handler)
@@ -57,7 +58,7 @@ class LoggerManager:
         info_handler.setFormatter(info_formatter)
 
         # Add a filter to exclude ERROR level (and above) messages
-        if not verbose: # Only apply filter if not verbose
+        if not verbose:  # Only apply filter if not verbose
             info_handler.addFilter(MaxLevelFilter(logging.INFO))
 
         self.logger.addHandler(info_handler)
@@ -71,9 +72,8 @@ class LoggerManager:
         error_handler.setFormatter(error_formatter)
 
         self.logger.addHandler(error_handler)
-    
-    # Existing info, error methods ...
 
+    # Existing info, error methods ...
 
     def info(self, message):
         """
@@ -86,6 +86,3 @@ class LoggerManager:
         Log an ERROR-level message.
         """
         self.logger.error(message)
-
-
-

@@ -36,7 +36,8 @@ def install_ffmpeg_binary():
             elif linux_family == "":  # Termux
                 LoggerManager().logger.info("pkg install ffmpeg")
             else:
-                LoggerManager().logger.info(f"Distro linux not supported (family: {linux_family})")
+                LoggerManager().logger.info(
+                    f"Distro linux not supported (family: {linux_family})")
 
         elif platform.system().lower() == "windows":
             LoggerManager().logger.info(
@@ -137,7 +138,13 @@ def install_requirements():
         print()
         LoggerManager().logger.error("Installing requirements...\n")
 
-        cmd = [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            "requirements.txt"]
         if is_linux():
             cmd.append("--break-system-packages")
 

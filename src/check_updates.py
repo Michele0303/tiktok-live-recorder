@@ -72,9 +72,14 @@ def check_updates() -> bool:
         delete_tmp_file()
         return False
 
-    if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
+    if float(Info.__str__(Info.VERSION)) != float(
+            InfoOld.__str__(InfoOld.VERSION)):
         print(
-            f"Current version: {InfoOld.__str__(InfoOld.VERSION)}\nNew version available: {Info.__str__(Info.VERSION)}"
+            f"Current version: {
+                InfoOld.__str__(
+                    InfoOld.VERSION)}\nNew version available: {
+                Info.__str__(
+                    Info.VERSION)}"
         )
         print("\nNew features:")
         for feature in Info.NEW_FEATURES:
@@ -93,10 +98,12 @@ def check_updates() -> bool:
     with zipfile.ZipFile(dir_path / FILE_NAME_UPDATE, "r") as zip_ref:
         zip_ref.extractall(temp_update_dir)
 
-    # Find the extracted folder (it will have the name 'tiktok-live-recorder-main')
+    # Find the extracted folder (it will have the name
+    # 'tiktok-live-recorder-main')
     extracted_folder = temp_update_dir / "tiktok-live-recorder-main" / "src"
 
-    # Copy all files and folders from the extracted folder to the main directory
+    # Copy all files and folders from the extracted folder to the main
+    # directory
     files_to_preserve = {"check_updates.py", "cookies.json", "telegram.json"}
     for item in extracted_folder.iterdir():
         source = item
