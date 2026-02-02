@@ -81,6 +81,100 @@ From termux command line:
 
 </div>
 
+## Command-Line Usage
+
+TikTok Live Recorder is operated entirely through command-line options.
+Below is a complete list of available flags and how to use them.
+
+### Basic Usage
+
+```bash
+python main.py [options]
+```
+
+### `-user <USERNAME>`
+ 
+
+Records a live stream from a TikTok username.
+
+    python main.py -user someuser
+
+### `-url <URL> `
+
+Records a live stream directly from a TikTok live URL.
+
+    python main.py -url https://www.tiktok.com/@username/live
+
+
+### `-room_id <ROOM_ID> `
+
+Records a live stream using a TikTok room ID.
+
+    python main.py -room_id 1234567890
+
+### `-mode <manual | automatic | followers>`
+
+Specifies the recording mode.
+
+- **manual** (default): Records only when the user is live.
+- **automatic**: Periodically checks if the user is live and records automatically.
+- **followers**: Automatically records live streams from followed users.
+
+```bash
+    python main.py -user someuser -mode automatic
+```
+
+### `-automatic_interval <MINUTES> `
+
+Sets how often (in minutes) the tool checks whether the user is live when using automatic mode.
+
+Default: 5
+
+    python main.py -user someuser -mode automatic -automatic_interval 2
+
+### `-output <DIRECTORY> `
+
+Specifies the directory where recorded videos will be saved.
+
+    python main.py -user someuser -output ./recordings
+
+### `-duration <SECONDS> `
+
+Limits the recording duration in seconds.
+If not specified, recording continues until the live session ends.
+
+    python main.py -user someuser -duration 600
+
+### `-proxy <PROXY_URL> `
+
+Uploads the recorded video to Telegram after recording finishes.
+Requires configuring the telegram.json file.
+
+    python main.py -proxy http://127.0.0.1:8080
+
+
+### `-telegram `
+
+Uses an HTTP proxy to bypass login restrictions in some countries.
+
+    python main.py -user someuser -telegram
+
+### `-no-update-check`
+
+Disables the automatic update check before running the program.
+
+    python main.py -user someuser -no-update-check
+
+
+## Common Examples
+
+Record a live stream from a user
+
+    python main.py -user someuser
+
+
+
+
   ```bash
 # Update packages
 $ pkg update
