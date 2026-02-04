@@ -145,19 +145,21 @@ If not specified, recording continues until the live session ends.
 
     python main.py -user someuser -duration 600
 
-### `-proxy <PROXY_URL> `
+### `-proxy <PROXY_URL>`
 
-Uploads the recorded video to Telegram after recording finishes.
-Requires configuring the telegram.json file.
+Uses an HTTP proxy to bypass login restrictions in some countries.
 
     python main.py -proxy http://127.0.0.1:8080
 
 
-### `-telegram `
 
-Uses an HTTP proxy to bypass login restrictions in some countries.
+### `-telegram`
+
+Uploads the recorded video to Telegram after recording finishes.
+Requires configuring the `telegram.json` file.
 
     python main.py -user someuser -telegram
+
 
 ### `-no-update-check`
 
@@ -171,7 +173,6 @@ Disables the automatic update check before running the program.
 Record a live stream from a user
 
     python main.py -user someuser
-
 
 
 
