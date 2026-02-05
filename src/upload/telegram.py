@@ -12,8 +12,8 @@ PREMIUM_USER_MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024
 
 
 class Telegram:
-    def __init__(self):
-        config = read_telegram_config()
+    def __init__(self, config_path):
+        config = read_telegram_config(config_path)
 
         self.api_id = config["api_id"]
         self.api_hash = config["api_hash"]

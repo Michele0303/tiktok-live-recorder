@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def record_user(
-    user, url, room_id, mode, interval, proxy, output, duration, use_telegram, cookies
+    user, url, room_id, mode, interval, config_path, proxy, output, duration, use_telegram, cookies
 ):
     from core.tiktok_recorder import TikTokRecorder
     from utils.logger_manager import logger
@@ -18,6 +18,7 @@ def record_user(
             room_id=room_id,
             mode=mode,
             automatic_interval=interval,
+            config_path=config_path,
             cookies=cookies,
             proxy=proxy,
             output=output,
@@ -40,6 +41,7 @@ def run_recordings(args, mode, cookies):
                     args.room_id,
                     mode,
                     args.automatic_interval,
+                    args.config_path,
                     args.proxy,
                     args.output,
                     args.duration,
@@ -69,6 +71,7 @@ def run_recordings(args, mode, cookies):
             args.room_id,
             mode,
             args.automatic_interval,
+            args.config_path,
             args.proxy,
             args.output,
             args.duration,
@@ -97,7 +100,7 @@ def main():
             logger.info("Skipped update check\n")
 
         # read cookies from the config file
-        cookies = read_cookies()
+        cookies = read_cookies(args.config_path)
 
         # run the recordings based on the parsed arguments
         run_recordings(args, mode, cookies)

@@ -21,6 +21,7 @@ class TikTokRecorder:
         room_id,
         mode,
         automatic_interval,
+        config_path,
         cookies,
         proxy,
         output,
@@ -40,6 +41,7 @@ class TikTokRecorder:
         self.automatic_interval = automatic_interval
         self.duration = duration
         self.output = output
+        self.config_path = config_path
 
         # Upload Settings
         self.use_telegram = use_telegram
@@ -266,7 +268,7 @@ class TikTokRecorder:
         VideoManagement.convert_flv_to_mp4(output)
 
         if self.use_telegram:
-            Telegram().upload(output.replace("_flv.mp4", ".mp4"))
+            Telegram(self.config_path).upload(output.replace("_flv.mp4", ".mp4"))
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
