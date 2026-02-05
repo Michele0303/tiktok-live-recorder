@@ -46,7 +46,7 @@ class Error(Enum):
         return str(self.value)
 
     CONNECTION_CLOSED = "Connection broken by the server."
-    CONNECTION_CLOSED_AUTOMATIC = f"{CONNECTION_CLOSED}. Try again after delay of {TimeOut.CONNECTION_CLOSED} minutes"
+    CONNECTION_CLOSED_AUTOMATIC = "Connection broken by the server. Try again after delay of {} minutes".format(TimeOut.CONNECTION_CLOSED)
 
 
 class TikTokError(Enum):
@@ -127,10 +127,10 @@ class Info(Enum):
     VERSION = 7.5
     BANNER = rf"""
 
-  _____ _ _   _____    _     _    _           ___                   _         
- |_   _(_) |_|_   _|__| |__ | |  (_)_ _____  | _ \___ __ ___ _ _ __| |___ _ _ 
+  _____ _ _   _____    _     _    _           ___                   _
+ |_   _(_) |_|_   _|__| |__ | |  (_)_ _____  | _ \___ __ ___ _ _ __| |___ _ _
    | | | | / / | |/ _ \ / / | |__| \ V / -_) |   / -_) _/ _ \ '_/ _` / -_) '_|
-   |_| |_|_\_\ |_|\___/_\_\ |____|_|\_/\___| |_|_\___\__\___/_| \__,_\___|_| 
+   |_| |_|_\_\ |_|\___/_\_\ |____|_|\_/\___| |_|_\___\__\___/_| \__,_\___|_|
 
    V{VERSION}
 """

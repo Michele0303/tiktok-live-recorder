@@ -3,7 +3,7 @@ import re
 
 from http_utils.http_client import HttpClient
 from utils.enums import StatusCode, TikTokError
-from utils.logger_manager import logger
+from utils.logger_manager import LoggerManager
 from utils.custom_exceptions import (
     UserLiveError,
     TikTokRecorderError,
@@ -33,7 +33,8 @@ class TikTokAPI:
         """
         Checks if the user is in a blacklisted country that requires login
         """
-        response = self.http_client.get(f"{self.BASE_URL}/live", allow_redirects=False)
+        response = self.http_client.get(
+            f"{self.BASE_URL}/live", allow_redirects=False)
 
         return response.status_code == StatusCode.REDIRECT
 
@@ -44,15 +45,22 @@ class TikTokAPI:
         if not room_id:
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
-        data = self.http_client.get(
+        url = (
             f"{self.WEBCAST_URL}/webcast/room/check_alive/"
             f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
-        ).json()
+        )
+        LoggerManager().logger.debug(f"Checking room status: {url}")
+
+        data = self.http_client.get(url).json()
 
         if "data" not in data or len(data["data"]) == 0:
+            LoggerManager().logger.debug("Room status check returned empty data.")
             return False
 
-        return data["data"][0].get("alive", False)
+        is_alive = data["data"][0].get("alive", False)
+        LoggerManager().logger.debug(
+            f"Room {room_id} alive status: {is_alive}")
+        return is_alive
 
     def get_sec_uid(self):
         """
@@ -90,6 +98,7 @@ class TikTokAPI:
         """
         Given a url, get user and room_id.
         """
+        LoggerManager().logger.debug(f"Resolving URL: {live_url}")
         response = self.http_client.get(live_url, allow_redirects=False)
         content = response.text
 
@@ -104,11 +113,15 @@ class TikTokAPI:
             user = matches[0]
 
         # https://www.tiktok.com/@<username>/live
-        match = re.match(r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live", live_url)
+        match = re.match(
+            r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live",
+            live_url)
         if match:
             user = match.group(1)
 
         room_id = self.get_room_id_from_user(user)
+        LoggerManager().logger.debug(
+            f"Resolved: User={user}, RoomID={room_id}")
 
         return user, room_id
 
@@ -145,6 +158,7 @@ class TikTokAPI:
 
     def get_room_id_from_user(self, user: str) -> str | None:
         """Given a username, get the room_id."""
+        LoggerManager().logger.debug(f"Getting Room ID for user: {user}")
         signed_url = self._tikrec_get_room_id_signed_url(user)
 
         response = self.http_client.get(signed_url)
@@ -154,7 +168,9 @@ class TikTokAPI:
             raise UserLiveError(TikTokError.WAF_BLOCKED)
 
         data = response.json()
-        return (data.get("data") or {}).get("user", {}).get("roomId")
+        room_id = (data.get("data") or {}).get("user", {}).get("roomId")
+        LoggerManager().logger.debug(f"Got Room ID: {room_id}")
+        return room_id
 
     def get_followers_list(self, sec_uid) -> list:
         """
@@ -226,6 +242,7 @@ class TikTokAPI:
         """
         Return the cdn (flv or m3u8) of the streaming
         """
+        LoggerManager().logger.debug(f"Getting live URL for room: {room_id}")
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
         ).json()
@@ -241,16 +258,18 @@ class TikTokAPI:
             .get("stream_data")
         )
         if not sdk_data_str:
-            logger.warning(
+            LoggerManager().logger.warning(
                 "No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code."
             )
-            return (
+            url = (
                 stream_url.get("flv_pull_url", {}).get("FULL_HD1")
                 or stream_url.get("flv_pull_url", {}).get("HD1")
                 or stream_url.get("flv_pull_url", {}).get("SD2")
                 or stream_url.get("flv_pull_url", {}).get("SD1")
                 or stream_url.get("rtmp_pull_url", "")
             )
+            LoggerManager().logger.debug(f"Found Legacy URL: {url}")
+            return url
 
         # Extract stream options
         sdk_data = json.loads(sdk_data_str).get("data", {})
@@ -261,7 +280,8 @@ class TikTokAPI:
             .get("qualities", [])
         )
         if not qualities:
-            logger.warning("No qualities found in the stream data. Returning None.")
+            LoggerManager().logger.warning(
+                "No qualities found in the stream data. Returning None.")
             return None
         level_map = {q["sdk_key"]: q["level"] for q in qualities}
 
@@ -276,6 +296,9 @@ class TikTokAPI:
 
         if not best_flv and data.get("status_code") == 4003110:
             raise UserLiveError(TikTokError.LIVE_RESTRICTION)
+
+        LoggerManager().logger.debug(
+            f"Found Best FLV URL (Level {best_level}): {best_flv}")
 
         return best_flv
 
