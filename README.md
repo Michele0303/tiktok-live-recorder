@@ -40,6 +40,9 @@ To clone and run this application, you'll need [Git](https://git-scm.com) and [P
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
 $ cd tiktok-live-recorder
+# Create and activate virtual environment
+$ python -m venv .venv
+$ .\.venv\Scripts\activate
 # Go into the source code
 $ cd src
 # Install dependencies
@@ -63,10 +66,13 @@ To clone and run this application, you'll need [Git](https://git-scm.com) and [P
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
 $ cd tiktok-live-recorder
+# Create and activate virtual environment
+$ python -m venv .venv
+$ source .venv/bin/activate
 # Go into the source code
 $ cd src
 # Install dependencies
-$ pip install -r requirements.txt --break-system-packages
+$ pip install -r requirements.txt
 # Run the app on linux
 $ python3 main.py -h
   ```
