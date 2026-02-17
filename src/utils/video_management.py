@@ -22,9 +22,11 @@ class VideoManagement:
         return False
 
     @staticmethod
-    def convert_flv_to_mp4(file):
+    def convert_flv_to_mp4(file, ffmpeg_path="ffmpeg"):
         """
-        Convert the video from flv format to mp4 format
+        Convert the video from flv format to mp4 format.
+        ffmpeg_path: path to the ffmpeg binary. Defaults to "ffmpeg" (system PATH).
+                     Pass a custom path if using a standalone ffmpeg binary.
         """
         logger.info("Converting {} to MP4 format...".format(file))
 
@@ -39,7 +41,9 @@ class VideoManagement:
                 file.replace("_flv.mp4", ".mp4"),
                 c="copy",
                 y="-y",
-            ).run(quiet=True)
+            # NEW: cmd parameter tells ffmpeg-python which binary to use.
+            # Defaults to "ffmpeg" so existing behavior is fully preserved.
+            ).run(quiet=True, cmd=ffmpeg_path)
         except ffmpeg.Error as e:
             logger.error(
                 f"ffmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"

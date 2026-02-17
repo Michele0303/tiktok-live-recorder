@@ -26,6 +26,7 @@ class TikTokRecorder:
         output,
         duration,
         use_telegram,
+        ffmpeg_path="ffmpeg",  # NEW: custom path to ffmpeg binary, defaults to "ffmpeg" (system PATH)
     ):
         # Setup TikTok API client
         self.tiktok = TikTokAPI(proxy=proxy, cookies=cookies)
@@ -43,6 +44,9 @@ class TikTokRecorder:
 
         # Upload Settings
         self.use_telegram = use_telegram
+
+        # NEW: Store the custom ffmpeg path so it can be used during recording
+        self.ffmpeg_path = ffmpeg_path
 
         # Check if the user's country is blacklisted
         self.check_country_blacklisted()
@@ -263,7 +267,9 @@ class TikTokRecorder:
                     out_file.flush()
 
         logger.info(f"Recording finished: {output}\n")
-        VideoManagement.convert_flv_to_mp4(output)
+
+        # NEW: Pass self.ffmpeg_path to VideoManagement so it uses the custom binary
+        VideoManagement.convert_flv_to_mp4(output, ffmpeg_path=self.ffmpeg_path)
 
         if self.use_telegram:
             Telegram().upload(output.replace("_flv.mp4", ".mp4"))
