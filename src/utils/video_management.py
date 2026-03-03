@@ -47,8 +47,7 @@ class VideoManagement:
                 output_args["c:a"] = "copy"
 
             ffmpeg.input(file).output(
-                file.replace("_flv.mp4", ".mp4"),
-                **output_args
+                file.replace("_flv.mp4", ".mp4"), **output_args
             ).run(quiet=True)
         except ffmpeg.Error as e:
             logger.error(
