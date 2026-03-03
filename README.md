@@ -27,12 +27,13 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 ## Installation
 
-**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html), [uv](https://docs.astral.sh/uv/getting-started/installation/)
+**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html)
 
 <details>
 <summary>Windows 💻</summary>
 
-```bash
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 git clone https://github.com/Michele0303/tiktok-live-recorder
 cd tiktok-live-recorder
 uv sync
@@ -45,6 +46,7 @@ uv run python src/main.py -h
 <summary>Linux 🐧</summary>
 
 ```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone https://github.com/Michele0303/tiktok-live-recorder
 cd tiktok-live-recorder
 uv sync
