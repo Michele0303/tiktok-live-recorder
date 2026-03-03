@@ -137,12 +137,8 @@ def install_requirements():
         print()
         logger.error("Installing requirements...\n")
 
-        cmd = [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
-        if is_linux():
-            cmd.append("--break-system-packages")
-
         subprocess.run(
-            cmd,
+            ["uv", "sync", "--no-dev"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             check=True,
