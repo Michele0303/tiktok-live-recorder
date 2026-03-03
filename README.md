@@ -27,16 +27,16 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 ## Installation
 
-**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html)
+**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html), [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 <details>
 <summary>Windows 💻</summary>
 
 ```bash
 git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder/src
-pip install -r requirements.txt
-python main.py -h
+cd tiktok-live-recorder
+uv sync
+uv run python src/main.py -h
 ```
 
 </details>
@@ -46,9 +46,9 @@ python main.py -h
 
 ```bash
 git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder/src
-pip install -r requirements.txt --break-system-packages
-python3 main.py -h
+cd tiktok-live-recorder
+uv sync
+uv run python src/main.py -h
 ```
 
 </details>
@@ -61,10 +61,11 @@ Install Termux from [F-Droid](https://f-droid.org/packages/com.termux/) (avoid t
 ```bash
 pkg update && pkg upgrade
 pkg install git python3 ffmpeg
+pip install uv --break-system-packages
 git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder/src
-pip install -r requirements.txt --break-system-packages
-python main.py -h
+cd tiktok-live-recorder
+uv sync
+uv run python src/main.py -h
 ```
 
 </details>
@@ -85,7 +86,7 @@ sudo docker run \
 ## Command-Line Usage
 
 ```bash
-python main.py [options]
+uv run python src/main.py [options]
 ```
 
 ### Options
