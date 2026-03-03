@@ -2,10 +2,10 @@
 
 <h1> TikTok Live Recorder🎥</h1>
 
-<em>TikTok Live Recorder is a tool for recording live streaming tiktok.</em>
+<em>TikTok Live Recorder is a tool for recording live streaming TikTok.</em>
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/tiktokliverecorder)
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) 
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE)
 
 The TikTok Live Recorder is a tool designed to easily capture and save live streaming sessions from TikTok. It records both audio and video, allowing users to revisit and preserve engaging live content for later enjoyment and analysis. It's a valuable resource for creators, researchers, and anyone who wants to capture memorable moments from TikTok live streams.
@@ -16,11 +16,10 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 <div align="left">
 
-
   <h1> How To Use </h1>
 
-- [Install on Windows & Linux 💻](#install-on-windows-)
-- [Install on Linux 💻](#install-on-linux-)
+- [Install on Windows 💻](#install-on-windows-)
+- [Install on Linux 🐧](#install-on-linux-)
 - [Install on Android 📱](#install-on-android-)
 
 </div>
@@ -29,13 +28,7 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3.11+](https://www.python.org/downloads/) and [FFmpeg](https://www.youtube.com/watch?v=OlNWCpFdVMA) installed on your computer. From your command line:
 
-<!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
-
-<be>
-
-</div>
-
-  ```bash
+```bash
 # Clone this repository
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
@@ -46,19 +39,13 @@ $ cd src
 $ pip install -r requirements.txt
 # Run the app on windows
 $ python main.py -h
-  ```
+```
 
 ## Install on Linux 🐧
 
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Python3.11+](https://www.python.org/downloads/) and [FFmpeg](https://ffmpeg.org/download.html#build-linux) installed on your computer. From your command line:
 
-<!-- <img src="https://i.ibb.co/8DkzXZn/image.png" alt="image" border="0"> -->
-
-<be>
-
-</div>
-
-  ```bash
+```bash
 # Clone this repository
 $ git clone https://github.com/Michele0303/tiktok-live-recorder
 # Go into the repository
@@ -69,7 +56,7 @@ $ cd src
 $ pip install -r requirements.txt --break-system-packages
 # Run the app on linux
 $ python3 main.py -h
-  ```
+```
 
 ## Install on Android 📱
 
@@ -77,106 +64,7 @@ $ python3 main.py -h
 
 From termux command line:
 
-<be>
-
-</div>
-
-## Command-Line Usage
-
-TikTok Live Recorder is operated entirely through command-line options.
-Below is a complete list of available flags and how to use them.
-
-### Basic Usage
-
 ```bash
-python main.py [options]
-```
-
-### `-user <USERNAME>`
- 
-
-Records a live stream from a TikTok username.
-
-    python main.py -user someuser
-
-### `-url <URL> `
-
-Records a live stream directly from a TikTok live URL.
-
-    python main.py -url https://www.tiktok.com/@username/live
-
-
-### `-room_id <ROOM_ID> `
-
-Records a live stream using a TikTok room ID.
-
-    python main.py -room_id 1234567890
-
-### `-mode <manual | automatic | followers>`
-
-Specifies the recording mode.
-
-- **manual** (default): Records only when the user is live.
-- **automatic**: Periodically checks if the user is live and records automatically.
-- **followers**: Automatically records live streams from followed users.
-
-```bash
-    python main.py -user someuser -mode automatic
-```
-
-### `-automatic_interval <MINUTES> `
-
-Sets how often (in minutes) the tool checks whether the user is live when using automatic mode.
-
-Default: 5
-
-    python main.py -user someuser -mode automatic -automatic_interval 2
-
-### `-output <DIRECTORY> `
-
-Specifies the directory where recorded videos will be saved.
-
-    python main.py -user someuser -output ./recordings
-
-### `-duration <SECONDS> `
-
-Limits the recording duration in seconds.
-If not specified, recording continues until the live session ends.
-
-    python main.py -user someuser -duration 600
-
-### `-proxy <PROXY_URL>`
-
-Uses an HTTP proxy to bypass login restrictions in some countries.
-
-    python main.py -proxy http://127.0.0.1:8080
-
-
-
-### `-telegram`
-
-Uploads the recorded video to Telegram after recording finishes.
-Requires configuring the `telegram.json` file.
-
-    python main.py -user someuser -telegram
-
-
-### `-no-update-check`
-
-Disables the automatic update check before running the program.
-
-    python main.py -user someuser -no-update-check
-
-
-## Common Examples
-
-Record a live stream from a user
-
-    python main.py -user someuser
-
-
-
-  ```bash
 # Update packages
 $ pkg update
 $ pkg upgrade
@@ -192,13 +80,118 @@ $ cd src
 $ pip install -r requirements.txt --break-system-packages
 # Run the app
 $ python main.py -h
-  ```
+```
 
-<div align="left">
+## Command-Line Usage
+
+TikTok Live Recorder is operated entirely through command-line options.
+Below is a complete list of available flags and how to use them.
+
+### Basic Usage
+
+```bash
+python main.py [options]
+```
+
+### `-user <USERNAME>`
+
+Records a live stream from a TikTok username. Supports multiple usernames separated by commas.
+
+    python main.py -user someuser
+    python main.py -user user1,user2,user3
+
+### `-url <URL>`
+
+Records a live stream directly from a TikTok live URL.
+
+    python main.py -url https://www.tiktok.com/@username/live
+
+### `-room_id <ROOM_ID>`
+
+Records a live stream using a TikTok room ID.
+
+    python main.py -room_id 1234567890
+
+### `-mode <manual | automatic | followers>`
+
+Specifies the recording mode.
+
+- **manual** (default): Records only when the user is live.
+- **automatic**: Periodically checks if the user is live and records automatically.
+- **followers**: Automatically records live streams from followed users.
+
+```bash
+python main.py -user someuser -mode automatic
+```
+
+### `-automatic_interval <MINUTES>`
+
+Sets how often (in minutes) the tool checks whether the user is live when using automatic mode.
+
+Default: 5
+
+    python main.py -user someuser -mode automatic -automatic_interval 2
+
+### `-output <DIRECTORY>`
+
+Specifies the directory where recorded videos will be saved.
+
+    python main.py -user someuser -output ./recordings
+
+### `-duration <SECONDS>`
+
+Limits the recording duration in seconds.
+If not specified, recording continues until the live session ends.
+
+    python main.py -user someuser -duration 600
+
+### `-proxy <PROXY_URL>`
+
+Uses an HTTP proxy to bypass login restrictions in some countries.
+
+    python main.py -proxy http://127.0.0.1:8080
+
+### `-bitrate <BITRATE>`
+
+Specifies the bitrate for post-processing the output file (e.g. `1000k`, `1M`).
+If not specified, the original bitrate is kept.
+
+    python main.py -user someuser -bitrate 1M
+
+### `-telegram`
+
+Uploads the recorded video to Telegram after recording finishes.
+Requires configuring the `telegram.json` file.
+
+    python main.py -user someuser -telegram
+
+### `-no-update-check`
+
+Disables the automatic update check before running the program.
+
+    python main.py -user someuser -no-update-check
+
+## Common Examples
+
+Record a live stream from a user:
+
+    python main.py -user someuser
+
+Record automatically with a custom check interval:
+
+    python main.py -user someuser -mode automatic -automatic_interval 2
+
+Record with a duration limit and save to a specific folder:
+
+    python main.py -user someuser -duration 600 -output ./recordings
+
+Record multiple users simultaneously:
+
+    python main.py -user user1,user2,user3 -mode automatic
 
 ## Docker
-TikTok Live Recorder can easily be run using Docker.  
-The example below saves recordings into a local `./output` folder (created if it doesn’t exist):
+TikTok Live Recorder can easily be run using Docker.
+The example below saves recordings into a local `./output` folder (created if it doesn't exist):
 
 ```bash
 $ sudo docker run \
