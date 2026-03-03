@@ -176,9 +176,8 @@ class TikTokRecorder:
                         continue
 
                 print()
-                delay = self.automatic_interval * TimeOut.ONE_MINUTE
-                logger.info(f"Waiting {delay} minutes for the next check...")
-                time.sleep(delay)
+                logger.info(f"Waiting {self.automatic_interval} minutes for the next check...")
+                time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
             except UserLiveError as ex:
                 logger.info(ex)
