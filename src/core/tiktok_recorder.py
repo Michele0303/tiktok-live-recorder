@@ -8,7 +8,6 @@ from requests import RequestException
 from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
 from utils.video_management import VideoManagement
-from upload.telegram import Telegram
 from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderError
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
@@ -176,7 +175,9 @@ class TikTokRecorder:
                         continue
 
                 print()
-                logger.info(f"Waiting {self.automatic_interval} minutes for the next check...")
+                logger.info(
+                    f"Waiting {self.automatic_interval} minutes for the next check..."
+                )
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
             except UserLiveError as ex:

@@ -1,10 +1,8 @@
 import subprocess
-import sys
 import platform
 from subprocess import SubprocessError
 
 from .logger_manager import logger
-from .utils import is_linux
 
 
 def check_ffmpeg_binary():
