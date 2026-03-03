@@ -1,6 +1,6 @@
-import os
 import time
 from http.client import HTTPException
+from pathlib import Path
 from threading import Thread
 
 from requests import RequestException
@@ -179,6 +179,12 @@ class TikTokRecorder:
             except Exception as ex:
                 logger.error(f"Unexpected error: {ex}\n")
 
+    def _build_output_path(self, user: str) -> str:
+        filename = f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
+        if self.output:
+            return str(Path(self.output) / filename)
+        return filename
+
     def start_recording(self, user, room_id):
         """
         Start recording live
@@ -187,16 +193,7 @@ class TikTokRecorder:
         if not live_url:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
-        current_date = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
-
-        if isinstance(self.output, str) and self.output != "":
-            if not (self.output.endswith("/") or self.output.endswith("\\")):
-                if os.name == "nt":
-                    self.output = self.output + "\\"
-                else:
-                    self.output = self.output + "/"
-
-        output = f"{self.output if self.output else ''}TK_{user}_{current_date}_flv.mp4"
+        output = self._build_output_path(user)
 
         if self.duration:
             logger.info(f"Started recording for {self.duration} seconds ")
