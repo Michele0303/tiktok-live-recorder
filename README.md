@@ -20,10 +20,8 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 ## Table of Contents
 
 - [Installation](#installation)
-- [Command-Line Usage](#command-line-usage)
+- [Usage](#command-line-usage)
 - [Guide](#guide)
-- [Contributing](#contributing)
-- [Legal ⚖️](#legal-)
 
 ## Installation
 
@@ -47,6 +45,20 @@ uv run python src/main.py -h
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
+git clone https://github.com/Michele0303/tiktok-live-recorder
+cd tiktok-live-recorder
+uv sync
+uv run python src/main.py -h
+```
+
+</details>
+
+<details>
+<summary>macOS 🍎</summary>
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+brew install ffmpeg
 git clone https://github.com/Michele0303/tiktok-live-recorder
 cd tiktok-live-recorder
 uv sync
