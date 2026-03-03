@@ -92,6 +92,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-bitrate",
+        dest="bitrate",
+        help="Specify the bitrate for the output file (e.g. 1000k, 1M). Default: None (keep original)",
+        action="store",
+    )
+
+    parser.add_argument(
         "-no-update-check",
         dest="update_check",
         action="store_false",

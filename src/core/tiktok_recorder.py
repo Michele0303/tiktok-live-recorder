@@ -26,6 +26,7 @@ class TikTokRecorder:
         output,
         duration,
         use_telegram,
+        bitrate,
     ):
         # Setup TikTok API client
         self.tiktok = TikTokAPI(proxy=proxy, cookies=cookies)
@@ -40,6 +41,7 @@ class TikTokRecorder:
         self.automatic_interval = automatic_interval
         self.duration = duration
         self.output = output
+        self.bitrate = bitrate
 
         # Upload Settings
         self.use_telegram = use_telegram
@@ -263,10 +265,7 @@ class TikTokRecorder:
                     out_file.flush()
 
         logger.info(f"Recording finished: {output}\n")
-        VideoManagement.convert_flv_to_mp4(output)
-
-        if self.use_telegram:
-            Telegram().upload(output.replace("_flv.mp4", ".mp4"))
+        VideoManagement.convert_flv_to_mp4(output, self.bitrate)
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()

@@ -22,7 +22,7 @@ class VideoManagement:
         return False
 
     @staticmethod
-    def convert_flv_to_mp4(file):
+    def convert_flv_to_mp4(file, bitrate=None):
         """
         Convert the video from flv format to mp4 format
         """
@@ -35,10 +35,20 @@ class VideoManagement:
             return
 
         try:
+            output_args = {
+                "c": "copy",
+                "y": "-y",
+            }
+
+            if bitrate:
+                output_args["b:v"] = bitrate
+                del output_args["c"]
+                output_args["c:v"] = "libx264"
+                output_args["c:a"] = "copy"
+
             ffmpeg.input(file).output(
                 file.replace("_flv.mp4", ".mp4"),
-                c="copy",
-                y="-y",
+                **output_args
             ).run(quiet=True)
         except ffmpeg.Error as e:
             logger.error(
