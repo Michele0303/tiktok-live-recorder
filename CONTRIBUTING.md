@@ -134,22 +134,59 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/Michel
 <!-- You might want to create an issue template for enhancement suggestions that can be used as a guide and that defines the structure of the information to be included. If you do so, reference it here in the description. -->
 
 ### Your First Code Contribution
-<!-- TODO
-include Setup of env, IDE and typical getting started instructions?
 
--->
+**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html), [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+1. Fork the repository and clone it locally:
+   ```bash
+   git clone https://github.com/<your-fork>/tiktok-live-recorder
+   cd tiktok-live-recorder
+   ```
+
+2. Install all dependencies including dev tools:
+   ```bash
+   uv sync --dev
+   ```
+
+3. Install pre-commit hooks:
+   ```bash
+   uv run pre-commit install
+   ```
+
+4. Create a branch for your change:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+
+5. Run the tool locally:
+   ```bash
+   uv run python src/main.py -h
+   ```
+
+6. Before submitting, ensure code is formatted:
+   ```bash
+   uv run ruff format .
+   uv run ruff check .
+   ```
 
 ### Improving The Documentation
-<!-- TODO
-Updating, improving and correcting the documentation
 
--->
+Documentation lives in:
+- `README.md` — installation and usage overview
+- `docs/GUIDE.md` — detailed guides (cookies, room_id, Telegram)
+- `CONTRIBUTING.md` — this file
 
 ## Styleguides
-### Commit Messages
-<!-- TODO
 
--->
+### Commit Messages
+
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>: <short summary>
+```
+
+Common types: `feat`, `fix`, `docs`, `refactor`, `chore`.
 
 ## Join The Project Team
 <!-- TODO -->
