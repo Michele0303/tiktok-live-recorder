@@ -90,43 +90,25 @@ python main.py [options]
 
 ### Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `-user <USERNAME>` | Username(s) to record. Separate multiple with commas. | — |
-| `-url <URL>` | TikTok live URL to record from. | — |
-| `-room_id <ROOM_ID>` | Room ID to record from. | — |
-| `-mode <MODE>` | Recording mode: `manual`, `automatic`, `followers`. | `manual` |
-| `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). | `5` |
-| `-output <DIRECTORY>` | Directory where recordings will be saved. | current dir |
-| `-duration <SECONDS>` | Stop recording after this many seconds. | unlimited |
-| `-proxy <URL>` | HTTP proxy to bypass regional restrictions. | — |
-| `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). | original |
-| `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. | disabled |
-| `-no-update-check` | Skip the automatic update check on startup. | — |
+| Flag | Description |
+|------|-------------|
+| `-user <USERNAME>` | Username(s) to record. Separate multiple with commas. |
+| `-url <URL>` | TikTok live URL to record from. |
+| `-room_id <ROOM_ID>` | Room ID to record from. |
+| `-mode <MODE>` | Recording mode: `manual`, `automatic`, `followers`. |
+| `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). |
+| `-output <DIRECTORY>` | Directory where recordings will be saved. |
+| `-duration <SECONDS>` | Stop recording after this many seconds. |
+| `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
+| `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
+| `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
+| `-no-update-check` | Skip the automatic update check on startup. |
 
 ### Recording Modes
 
 - **`manual`** *(default)*: Records immediately if the user is currently live.
 - **`automatic`**: Polls at regular intervals and records whenever the user goes live.
 - **`followers`**: Automatically records live streams from all followed users.
-
-## Common Examples
-
-Record a live stream from a user:
-
-    python main.py -user someuser
-
-Record automatically with a custom check interval:
-
-    python main.py -user someuser -mode automatic -automatic_interval 2
-
-Record with a duration limit and save to a specific folder:
-
-    python main.py -user someuser -duration 600 -output ./recordings
-
-Record multiple users simultaneously:
-
-    python main.py -user user1,user2,user3 -mode automatic
 
 ## Docker
 TikTok Live Recorder can easily be run using Docker.
