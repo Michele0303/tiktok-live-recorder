@@ -7,48 +7,32 @@ from requests import RequestException
 
 from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
+from utils.recorder_config import RecorderConfig
 from utils.video_management import VideoManagement
 from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderError
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
 
 class TikTokRecorder:
-    def __init__(
-        self,
-        url,
-        user,
-        room_id,
-        mode,
-        automatic_interval,
-        cookies,
-        proxy,
-        output,
-        duration,
-        use_telegram,
-        bitrate,
-    ):
-        # Setup TikTok API client
-        self.tiktok = TikTokAPI(proxy=proxy, cookies=cookies)
+    def __init__(self, config: RecorderConfig):
+        self.tiktok = TikTokAPI(proxy=config.proxy, cookies=config.cookies)
 
-        # TikTok Data
-        self.url = url
-        self.user = user
-        self.room_id = room_id
+        self.url = config.url
+        self.user = config.user
+        self.room_id = config.room_id
+        self.mode = config.mode
+        self.automatic_interval = config.automatic_interval
+        self.duration = config.duration
+        self.output = config.output
+        self.bitrate = config.bitrate
+        self.use_telegram = config.use_telegram
+        self._proxy = config.proxy
+        self._cookies = config.cookies
 
-        # Tool Settings
-        self.mode = mode
-        self.automatic_interval = automatic_interval
-        self.duration = duration
-        self.output = output
-        self.bitrate = bitrate
-
-        # Upload Settings
-        self.use_telegram = use_telegram
-
-        # Check if the user's country is blacklisted
+    def _setup(self):
+        """Resolve user/room data and validate prerequisites via network calls."""
         self.check_country_blacklisted()
 
-        # Retrieve sec_uid if the mode is FOLLOWERS
         if self.mode == Mode.FOLLOWERS:
             self.sec_uid = self.tiktok.get_sec_uid()
             if self.sec_uid is None:
@@ -56,7 +40,6 @@ class TikTokRecorder:
 
             logger.info("Followers mode activated\n")
         else:
-            # Get live information based on the provided user data
             if self.url:
                 self.user, self.room_id = self.tiktok.get_room_and_user_from_url(
                     self.url
@@ -75,13 +58,14 @@ class TikTokRecorder:
                     + ("\n" if not self.tiktok.is_room_alive(self.room_id) else "")
                 )
 
-        # If proxy is provided, set up the HTTP client without the proxy
-        if proxy:
-            self.tiktok = TikTokAPI(proxy=None, cookies=cookies)
+        # If proxy was used for the initial checks, switch to a direct connection
+        # for the actual stream download to avoid proxy bottlenecks
+        if self._proxy:
+            self.tiktok = TikTokAPI(proxy=None, cookies=self._cookies)
 
     def run(self):
         """
-        runs the program in the selected mode.
+        Resolves prerequisites and runs the recorder in the selected mode.
 
         If the mode is MANUAL, it checks if the user is currently live and
         if so, starts recording.
@@ -94,6 +78,8 @@ class TikTokRecorder:
         the authenticated user. If any follower is live, it starts recording
         their live stream in a separate process.
         """
+        self._setup()
+
         if self.mode == Mode.MANUAL:
             self.manual_mode()
 
@@ -137,7 +123,7 @@ class TikTokRecorder:
                 logger.error(f"Unexpected error: {ex}\n")
 
     def followers_mode(self):
-        active_recordings = {}  # follower -> Process
+        active_recordings = {}  # follower -> Thread
 
         while True:
             try:
@@ -155,7 +141,6 @@ class TikTokRecorder:
                         room_id = self.tiktok.get_room_id_from_user(follower)
 
                         if not room_id or not self.tiktok.is_room_alive(room_id):
-                            # logger.info(f"@{follower} is not live. Skipping...")
                             continue
 
                         logger.info(f"@{follower} is live. Starting recording...")

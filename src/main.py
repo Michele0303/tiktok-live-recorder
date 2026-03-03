@@ -5,60 +5,40 @@ import multiprocessing
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def record_user(
-    user,
-    url,
-    room_id,
-    mode,
-    interval,
-    proxy,
-    output,
-    duration,
-    use_telegram,
-    bitrate,
-    cookies,
-):
+def record_user(config):
     from core.tiktok_recorder import TikTokRecorder
     from utils.logger_manager import logger
 
     try:
-        TikTokRecorder(
-            url=url,
-            user=user,
-            room_id=room_id,
-            mode=mode,
-            automatic_interval=interval,
-            cookies=cookies,
-            proxy=proxy,
-            output=output,
-            duration=duration,
-            use_telegram=use_telegram,
-            bitrate=bitrate,
-        ).run()
+        TikTokRecorder(config).run()
     except Exception as e:
         logger.error(f"{e}")
+
+
+def _build_config(args, mode, cookies, user=None):
+    from utils.recorder_config import RecorderConfig
+
+    return RecorderConfig(
+        url=args.url,
+        user=user,
+        room_id=args.room_id,
+        mode=mode,
+        automatic_interval=args.automatic_interval,
+        cookies=cookies,
+        proxy=args.proxy,
+        output=args.output,
+        duration=args.duration,
+        use_telegram=args.telegram,
+        bitrate=args.bitrate,
+    )
 
 
 def run_recordings(args, mode, cookies):
     if isinstance(args.user, list):
         processes = []
         for user in args.user:
-            p = multiprocessing.Process(
-                target=record_user,
-                args=(
-                    user,
-                    args.url,
-                    args.room_id,
-                    mode,
-                    args.automatic_interval,
-                    args.proxy,
-                    args.output,
-                    args.duration,
-                    args.telegram,
-                    args.bitrate,
-                    cookies,
-                ),
-            )
+            config = _build_config(args, mode, cookies, user=user)
+            p = multiprocessing.Process(target=record_user, args=(config,))
             p.start()
             processes.append(p)
         try:
@@ -75,19 +55,8 @@ def run_recordings(args, mode, cookies):
                     if p.is_alive():
                         p.terminate()
     else:
-        record_user(
-            args.user,
-            args.url,
-            args.room_id,
-            mode,
-            args.automatic_interval,
-            args.proxy,
-            args.output,
-            args.duration,
-            args.telegram,
-            args.bitrate,
-            cookies,
-        )
+        config = _build_config(args, mode, cookies, user=args.user)
+        record_user(config)
 
 
 def main():
