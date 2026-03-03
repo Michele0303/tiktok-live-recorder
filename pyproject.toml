@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "tiktok-live-recorder"
+version = "7.5"
+description = "A tool for recording TikTok live streams"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "ffmpeg-python>=0.2.0",
+    "telethon>=1.42.0",
+    "distro>=1.9.0",
+    "curl_cffi>=0.12.0",
+    "requests>=2.32.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.12.0",
+    "pre-commit>=4.3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Michele0303/tiktok-live-recorder"
+Repository = "https://github.com/Michele0303/tiktok-live-recorder"
+Issues = "https://github.com/Michele0303/tiktok-live-recorder/issues"
+
+[project.scripts]
+tiktok-live-recorder = "main:main"
+
+[tool.setuptools]
+py-modules = ["main", "check_updates"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
