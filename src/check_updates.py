@@ -72,7 +72,10 @@ def check_updates() -> bool:
         delete_tmp_file()
         return False
 
-    if float(Info.__str__(Info.VERSION)) != float(InfoOld.__str__(InfoOld.VERSION)):
+    def _parse_version(v):
+        return tuple(int(x) for x in str(v).split("."))
+
+    if _parse_version(Info.VERSION) != _parse_version(InfoOld.VERSION):
         print(
             f"Current version: {InfoOld.__str__(InfoOld.VERSION)}\nNew version available: {Info.__str__(Info.VERSION)}"
         )

@@ -124,7 +124,7 @@ class Info(Enum):
         "Minor.",
     ]
 
-    VERSION = 7.5
+    VERSION = "7.5.0"
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         

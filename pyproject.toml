@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tiktok-live-recorder"
-version = "7.5"
+version = "7.5.0"
 description = "A tool for recording TikTok live streams"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -21,6 +21,7 @@ dependencies = [
 dev = [
     "ruff>=0.12.0",
     "pre-commit>=4.3.0",
+    "bump-my-version>=0.32.0",
 ]
 
 [project.urls]
@@ -42,3 +43,20 @@ where = ["src"]
 
 [tool.ruff]
 line-length = 88
+
+[tool.bumpversion]
+current_version = "7.5.0"
+commit = true
+tag = true
+tag_name = "v{new_version}"
+message = "chore: bump version {current_version} → {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src/utils/enums.py"
+search = 'VERSION = "{current_version}"'
+replace = 'VERSION = "{new_version}"'
