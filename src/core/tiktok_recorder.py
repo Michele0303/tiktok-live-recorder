@@ -101,15 +101,8 @@ class TikTokRecorder:
                 self.room_id = self.tiktok.get_room_id_from_user(self.user)
                 self.manual_mode()
 
-            except UserLiveError as ex:
+            except (UserLiveError, LiveNotFound) as ex:
                 logger.info(ex)
-                logger.info(
-                    f"Waiting {self.automatic_interval} minutes before recheck\n"
-                )
-                time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
-
-            except LiveNotFound as ex:
-                logger.error(f"Live not found: {ex}")
                 logger.info(
                     f"Waiting {self.automatic_interval} minutes before recheck\n"
                 )
@@ -118,9 +111,6 @@ class TikTokRecorder:
             except ConnectionError:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
-
-            except Exception as ex:
-                logger.error(f"Unexpected error: {ex}\n")
 
     def followers_mode(self):
         active_recordings = {}  # follower -> Thread
@@ -155,8 +145,15 @@ class TikTokRecorder:
 
                         time.sleep(2.5)
 
-                    except Exception as e:
+                    except TikTokRecorderError as e:
                         logger.error(f"Error while processing @{follower}: {e}")
+                        continue
+
+                    except Exception as e:
+                        logger.error(
+                            f"Unexpected error processing @{follower}: {e}",
+                            exc_info=True,
+                        )
                         continue
 
                 print()
@@ -165,7 +162,7 @@ class TikTokRecorder:
                 )
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except UserLiveError as ex:
+            except (UserLiveError, LiveNotFound) as ex:
                 logger.info(ex)
                 logger.info(
                     f"Waiting {self.automatic_interval} minutes before recheck\n"
@@ -175,9 +172,6 @@ class TikTokRecorder:
             except ConnectionError:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
-
-            except Exception as ex:
-                logger.error(f"Unexpected error: {ex}\n")
 
     def _build_output_path(self, user: str) -> str:
         filename = (
@@ -231,7 +225,8 @@ class TikTokRecorder:
                         logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                         time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-                except (RequestException, HTTPException):
+                except (RequestException, HTTPException) as ex:
+                    logger.warning(f"Network hiccup, retrying: {ex}")
                     time.sleep(2)
 
                 except KeyboardInterrupt:
@@ -239,7 +234,10 @@ class TikTokRecorder:
                     stop_recording = True
 
                 except Exception as ex:
-                    logger.error(f"Unexpected error: {ex}\n")
+                    logger.error(
+                        f"Unexpected error during recording: {ex}",
+                        exc_info=True,
+                    )
                     stop_recording = True
 
                 finally:

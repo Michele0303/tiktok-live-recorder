@@ -79,7 +79,7 @@ class Telegram:
                 logger.info("File successfully uploaded to Telegram.\n")
 
             except Exception as e:
-                logger.error(f"Error during Telegram upload: {e}\n")
+                logger.error(f"Error during Telegram upload: {e}\n", exc_info=True)
 
             finally:
                 await self.client.disconnect()

@@ -12,7 +12,7 @@ def record_user(config):
     try:
         TikTokRecorder(config).run()
     except Exception as e:
-        logger.error(f"{e}")
+        logger.error(f"{e}", exc_info=True)
 
 
 def _build_config(args, mode, cookies, user=None):

@@ -49,11 +49,12 @@ class VideoManagement:
             ffmpeg.input(file).output(
                 file.replace("_flv.mp4", ".mp4"), **output_args
             ).run(quiet=True)
+
         except ffmpeg.Error as e:
             logger.error(
-                f"ffmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"
+                f"ffmpeg conversion failed: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"
             )
+            return
 
         os.remove(file)
-
         logger.info("Finished converting {}\n".format(file))

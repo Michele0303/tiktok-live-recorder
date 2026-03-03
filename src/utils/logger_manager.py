@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
 
 class MaxLevelFilter(logging.Filter):
@@ -11,12 +12,11 @@ class MaxLevelFilter(logging.Filter):
         self.max_level = max_level
 
     def filter(self, record):
-        # Only accept records whose level number is <= self.max_level
         return record.levelno <= self.max_level
 
 
 class LoggerManager:
-    _instance = None  # Singleton instance
+    _instance = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -28,42 +28,42 @@ class LoggerManager:
     def setup_logger(self):
         if self.logger is None:
             self.logger = logging.getLogger("logger")
-            self.logger.setLevel(logging.INFO)
+            self.logger.setLevel(logging.DEBUG)
 
-            # 1) INFO handler
+            fmt_datefmt = "%Y-%m-%d %H:%M:%S"
+
+            # 1) Console INFO handler (stdout)
             info_handler = logging.StreamHandler()
             info_handler.setLevel(logging.INFO)
-            info_format = "[*] %(asctime)s - %(message)s"
-            info_datefmt = "%Y-%m-%d %H:%M:%S"
-            info_formatter = logging.Formatter(info_format, info_datefmt)
-            info_handler.setFormatter(info_formatter)
-
-            # Add a filter to exclude ERROR level (and above) messages
+            info_handler.setFormatter(
+                logging.Formatter("[*] %(asctime)s - %(message)s", fmt_datefmt)
+            )
             info_handler.addFilter(MaxLevelFilter(logging.INFO))
-
             self.logger.addHandler(info_handler)
 
-            # 2) ERROR handler
+            # 2) Console ERROR handler (stderr)
             error_handler = logging.StreamHandler()
             error_handler.setLevel(logging.ERROR)
-            error_format = "[!] %(asctime)s - %(message)s"
-            error_datefmt = "%Y-%m-%d %H:%M:%S"
-            error_formatter = logging.Formatter(error_format, error_datefmt)
-            error_handler.setFormatter(error_formatter)
-
+            error_handler.setFormatter(
+                logging.Formatter("[!] %(asctime)s - %(message)s", fmt_datefmt)
+            )
             self.logger.addHandler(error_handler)
 
-    def info(self, message):
-        """
-        Log an INFO-level message.
-        """
-        self.logger.info(message)
-
-    def error(self, message):
-        """
-        Log an ERROR-level message.
-        """
-        self.logger.error(message)
+            # 3) File handler — DEBUG level, includes full stack traces
+            #    Rotates at 5 MB, keeps 3 backups
+            file_handler = RotatingFileHandler(
+                "tiktok-recorder.log",
+                maxBytes=5 * 1024 * 1024,
+                backupCount=3,
+                encoding="utf-8",
+            )
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(
+                logging.Formatter(
+                    "%(asctime)s [%(levelname)s] %(message)s", fmt_datefmt
+                )
+            )
+            self.logger.addHandler(file_handler)
 
 
 logger = LoggerManager().logger
