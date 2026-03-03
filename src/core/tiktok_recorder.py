@@ -180,7 +180,9 @@ class TikTokRecorder:
                 logger.error(f"Unexpected error: {ex}\n")
 
     def _build_output_path(self, user: str) -> str:
-        filename = f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
+        filename = (
+            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
+        )
         if self.output:
             return str(Path(self.output) / filename)
         return filename
