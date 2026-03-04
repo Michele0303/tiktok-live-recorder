@@ -73,7 +73,10 @@ def check_updates() -> bool:
         return False
 
     def _parse_version(v):
-        return tuple(int(x) for x in str(v).split("."))
+        try:
+            return (float(str(v)),)
+        except ValueError:
+            return tuple(int(x) for x in str(v).split("."))
 
     if _parse_version(Info.VERSION) != _parse_version(InfoOld.VERSION):
         print(
@@ -106,7 +109,7 @@ def check_updates() -> bool:
         destination = dir_path / item.name
 
         # Skip overwriting the files we want to preserve
-        if source.name in files_to_preserve:
+        if source.name in files_to_preserve or source.suffix == ".session":
             continue
 
         # If it's a file, overwrite it
