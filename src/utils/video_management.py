@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 
 import ffmpeg
 
@@ -57,4 +58,4 @@ class VideoManagement:
             return
 
         os.remove(file)
-        logger.info("Finished converting {}\n".format(file))
+        logger.info(f"Finished converting {Path(file).resolve()}\n")
