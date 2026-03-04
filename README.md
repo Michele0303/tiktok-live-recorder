@@ -74,8 +74,7 @@ Install Termux from [F-Droid](https://f-droid.org/packages/com.termux/) (avoid t
 
 ```bash
 pkg update && pkg upgrade
-pkg install git python3 ffmpeg
-pip install uv --break-system-packages
+pkg install git python3 ffmpeg uv
 git clone https://github.com/Michele0303/tiktok-live-recorder
 cd tiktok-live-recorder
 uv sync
