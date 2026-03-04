@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 
 import ffmpeg
 
@@ -39,6 +40,7 @@ class VideoManagement:
                 "c": "copy",
                 "y": "-y",
             }
+            output_file = file.replace("_flv.mp4", ".mp4")
 
             if bitrate:
                 output_args["b:v"] = bitrate
@@ -47,7 +49,7 @@ class VideoManagement:
                 output_args["c:a"] = "copy"
 
             ffmpeg.input(file).output(
-                file.replace("_flv.mp4", ".mp4"), **output_args
+                output_file, **output_args
             ).run(quiet=True)
 
         except ffmpeg.Error as e:
@@ -57,4 +59,4 @@ class VideoManagement:
             return
 
         os.remove(file)
-        logger.info("Finished converting {}\n".format(file))
+        logger.info(f"Finished converting {Path(output_file).resolve()}\n")
