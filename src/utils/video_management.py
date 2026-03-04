@@ -48,9 +48,7 @@ class VideoManagement:
                 output_args["c:v"] = "libx264"
                 output_args["c:a"] = "copy"
 
-            ffmpeg.input(file).output(
-                output_file, **output_args
-            ).run(quiet=True)
+            ffmpeg.input(file).output(output_file, **output_args).run(quiet=True)
 
         except ffmpeg.Error as e:
             logger.error(
