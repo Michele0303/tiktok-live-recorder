@@ -246,7 +246,7 @@ class TikTokRecorder:
                         buffer.clear()
                     out_file.flush()
 
-        logger.info(f"Recording finished: {output}\n")
+        logger.info(f"Recording finished: {Path(output).resolve()}\n")
         VideoManagement.convert_flv_to_mp4(output, self.bitrate)
 
     def check_country_blacklisted(self):
