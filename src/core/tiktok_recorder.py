@@ -15,7 +15,7 @@ from utils.enums import Mode, Error, TimeOut, TikTokError
 
 class TikTokRecorder:
     def __init__(self, config: RecorderConfig):
-        self.tiktok = TikTokAPI(proxy=config.proxy, cookies=config.cookies)
+        self.tiktok = TikTokAPI(proxy=config.proxy, cookies=config.cookies, tikrec_url=config.tikrec_url)
 
         self.url = config.url
         self.user = config.user
@@ -28,6 +28,7 @@ class TikTokRecorder:
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
+        self._tikrec_url = config.tikrec_url
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -61,7 +62,7 @@ class TikTokRecorder:
         # If proxy was used for the initial checks, switch to a direct connection
         # for the actual stream download to avoid proxy bottlenecks
         if self._proxy:
-            self.tiktok = TikTokAPI(proxy=None, cookies=self._cookies)
+            self.tiktok = TikTokAPI(proxy=None, cookies=self._cookies, tikrec_url=self._tikrec_url)
 
     def run(self):
         """
