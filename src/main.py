@@ -30,6 +30,7 @@ def _build_config(args, mode, cookies, user=None):
         duration=args.duration,
         use_telegram=args.telegram,
         bitrate=args.bitrate,
+        tikrec_url=args.tikrec_url,
     )
 
 

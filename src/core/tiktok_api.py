@@ -12,12 +12,12 @@ from utils.custom_exceptions import (
 
 
 class TikTokAPI:
-    def __init__(self, proxy, cookies):
+    def __init__(self, proxy, cookies, tikrec_url):
         self.BASE_URL = "https://www.tiktok.com"
         self.WEBCAST_URL = "https://webcast.tiktok.com"
         self.API_URL = "https://www.tiktok.com/api-live/user/room/"
         self.EULER_API = "https://tiktok.eulerstream.com"
-        self.TIKREC_API = "https://tikrec.com"
+        self.tikrec_url = tikrec_url
 
         self.http_client = HttpClient(proxy, cookies).req
         self._http_client_stream = HttpClient(proxy, cookies).req_stream
@@ -134,7 +134,7 @@ class TikTokAPI:
 
     def _tikrec_get_room_id_signed_url(self, user: str) -> str:
         response = self.http_client.get(
-            f"{self.TIKREC_API}/tiktok/room/api/sign",
+            f"{self.tikrec_url}/tiktok/room/api/sign",
             params={"unique_id": user},
         )
 
