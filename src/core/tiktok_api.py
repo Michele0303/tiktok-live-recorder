@@ -225,9 +225,39 @@ class TikTokAPI:
 
         return followers
 
-    def get_live_url(self, room_id: str) -> str | None:
+    def _get_stream_url_from_page(self, user: str) -> str | None:
         """
-        Return the cdn (flv or m3u8) of the streaming
+        Fallback: fetch the live page HTML and extract the stream URL directly.
+        Used when the webcast API returns status code 4003110 (WAF/access restriction).
+        """
+        try:
+            live_page_url = f"{self.BASE_URL}/@{user}/live"
+            response = self.http_client.get(live_page_url)
+            content = response.text
+
+            flv_matches = re.findall(r'https?://[^\s"\'<>]+\.flv[^\s"\'<>]*', content)
+            if flv_matches:
+                for url in flv_matches:
+                    url = url.rstrip("\\")
+                    if "_or4" in url or "_sd" in url:
+                        logger.info(f"Found stream URL from page: {url[:80]}...")
+                        return url
+                return flv_matches[0].rstrip("\\")
+
+            hls_matches = re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)
+            if hls_matches:
+                return hls_matches[0]
+
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to extract stream URL from page: {e}")
+            return None
+
+    def get_live_url(self, room_id: str, user: str = None) -> str | None:
+        """
+        Return the cdn (flv or m3u8) of the streaming.
+        If the API returns status code 4003110 and a username is provided,
+        falls back to scraping the live page directly.
         """
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
@@ -235,6 +265,19 @@ class TikTokAPI:
 
         if "This account is private" in data:
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
+
+        status_code = data.get("status_code", 0)
+
+        if status_code == 4003110:
+            if user:
+                logger.info(
+                    "API blocked by WAF (4003110). Trying fallback: extract stream URL from live page..."
+                )
+                fallback_url = self._get_stream_url_from_page(user)
+                if fallback_url:
+                    return fallback_url
+
+            raise UserLiveError(TikTokError.LIVE_RESTRICTION)
 
         stream_url = data.get("data", {}).get("stream_url", {})
 
