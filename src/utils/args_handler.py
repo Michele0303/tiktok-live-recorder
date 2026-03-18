@@ -99,6 +99,23 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-save-chat",
+        dest="save_chat",
+        action="store_true",
+        help="Save live chat messages to a text file alongside the recording.",
+    )
+
+    parser.add_argument(
+        "-chat-output",
+        dest="chat_output",
+        help=(
+            "Specify the output file path for saved chat messages.\n"
+            "Implies -save-chat. Default: chat_<user>_<timestamp>.txt"
+        ),
+        action="store",
+    )
+
+    parser.add_argument(
         "-no-update-check",
         dest="update_check",
         action="store_false",

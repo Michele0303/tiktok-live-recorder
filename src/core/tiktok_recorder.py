@@ -26,6 +26,8 @@ class TikTokRecorder:
         self.output = config.output
         self.bitrate = config.bitrate
         self.use_telegram = config.use_telegram
+        self.save_chat = config.save_chat
+        self.chat_output = config.chat_output
         self._proxy = config.proxy
         self._cookies = config.cookies
 
@@ -181,6 +183,17 @@ class TikTokRecorder:
             return str(Path(self.output) / filename)
         return filename
 
+    def _build_chat_output_path(self, user: str) -> str:
+        """Build the output path for the chat log file."""
+        if self.chat_output:
+            return self.chat_output
+        filename = (
+            f"chat_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}.txt"
+        )
+        if self.output:
+            return str(Path(self.output) / filename)
+        return filename
+
     def start_recording(self, user, room_id):
         """
         Start recording live
@@ -190,6 +203,15 @@ class TikTokRecorder:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         output = self._build_output_path(user)
+
+        # Start chat collection if enabled
+        chat_collector = None
+        if self.save_chat:
+            from core.chat_collector import ChatCollector
+
+            chat_path = self._build_chat_output_path(user)
+            chat_collector = ChatCollector(user=user, output_path=chat_path)
+            chat_collector.start()
 
         if self.duration:
             logger.info(f"Started recording for {self.duration} seconds ")
@@ -245,6 +267,10 @@ class TikTokRecorder:
                         out_file.write(buffer)
                         buffer.clear()
                     out_file.flush()
+
+        # Stop chat collection
+        if chat_collector is not None:
+            chat_collector.stop()
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
         VideoManagement.convert_flv_to_mp4(output, self.bitrate)

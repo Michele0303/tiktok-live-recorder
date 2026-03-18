@@ -30,6 +30,8 @@ def _build_config(args, mode, cookies, user=None):
         duration=args.duration,
         use_telegram=args.telegram,
         bitrate=args.bitrate,
+        save_chat=args.save_chat or bool(args.chat_output),
+        chat_output=args.chat_output,
     )
 
 

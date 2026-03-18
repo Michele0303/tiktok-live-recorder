@@ -18,6 +18,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+chat = [
+    "TikTokLive>=7.0.0",
+]
 dev = [
     "ruff>=0.12.0",
     "pre-commit>=4.3.0",
