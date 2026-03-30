@@ -2,7 +2,7 @@ import argparse
 import re
 
 from utils.custom_exceptions import ArgsParseError
-from utils.enums import Mode, Regex
+from utils.enums import Mode, OutputFormat, Regex
 
 
 def parse_args():
@@ -96,6 +96,17 @@ def parse_args():
         dest="bitrate",
         help="Specify the bitrate for the output file (e.g. 1000k, 1M). Default: None (keep original)",
         action="store",
+    )
+
+    parser.add_argument(
+        "-format",
+        dest="output_format",
+        choices=[f.value for f in OutputFormat],
+        default=OutputFormat.MP4.value,
+        help=(
+            "Final output container after recording [Default: mp4].\n"
+            f"Choices: {', '.join(f.value for f in OutputFormat)}."
+        ),
     )
 
     parser.add_argument(
