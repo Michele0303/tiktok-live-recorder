@@ -26,6 +26,7 @@ class TikTokRecorder:
         self.output = config.output
         self.bitrate = config.bitrate
         self.use_telegram = config.use_telegram
+        self.output_format = config.output_format
         self._proxy = config.proxy
         self._cookies = config.cookies
 
@@ -175,7 +176,7 @@ class TikTokRecorder:
 
     def _build_output_path(self, user: str) -> str:
         filename = (
-            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
+            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_raw.flv"
         )
         if self.output:
             return str(Path(self.output) / filename)
@@ -247,7 +248,7 @@ class TikTokRecorder:
                     out_file.flush()
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
-        VideoManagement.convert_flv_to_mp4(output, self.bitrate)
+        VideoManagement.finalize_recording(output, self.output_format, self.bitrate)
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()

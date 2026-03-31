@@ -37,6 +37,16 @@ class Mode(IntEnum):
     FOLLOWERS = 2
 
 
+class OutputFormat(str, Enum):
+    """Final container format after capture (stream is recorded as FLV)."""
+
+    MP4 = "mp4"
+    FLV = "flv"
+    MKV = "mkv"
+    MOV = "mov"
+    TS = "ts"
+
+
 class Error(Enum):
     """
     Enumeration that contains possible errors while using TikTok-Live-Recorder.
