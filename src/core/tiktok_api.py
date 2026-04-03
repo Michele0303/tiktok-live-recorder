@@ -1,5 +1,6 @@
 import json
 import re
+import requests  
 
 from http_utils.http_client import HttpClient
 from utils.enums import StatusCode, TikTokError
@@ -25,22 +26,14 @@ class TikTokAPI:
     def _is_authenticated(self) -> bool:
         response = self.http_client.get(f"{self.BASE_URL}/foryou")
         response.raise_for_status()
-
         content = response.text
         return "login-title" not in content
 
     def is_country_blacklisted(self) -> bool:
-        """
-        Checks if the user is in a blacklisted country that requires login
-        """
         response = self.http_client.get(f"{self.BASE_URL}/live", allow_redirects=False)
-
         return response.status_code == StatusCode.REDIRECT
 
     def is_room_alive(self, room_id: str) -> bool:
-        """
-        Checking whether the user is live.
-        """
         if not room_id:
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
@@ -55,28 +48,19 @@ class TikTokAPI:
         return data["data"][0].get("alive", False)
 
     def get_sec_uid(self):
-        """
-        Returns the sec_uid of the authenticated user.
-        """
         response = self.http_client.get(f"{self.BASE_URL}/foryou")
-
         sec_uid = re.search('"secUid":"(.*?)",', response.text)
         if sec_uid:
             sec_uid = sec_uid.group(1)
-
         return sec_uid
 
     def get_user_from_room_id(self, room_id) -> str:
-        """
-        Given a room_id, I get the username
-        """
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
         ).json()
 
         if "Follow the creator to watch their LIVE" in json.dumps(data):
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE_FOLLOW)
-
         if "This account is private" in data:
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
 
@@ -87,9 +71,6 @@ class TikTokAPI:
         return display_id
 
     def get_room_and_user_from_url(self, live_url: str):
-        """
-        Given a url, get user and room_id.
-        """
         response = self.http_client.get(live_url, allow_redirects=False)
         content = response.text
 
@@ -100,36 +81,29 @@ class TikTokAPI:
             matches = re.findall("com/@(.*?)/live", content)
             if len(matches) < 1:
                 raise LiveNotFound(TikTokError.INVALID_TIKTOK_LIVE_URL)
-
             user = matches[0]
 
-        # https://www.tiktok.com/@<username>/live
         match = re.match(r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live", live_url)
         if match:
             user = match.group(1)
 
         room_id = self.get_room_id_from_user(user)
-
         return user, room_id
 
     def _old_get_room_id_from_user(self, user: str) -> str:
         params = {"uniqueId": user, "giftInfo": "false"}
-
         response = self.http_client.get(
             f"{self.EULER_API}/webcast/room_info",
             params=params,
             headers={"x-api-key": ""},
         )
-
         if response.status_code != 200:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
         data = response.json()
-
         room_id = data.get("data", {}).get("room_info", {}).get("id")
         if not room_id:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
-
         return room_id
 
     def _tikrec_get_room_id_signed_url(self, user: str) -> str:
@@ -137,16 +111,12 @@ class TikTokAPI:
             f"{self.TIKREC_API}/tiktok/room/api/sign",
             params={"unique_id": user},
         )
-
         data = response.json()
-
         signed_path = data.get("signed_path")
         return f"{self.BASE_URL}{signed_path}"
 
     def get_room_id_from_user(self, user: str) -> str | None:
-        """Given a username, get the room_id."""
         signed_url = self._tikrec_get_room_id_signed_url(user)
-
         response = self.http_client.get(signed_url)
         content = response.text
 
@@ -157,9 +127,6 @@ class TikTokAPI:
         return (data.get("data") or {}).get("user", {}).get("roomId")
 
     def get_followers_list(self, sec_uid) -> list:
-        """
-        Returns all followers for the authenticated user by paginating
-        """
         followers = []
         cursor = 0
         has_more = True
@@ -178,7 +145,7 @@ class TikTokAPI:
             "screen_height=1080&screen_width=1920&tz_name=Europe%2FRome&user_is_login=true&"
             "verifyFp=verify_mh4yf0uq_rdjp1Xwt_OoTk_4Jrf_AS8H_sp31opbnJFre&webcast_language=it-IT&"
             "msToken=GphHoLvRR4QxA5AWVwDkrs3AbumoK5H8toE8LVHtj6cce3ToGdXhMfvDWzOXG-0GXUWoaGVHrwGNA4k_NnjuFFnHgv2S5eMjsvtkAhwMPa13xLmvP7tumx0KreFjPwTNnOj-BvAkPdO5Zrev3hoFBD9lHVo=&X-Bogus=&X-Gnarly="
-        ).cookies["msToken"]
+        ).cookies.get("msToken", "")
 
         while has_more:
             url = (
@@ -197,10 +164,8 @@ class TikTokAPI:
             )
 
             response = self.http_client.get(url)
-
             if response.status_code != StatusCode.OK:
                 raise TikTokRecorderError("Failed to retrieve followers list.")
-
             if not response.content:
                 raise TikTokRecorderError("Empty response from TikTok followers API.")
 
@@ -214,20 +179,64 @@ class TikTokAPI:
 
             has_more = data.get("hasMore", False)
             new_cursor = data.get("minCursor", 0)
-
             if new_cursor == cursor:
                 break
-
             cursor = new_cursor
 
         if not followers:
             raise TikTokRecorderError("Followers list is empty.")
-
         return followers
 
-    def get_live_url(self, room_id: str) -> str | None:
+    def _find_stream_recursively(self, obj):
+        if isinstance(obj, dict):
+            if "stream_data" in obj and isinstance(obj["stream_data"], str):
+                try:
+                    parsed = json.loads(obj["stream_data"])
+                    flv = parsed.get("data", {}).get("origin", {}).get("main", {}).get("flv")
+                    if flv: return flv
+                except: pass
+            
+            if "flv_pull_url" in obj and isinstance(obj["flv_pull_url"], dict):
+                pull = obj["flv_pull_url"]
+                return pull.get("FULL_HD1") or pull.get("HD1") or pull.get("SD2") or pull.get("SD1")
+                
+            for v in obj.values():
+                res = self._find_stream_recursively(v)
+                if res: return res
+
+        elif isinstance(obj, list):
+            for item in obj:
+                res = self._find_stream_recursively(item)
+                if res: return res
+        return None
+
+    def _fallback_scrape(self, username: str):
+        """If the API hides the stream, steal it straight from the HTML page."""
+        url = f"{self.BASE_URL}/@{username}/live"
+        try:
+            # Put your sessionid and sessionid_ss here
+            stealth_headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0",
+                "Cookie": "sessionid=; sessionid_ss=;",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://www.tiktok.com/"
+            }
+            
+            # Bypass http_client and use our authenticated one
+            response = requests.get(url, headers=stealth_headers)
+            
+            match = re.search(r'id="SIGI_STATE"\s*type="application/json">([^<]+)</script>', response.text)
+            if match:
+                sigi = json.loads(match.group(1))
+                return self._find_stream_recursively(sigi)
+        except Exception as e:
+            logger.error(f"Fallback scrape failed: {e}")
+        return None
+
+    def get_live_url(self, room_id: str, username: str = None) -> str | None:
         """
-        Return the cdn (flv or m3u8) of the streaming
+        Return the cdn (flv or m3u8) of the streaming 
         """
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
@@ -236,51 +245,23 @@ class TikTokAPI:
         if "This account is private" in data:
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
 
-        stream_url = data.get("data", {}).get("stream_url", {})
+        # Step 1: Let it loose on API repsponse
+        flv_url = self._find_stream_recursively(data)
+        if flv_url:
+            logger.info("Target locked via Webcast API.")
+            return flv_url
 
-        sdk_data_str = (
-            stream_url.get("live_core_sdk_data", {})
-            .get("pull_data", {})
-            .get("stream_data")
-        )
-        if not sdk_data_str:
-            logger.warning(
-                "No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code."
-            )
-            return (
-                stream_url.get("flv_pull_url", {}).get("FULL_HD1")
-                or stream_url.get("flv_pull_url", {}).get("HD1")
-                or stream_url.get("flv_pull_url", {}).get("SD2")
-                or stream_url.get("flv_pull_url", {}).get("SD1")
-                or stream_url.get("rtmp_pull_url", "")
-            )
-
-        # Extract stream options
-        sdk_data = json.loads(sdk_data_str).get("data", {})
-        qualities = (
-            stream_url.get("live_core_sdk_data", {})
-            .get("pull_data", {})
-            .get("options", {})
-            .get("qualities", [])
-        )
-        if not qualities:
-            logger.warning("No qualities found in the stream data. Returning None.")
-            return None
-        level_map = {q["sdk_key"]: q["level"] for q in qualities}
-
-        best_level = -1
-        best_flv = None
-        for sdk_key, entry in sdk_data.items():
-            level = level_map.get(sdk_key, -1)
-            stream_main = entry.get("main", {})
-            if level > best_level:
-                best_level = level
-                best_flv = stream_main.get("flv")
-
-        if not best_flv and data.get("status_code") == 4003110:
-            raise UserLiveError(TikTokError.LIVE_RESTRICTION)
-
-        return best_flv
+        # Step 2: If the API withheld the data, trigger the HTML fallback scrape
+        if username:
+            logger.warning(f"Webcast API missed. Initiating deep-scrape for @{username}...")
+            fallback_url = self._fallback_scrape(username)
+            if fallback_url:
+                logger.info("Target locked via HTML Fallback.")
+                return fallback_url
+                
+        # Step 3: If both of methods miss, show an error.
+        logger.error("[!] All extraction methods failed. They might be completely offline.")
+        return None
 
     def download_live_stream(self, live_url: str):
         """Generator that returns the live stream for a given room_id."""
