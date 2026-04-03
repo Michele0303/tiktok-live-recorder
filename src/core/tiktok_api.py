@@ -248,7 +248,7 @@ class TikTokAPI:
         # Step 1: Let it loose on API repsponse
         flv_url = self._find_stream_recursively(data)
         if flv_url:
-            logger.info("[Target locked via Webcast API.")
+            logger.info("Target locked via Webcast API.")
             return flv_url
 
         # Step 2: If the API withheld the data, trigger the HTML fallback scrape
