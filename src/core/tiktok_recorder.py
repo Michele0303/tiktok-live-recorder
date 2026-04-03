@@ -185,7 +185,8 @@ class TikTokRecorder:
         """
         Start recording live
         """
-        live_url = self.tiktok.get_live_url(room_id)
+       
+        live_url = self.tiktok.get_live_url(room_id, user) 
         if not live_url:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
