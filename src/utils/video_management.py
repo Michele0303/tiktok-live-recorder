@@ -23,7 +23,7 @@ class VideoManagement:
         return False
 
     @staticmethod
-    def convert_flv_to_mp4(file, bitrate=None):
+    def convert_flv_to_mp4(file, bitrate=None, ffmpeg_path=None):
         """
         Convert the video from flv format to mp4 format
         """
@@ -48,7 +48,7 @@ class VideoManagement:
                 output_args["c:v"] = "libx264"
                 output_args["c:a"] = "copy"
 
-            ffmpeg.input(file).output(output_file, **output_args).run(quiet=True)
+            ffmpeg.input(file).output(output_file, **output_args).run(quiet=True, cmd=ffmpeg_path or "ffmpeg")
 
         except ffmpeg.Error as e:
             logger.error(

@@ -25,6 +25,7 @@ class TikTokRecorder:
         self.duration = config.duration
         self.output = config.output
         self.bitrate = config.bitrate
+        self.ffmpeg_path = config.ffmpeg_path
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
@@ -247,7 +248,7 @@ class TikTokRecorder:
                     out_file.flush()
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
-        VideoManagement.convert_flv_to_mp4(output, self.bitrate)
+        VideoManagement.convert_flv_to_mp4(output, self.bitrate, self.ffmpeg_path)
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
