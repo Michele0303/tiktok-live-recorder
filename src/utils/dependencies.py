@@ -5,10 +5,10 @@ from subprocess import SubprocessError
 from .logger_manager import logger
 
 
-def check_ffmpeg_binary():
+def check_ffmpeg_binary(ffmpeg_path="ffmpeg"):
     try:
         subprocess.run(
-            ["ffmpeg"],
+            [ffmpeg_path],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
         )
