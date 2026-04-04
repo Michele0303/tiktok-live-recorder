@@ -30,6 +30,12 @@ class TikTokRecorder:
         self._proxy = config.proxy
         self._cookies = config.cookies
 
+        if self.ffmpeg_path:
+            from utils.dependencies import check_ffmpeg_binary
+            if not check_ffmpeg_binary(self.ffmpeg_path):
+                raise TikTokRecorderError(f"Custom ffmpeg path is invalid: {self.ffmpeg_path}")
+
+
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
         self.check_country_blacklisted()
