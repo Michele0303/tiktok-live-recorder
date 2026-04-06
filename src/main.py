@@ -65,11 +65,15 @@ def main():
     from utils.utils import read_cookies
     from utils.logger_manager import logger
     from utils.custom_exceptions import TikTokRecorderError
+    from utils.dependencies import check_ffmpeg
     from check_updates import check_updates
 
     try:
         # validate and parse command line arguments
         args, mode = validate_and_parse_args()
+
+        # check ffmpeg binary (supports custom path via -ffmpeg-path)
+        check_ffmpeg(args.ffmpeg_path or "ffmpeg")
 
         # check for updates
         if args.update_check is True:
