@@ -30,7 +30,7 @@ def _build_config(args, mode, cookies, user=None):
         duration=args.duration,
         use_telegram=args.telegram,
         bitrate=args.bitrate,
-        ffmpeg_path=args.ffmpeg_path
+        ffmpeg_path=args.ffmpeg_path,
     )
 
 
