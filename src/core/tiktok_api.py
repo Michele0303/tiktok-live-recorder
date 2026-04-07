@@ -1,3 +1,4 @@
+import html
 import json
 import re
 
@@ -237,16 +238,17 @@ class TikTokAPI:
 
             flv_matches = re.findall(r'https?://[^\s"\'<>]+\.flv[^\s"\'<>]*', content)
             if flv_matches:
+                # Prefer original (_or4) or SD quality
                 for url in flv_matches:
-                    url = url.rstrip("\\")
+                    url = html.unescape(url.rstrip("\\"))
                     if "_or4" in url or "_sd" in url:
                         logger.info(f"Found stream URL from page: {url[:80]}...")
                         return url
-                return flv_matches[0].rstrip("\\")
+                return html.unescape(flv_matches[0].rstrip("\\"))
 
             hls_matches = re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)
             if hls_matches:
-                return hls_matches[0]
+                return html.unescape(hls_matches[0])
 
             return None
         except Exception as e:
@@ -319,9 +321,6 @@ class TikTokAPI:
             if level > best_level:
                 best_level = level
                 best_flv = stream_main.get("flv")
-
-        if not best_flv and data.get("status_code") == 4003110:
-            raise UserLiveError(TikTokError.LIVE_RESTRICTION)
 
         return best_flv
 
