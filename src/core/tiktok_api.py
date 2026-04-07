@@ -248,7 +248,7 @@ class TikTokAPI:
 
             hls_matches = re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)
             if hls_matches:
-                return html.unescape(hls_matches[0])
+                return html.unescape(hls_matches[0].rstrip("\\"))
 
             return None
         except Exception as e:
