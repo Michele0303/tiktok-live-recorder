@@ -157,7 +157,7 @@ This CLI tool gives you full control - run it on your own machine, customize the
 | Setup | Python + FFmpeg + terminal | Open Telegram, send /watch |
 | Runs on | Your machine | Cloud (24/7) |
 | Storage | Your disk | Telegram (unlimited) |
-| Multi-creator | One process per user | Automatic for all watchlist |
+| Multi-creator | Comma-separated users or followers mode | Automatic for all watchlist |
 | Monitoring | Automatic (if your machine runs 24/7) | 24/7 on cloud, detection < 3 min |
 | Cost | Free + electricity | Free |
 | Customizable | Full source code | No |
