@@ -17,11 +17,27 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 </div>
 
+---
+
+### Don't want to run it yourself?
+
+**[TikRec](https://tikrec.com)** is the hosted cloud version of this recorder. Same recording engine, running 24/7 on a server, delivering MP4s straight to your Telegram.
+
+- No installation, no terminal, no FFmpeg
+- Add TikTok usernames to a watchlist via [@tikrec_live_bot](https://t.me/tikrec_live_bot) on Telegram
+- Recordings delivered automatically when creators go live
+- Free for your watchlist. Past recordings from the archive available with Telegram Stars.
+
+**[Open TikRec on Telegram](https://t.me/tikrec_live_bot)** | **[Browse the recording archive](https://tikrec.com/latest)**
+
+---
+
 ## Table of Contents
 
 - [Installation](#installation)
 - [Usage](#command-line-usage)
 - [Guide](#guide)
+- [TikRec Cloud vs Self-Hosted](#tikrec-cloud-vs-self-hosted)
 
 ## Installation
 
@@ -129,6 +145,26 @@ uv run python src/main.py [options]
 - **`manual`** *(default)*: Records immediately if the user is currently live.
 - **`automatic`**: Polls at regular intervals and records whenever the user goes live.
 - **`followers`**: Automatically records live streams from all followed users.
+
+## TikRec Cloud vs Self-Hosted
+
+This CLI tool gives you full control - run it on your own machine, customize the output, pipe it into your own workflow. But it requires a computer running 24/7, FFmpeg installed, and manual setup per creator.
+
+[TikRec](https://tikrec.com) is the cloud version built by the same developer. It uses the same FFmpeg recording engine but runs on a server so you don't have to keep anything running.
+
+| | This CLI | [TikRec Cloud](https://tikrec.com) |
+|---|---|---|
+| Setup | Python + FFmpeg + terminal | Open Telegram, send /watch |
+| Runs on | Your machine | Cloud (24/7) |
+| Storage | Your disk | Telegram (unlimited) |
+| Multi-creator | One process per user | Automatic for all watchlist |
+| Monitoring | Manual | 24/7, detection < 3 min |
+| Cost | Free + electricity | Free |
+| Customizable | Full source code | No |
+
+**Use this CLI** if you want full control, custom output, or integration with your own tools.
+
+**Use [TikRec](https://t.me/tikrec_live_bot)** if you want recordings delivered to Telegram without maintaining anything.
 
 ## Guide
 
