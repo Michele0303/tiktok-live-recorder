@@ -108,6 +108,14 @@ def parse_args():
         ),
     )
 
+    parser.add_argument(
+        "-tikrec-url",
+        dest="tikrec_url",
+        help="Allows overriding the tikrec url signing service, if you have your own instance running.",
+        default="https://tikrec.com",
+        action="store",
+    )
+
     args = parser.parse_args()
 
     return args

@@ -126,19 +126,20 @@ uv run python src/main.py [options]
 
 ### Options
 
-| Flag | Description |
-|------|-------------|
-| `-user <USERNAME>` | Username(s) to record. Separate multiple with commas. |
-| `-url <URL>` | TikTok live URL to record from. |
-| `-room_id <ROOM_ID>` | Room ID to record from. |
-| `-mode <MODE>` | Recording mode: `manual`, `automatic`, `followers`. |
-| `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). |
-| `-output <DIRECTORY>` | Directory where recordings will be saved. |
-| `-duration <SECONDS>` | Stop recording after this many seconds. |
-| `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
-| `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
-| `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
-| `-no-update-check` | Skip the automatic update check on startup. |
+| Flag                        | Description                                                           |
+|-----------------------------|-----------------------------------------------------------------------|
+| `-user <USERNAME>`          | Username(s) to record. Separate multiple with commas.                 |
+| `-url <URL>`                | TikTok live URL to record from.                                       |
+| `-room_id <ROOM_ID>`        | Room ID to record from.                                               |
+| `-mode <MODE>`              | Recording mode: `manual`, `automatic`, `followers`.                   |
+| `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only).                    |
+| `-output <DIRECTORY>`       | Directory where recordings will be saved.                             |
+| `-duration <SECONDS>`       | Stop recording after this many seconds.                               |
+| `-proxy <URL>`              | HTTP proxy to bypass regional restrictions.                           |
+| `-bitrate <BITRATE>`        | Output bitrate for post-processing (e.g. `1M`, `1000k`).              |
+| `-telegram`                 | Upload the recording to Telegram when done. Requires `telegram.json`. |
+| `-no-update-check`          | Skip the automatic update check on startup.                           |
+| `-tikrec-url`               | Configure the url for the tikrec url signing service                  |
 
 ### Recording Modes
 
