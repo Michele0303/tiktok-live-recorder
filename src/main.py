@@ -73,10 +73,14 @@ def main():
         # check for updates
         if args.update_check is True:
             logger.info("Checking for updates...\n")
-            if check_updates():
-                exit()
-        else:
-            logger.info("Skipped update check\n")
+            check_updates()
+            exit()
+        
+        # added a message to show the output file location to the user.
+        if args.output:
+            print(f"Videos will be saved at: {args.output}")
+        else: 
+            print("Videos will be saved in the default directory")
 
         # read cookies from the config file
         cookies = read_cookies()
