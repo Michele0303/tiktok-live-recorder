@@ -29,6 +29,7 @@ def _build_config(args, mode, cookies, user=None):
         output=args.output,
         duration=args.duration,
         use_telegram=args.telegram,
+        skip_conversion=args.skip_convert,
         bitrate=args.bitrate,
     )
 
