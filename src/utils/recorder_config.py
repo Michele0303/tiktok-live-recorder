@@ -15,4 +15,5 @@ class RecorderConfig:
     output: str | None = None
     duration: int | None = None
     use_telegram: bool = False
+    skip_conversion: bool = False
     bitrate: str | None = None

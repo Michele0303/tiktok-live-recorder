@@ -99,6 +99,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--skip-convert",
+        "-skip-convert",
+        dest="skip_convert",
+        action="store_true",
+        help="Skip FLV to MP4 conversion after recording finishes.",
+    )
+
+    parser.add_argument(
         "-no-update-check",
         dest="update_check",
         action="store_false",
