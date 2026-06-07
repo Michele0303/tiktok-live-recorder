@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 
-# Execute main.py with all passed arguments
-exec python3 main.py -no-update-check "$@"
+# Execute main.py with the prebuilt virtual environment.
+exec /app/.venv/bin/python main.py -no-update-check "$@"
