@@ -108,7 +108,7 @@ class TikTokRecorder:
                 )
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except ConnectionError:
+            except (ConnectionError, RequestException, HTTPException):
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
@@ -169,7 +169,7 @@ class TikTokRecorder:
                 )
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except ConnectionError:
+            except (ConnectionError, RequestException, HTTPException):
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
