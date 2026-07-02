@@ -35,3 +35,9 @@ class NetworkError(TikTokRecorderError):
     """Raised for network-related errors."""
 
     pass
+
+
+class TikRecUnavailableError(TikTokRecorderError):
+    """Raised when the tikrec signing service is unreachable or returns an unexpected response."""
+
+    pass

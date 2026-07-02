@@ -8,6 +8,7 @@ from utils.custom_exceptions import (
     UserLiveError,
     TikTokRecorderError,
     LiveNotFound,
+    TikRecUnavailableError,
 )
 
 
@@ -133,19 +134,44 @@ class TikTokAPI:
         return room_id
 
     def _tikrec_get_room_id_signed_url(self, user: str) -> str:
-        response = self.http_client.get(
-            f"{self.TIKREC_API}/tiktok/room/api/sign",
-            params={"unique_id": user},
-        )
+        try:
+            response = self.http_client.get(
+                f"{self.TIKREC_API}/tiktok/room/api/sign",
+                params={"unique_id": user},
+            )
+            response.raise_for_status()
+        except Exception as e:
+            raise TikRecUnavailableError(
+                f"tikrec signing service is unreachable: {e}"
+            ) from e
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError as e:
+            raise TikRecUnavailableError(
+                "tikrec signing service returned an invalid response "
+                "(expected JSON, got something else — the service may be down)."
+            ) from e
 
         signed_path = data.get("signed_path")
+        if not signed_path:
+            raise TikRecUnavailableError(
+                "tikrec signing service did not return a signed_path "
+                "(the service may be down or overloaded)."
+            )
+
         return f"{self.BASE_URL}{signed_path}"
 
     def get_room_id_from_user(self, user: str) -> str | None:
         """Given a username, get the room_id."""
-        signed_url = self._tikrec_get_room_id_signed_url(user)
+        try:
+            signed_url = self._tikrec_get_room_id_signed_url(user)
+        except TikRecUnavailableError as e:
+            logger.warning(
+                f"[!] tikrec is unavailable ({e}). "
+                "Falling back to unsigned API — recording continues but may be less reliable."
+            )
+            return self._old_get_room_id_from_user(user)
 
         response = self.http_client.get(signed_url)
         content = response.text
