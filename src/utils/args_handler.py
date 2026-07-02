@@ -108,6 +108,18 @@ def parse_args():
         ),
     )
 
+    parser.add_argument(
+        "-ffmpeg-path",
+        dest="ffmpeg_path",
+        help=(
+            "Path to a custom ffmpeg binary.\n"
+            "Useful when ffmpeg is not on PATH or a standalone binary is preferred.\n"
+            "Example: -ffmpeg-path /opt/ffmpeg/bin/ffmpeg"
+        ),
+        default=None,
+        action="store",
+    )
+
     args = parser.parse_args()
 
     return args
@@ -166,6 +178,14 @@ def validate_and_parse_args():
         raise ArgsParseError(
             "Incorrect automatic_interval value. Must be one minute or more."
         )
+
+    if args.ffmpeg_path is not None:
+        from pathlib import Path
+
+        if not Path(args.ffmpeg_path).is_file():
+            raise ArgsParseError(
+                f"The specified ffmpeg binary was not found: {args.ffmpeg_path}"
+            )
 
     if args.mode == "manual":
         mode = Mode.MANUAL
