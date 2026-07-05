@@ -48,12 +48,11 @@ def _merge_cookies(existing_path: Path, new_path: Path) -> None:
     if not isinstance(new_defaults, dict):
         return
 
-    # Start from the new version's structure so added/removed keys stay current.
-    # Preserve the user's value for any key that is already non-empty.
-    merged = {
-        key: (existing[key] if existing.get(key) else default)
-        for key, default in new_defaults.items()
-    }
+    # Preserve all existing user cookies and add only new defaults shipped by updates.
+    merged = dict(existing)
+    for key, default in new_defaults.items():
+        if key not in merged:
+            merged[key] = default
 
     with open(existing_path, "w") as f:
         json.dump(merged, f, indent=2)
