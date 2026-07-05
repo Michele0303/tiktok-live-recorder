@@ -37,11 +37,15 @@ def _merge_cookies(existing_path: Path, new_path: Path) -> None:
             existing = json.load(f)
     except (OSError, json.JSONDecodeError):
         existing = {}
+    if not isinstance(existing, dict):
+        existing = {}
 
     try:
         with open(new_path, "r") as f:
             new_defaults = json.load(f)
     except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(new_defaults, dict):
         return
 
     # Start from the new version's structure so added/removed keys stay current.
