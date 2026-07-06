@@ -22,6 +22,7 @@ dev = [
     "ruff>=0.12.0",
     "pre-commit>=4.3.0",
     "bump-my-version>=0.32.0",
+    "pytest",
 ]
 
 [project.urls]
@@ -50,6 +51,9 @@ commit = true
 tag = true
 tag_name = "v{new_version}"
 message = "chore: bump version {current_version} → {new_version}"
+
+[pytest]
+addopts = ["--import-mode=importlib"]
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
