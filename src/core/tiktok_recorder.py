@@ -70,7 +70,7 @@ class TikTokRecorder:
             self.tiktok = TikTokAPI(proxy=None, cookies=self._cookies)
 
     def _start_chat_logger(self, username: str, room_id: str, events_file):
-        """Run a separate daemon thread to capture chat without blocking the video donwnload"""
+        """Run a separate daemon thread to capture chat without blocking the video download."""
         client = TikTokLiveClient(unique_id=f"@{username}")
 
         @client.on(CommentEvent)
