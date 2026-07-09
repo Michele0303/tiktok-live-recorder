@@ -13,12 +13,18 @@ from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderE
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
 
+from TikTokLive import TikTokLiveClient
+from TikTokLive.events import ConnectEvent, CommentEvent
+import asyncio
+
+
 class TikTokRecorder:
     def __init__(self, config: RecorderConfig):
         self.tiktok = TikTokAPI(proxy=config.proxy, cookies=config.cookies)
 
         self.url = config.url
         self.user = config.user
+
         self.room_id = config.room_id
         self.mode = config.mode
         self.automatic_interval = config.automatic_interval
@@ -63,6 +69,28 @@ class TikTokRecorder:
         if self._proxy:
             self.tiktok = TikTokAPI(proxy=None, cookies=self._cookies)
 
+    def _start_chat_logger(self, username: str, room_id: str, events_file):
+        """Run a separate daemon thread to capture chat without blocking the video donwnload"""
+        client = TikTokLiveClient(unique_id=f"@{username}")
+
+        @client.on(CommentEvent)
+        async def on_comment(event: CommentEvent):
+            with open(
+                events_file, "a", encoding="utf-8"
+            ) as f:  # Using utf-8 encoding to handle emojis
+                f.write(f"[Chat] {event.user.nickname}: {event.comment}.\n")
+
+        @client.on(ConnectEvent)
+        async def on_connect(event: ConnectEvent):
+            with open(events_file, "a", encoding="utf-8") as f:
+                f.write("[Connection] connection established.\n")
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        logger.info(f"Started Chat Logger for @{username}...")
+        client.run()
+
     def run(self):
         """
         Resolves prerequisites and runs the recorder in the selected mode.
@@ -88,6 +116,8 @@ class TikTokRecorder:
 
         elif self.mode == Mode.FOLLOWERS:
             self.followers_mode()
+
+    # Listen to an event with a decorator!
 
     def manual_mode(self):
         if not self.tiktok.is_room_alive(self.room_id):
@@ -177,6 +207,16 @@ class TikTokRecorder:
         filename = (
             f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
         )
+
+        if self.output:
+            return str(Path(self.output) / filename)
+        return filename
+
+    def _build_output_path_events(self, user: str) -> str:
+        filename = (
+            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}.txt"
+        )
+
         if self.output:
             return str(Path(self.output) / filename)
         return filename
@@ -190,6 +230,16 @@ class TikTokRecorder:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         output = self._build_output_path(user)
+
+        events_file_path = self._build_output_path_events(user)
+
+        # Injecting the Chat thread
+        chat_thread = Thread(
+            target=self._start_chat_logger,
+            args=(user, room_id, events_file_path),
+            daemon=True,
+        )
+        chat_thread.start()
 
         if self.duration:
             logger.info(f"Started recording for {self.duration} seconds ")
