@@ -23,11 +23,11 @@ class VideoManagement:
         return False
 
     @staticmethod
-    def convert_flv_to_mp4(file, bitrate=None, ffmpeg_path=None):
+    def convert_flv_to_mp4(file, bitrate=None, ffmpeg_path=None, audio_only=False):
         """
-        Convert the video from flv format to mp4 format
+        Convert the video from flv format to mp4 (or opus) format
         """
-        logger.info("Converting {} to MP4 format...".format(file))
+        logger.info(f"Converting {file}...")
 
         if not VideoManagement.wait_for_file_release(file):
             logger.error(
@@ -42,7 +42,19 @@ class VideoManagement:
             }
             output_file = file.replace("_flv.mp4", ".mp4")
 
-            if bitrate:
+            if audio_only:
+                output_file = file.replace("_flv.mp4", ".opus")
+                output_args = {
+                    "y": "-y",
+                    "vn": None,
+                    "ac": 1,
+                    "c:a": "libopus",
+                    "vbr": "on",
+                    "compression_level": 10,
+                    "application": "voip",
+                    "b:a": "24k"
+                }
+            elif bitrate:
                 output_args["b:v"] = bitrate
                 del output_args["c"]
                 output_args["c:v"] = "libx264"
