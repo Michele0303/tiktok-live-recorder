@@ -52,7 +52,7 @@ class VideoManagement:
                     "vbr": "on",
                     "compression_level": 10,
                     "application": "voip",
-                    "b:a": "24k"
+                    "b:a": "24k",
                 }
             elif bitrate:
                 output_args["b:v"] = bitrate
