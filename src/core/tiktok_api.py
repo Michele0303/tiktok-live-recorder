@@ -46,15 +46,42 @@ class TikTokAPI:
         if not room_id:
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
-        data = self.http_client.get(
+        alive_data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/check_alive/"
             f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
         ).json()
 
-        if "data" not in data or len(data["data"]) == 0:
+        if "data" not in alive_data or len(alive_data["data"]) == 0:
             return False
 
-        return data["data"][0].get("alive", False)
+        if not alive_data["data"][0].get("alive", False):
+            return False
+
+        room_info = self.http_client.get(
+            f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
+        ).json()
+
+        status_code = room_info.get("status_code", 0)
+        if status_code == 4003110:
+            return True
+
+        if status_code != 0:
+            return False
+
+        stream_url = room_info.get("data", {}).get("stream_url", {})
+        sdk_stream_data = (
+            stream_url.get("live_core_sdk_data", {})
+            .get("pull_data", {})
+            .get("stream_data")
+        )
+
+        return bool(
+            sdk_stream_data
+            or stream_url.get("flv_pull_url")
+            or stream_url.get("hls_pull_url")
+            or stream_url.get("hls_pull_url_map")
+            or stream_url.get("rtmp_pull_url")
+        )
 
     def get_sec_uid(self):
         """
