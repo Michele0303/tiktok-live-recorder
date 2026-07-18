@@ -206,6 +206,7 @@ class TikTokRecorder:
         min_stream_bytes = 4096
         recording_started_at = time.monotonic()
         interrupted_by_user = False
+        duration_expired = False
         for index, live_url in enumerate(live_urls, start=1):
             if self.duration:
                 logger.info(
@@ -226,6 +227,15 @@ class TikTokRecorder:
                 try:
                     while not stop_recording:
                         try:
+                            if (
+                                self.duration
+                                and time.monotonic() - recording_started_at
+                                >= self.duration
+                            ):
+                                duration_expired = True
+                                stop_recording = True
+                                break
+
                             if not self.tiktok.is_room_alive(room_id):
                                 logger.info(
                                     "User is no longer live. Stopping recording."
@@ -255,6 +265,11 @@ class TikTokRecorder:
                                 time.sleep(
                                     TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
                                 )
+                            else:
+                                logger.warning(
+                                    "Connection closed. Retrying in 2 seconds."
+                                )
+                                time.sleep(2)
 
                         except (RequestException, HTTPException) as ex:
                             logger.warning(f"Network hiccup, retrying: {ex}")
@@ -286,6 +301,13 @@ class TikTokRecorder:
                     VideoManagement.convert_flv_to_mp4(
                         output, self.bitrate, self.ffmpeg_path
                     )
+                return
+
+            if duration_expired and bytes_written < min_stream_bytes:
+                Path(output).unlink(missing_ok=True)
+                logger.info(
+                    "Recording duration elapsed before stream data was received."
+                )
                 return
 
             if bytes_written >= min_stream_bytes:

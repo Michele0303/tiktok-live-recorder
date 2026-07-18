@@ -215,7 +215,7 @@ def test_duration_is_not_reset_after_a_network_retry(monkeypatch, tmp_path):
     output = tmp_path / "out_flv.mp4"
     monkeypatch.setattr(recorder, "_build_output_path", lambda user: str(output))
     monkeypatch.setattr("core.tiktok_recorder.time.sleep", lambda seconds: None)
-    monotonic_times = iter([0, 6])
+    monotonic_times = iter([0, 0, 6])
     monkeypatch.setattr(
         "core.tiktok_recorder.time.monotonic", lambda: next(monotonic_times)
     )
@@ -225,4 +225,24 @@ def test_duration_is_not_reset_after_a_network_retry(monkeypatch, tmp_path):
 
     recorder.start_recording("creator", "123")
 
-    assert api.download_calls == 2
+    assert api.download_calls == 1
+    assert not output.exists()
+
+
+def test_manual_mode_delays_after_a_connection_error(monkeypatch, tmp_path):
+    recorder = TikTokRecorder(RecorderConfig(mode=Mode.MANUAL, cookies={}))
+    recorder.tiktok = RecordingTikTokAPI([ConnectionError("temporary error")])
+    monkeypatch.setattr(
+        recorder, "_build_output_path", lambda user: str(tmp_path / "out_flv.mp4")
+    )
+    sleep_calls = []
+
+    def interrupt_after_retry(seconds):
+        sleep_calls.append(seconds)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr("core.tiktok_recorder.time.sleep", interrupt_after_retry)
+
+    recorder.start_recording("creator", "123")
+
+    assert sleep_calls == [2]

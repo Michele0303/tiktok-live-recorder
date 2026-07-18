@@ -130,8 +130,9 @@ uv run python src/main.py [options]
 - **`automatic`**: Polls at regular intervals and records whenever the user goes live.
 - **`followers`**: Automatically records live streams from all followed users.
 
-Press `Ctrl+C` once to stop the current recording. The recorder finalizes the
-current file before exiting, including when running in automatic mode.
+Press `Ctrl+C` once to stop the current recording. When enough stream data has
+been captured, the recorder finalizes the current file before exiting, including
+when running in automatic mode. Very short recordings are discarded.
 
 ## Guide
 
