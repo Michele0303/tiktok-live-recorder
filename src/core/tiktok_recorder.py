@@ -29,6 +29,7 @@ class TikTokRecorder:
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
+        self._stop_requested = False
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -103,6 +104,8 @@ class TikTokRecorder:
             try:
                 self.room_id = self.tiktok.get_room_id_from_user(self.user)
                 self.manual_mode()
+                if self._stop_requested:
+                    return
 
             except (UserLiveError, LiveNotFound) as ex:
                 logger.info(ex)
@@ -195,6 +198,8 @@ class TikTokRecorder:
         output = self._build_output_path(user)
 
         min_stream_bytes = 4096
+        recording_started_at = time.monotonic()
+        interrupted_by_user = False
         for index, live_url in enumerate(live_urls, start=1):
             if self.duration:
                 logger.info(
@@ -218,7 +223,6 @@ class TikTokRecorder:
                             logger.info("User is no longer live. Stopping recording.")
                             break
 
-                        start_time = time.time()
                         for chunk in self.tiktok.download_live_stream(live_url):
                             buffer.extend(chunk)
                             bytes_written += len(chunk)
@@ -226,7 +230,7 @@ class TikTokRecorder:
                                 out_file.write(buffer)
                                 buffer.clear()
 
-                            elapsed_time = time.time() - start_time
+                            elapsed_time = time.monotonic() - recording_started_at
                             if self.duration and elapsed_time >= self.duration:
                                 stop_recording = True
                                 break
@@ -247,6 +251,7 @@ class TikTokRecorder:
 
                     except KeyboardInterrupt:
                         logger.info("Recording stopped by user.")
+                        interrupted_by_user = True
                         stop_recording = True
 
                     except Exception as ex:
@@ -261,6 +266,17 @@ class TikTokRecorder:
                             out_file.write(buffer)
                             buffer.clear()
                         out_file.flush()
+
+            if interrupted_by_user:
+                self._stop_requested = True
+                if bytes_written < min_stream_bytes:
+                    Path(output).unlink(missing_ok=True)
+                else:
+                    logger.info(f"Recording finished: {Path(output).resolve()}\n")
+                    VideoManagement.convert_flv_to_mp4(
+                        output, self.bitrate, self.ffmpeg_path
+                    )
+                return
 
             if bytes_written >= min_stream_bytes:
                 break
