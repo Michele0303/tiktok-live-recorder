@@ -7,7 +7,7 @@ from requests import RequestException
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from core.tiktok_recorder import TikTokRecorder  # noqa: E402
-from utils.custom_exceptions import TikTokRecorderError  # noqa: E402
+from utils.custom_exceptions import TikTokRecorderError, UserLiveError  # noqa: E402
 from utils.enums import Mode  # noqa: E402
 from utils.recorder_config import RecorderConfig  # noqa: E402
 
@@ -153,6 +153,53 @@ def test_automatic_mode_exits_after_a_user_stop_request(monkeypatch):
     recorder.automatic_mode()
 
     assert recorder.tiktok.calls == ["get_room_id_from_user:creator"]
+
+
+def test_automatic_mode_exits_when_interrupted_while_waiting(monkeypatch):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.AUTOMATIC, user="creator", cookies={})
+    )
+    recorder.tiktok = FakeTikTokAPI(blacklisted=False)
+
+    def user_is_not_live():
+        raise UserLiveError("not live")
+
+    monkeypatch.setattr(recorder, "manual_mode", user_is_not_live)
+    monkeypatch.setattr(
+        "core.tiktok_recorder.time.sleep",
+        lambda seconds: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+
+    recorder.automatic_mode()
+
+    assert recorder._stop_requested is True
+
+
+def test_start_recording_finalizes_when_interrupted_during_retry_sleep(
+    monkeypatch, tmp_path
+):
+    recorder = TikTokRecorder(RecorderConfig(mode=Mode.AUTOMATIC, cookies={}))
+    recorder.tiktok = RecordingTikTokAPI(
+        [[b"x" * 4096, RequestException("temporary error")]]
+    )
+    output = tmp_path / "recording_flv.mp4"
+    monkeypatch.setattr(recorder, "_build_output_path", lambda user: str(output))
+    monkeypatch.setattr(
+        "core.tiktok_recorder.time.sleep",
+        lambda seconds: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+
+    converted = []
+    monkeypatch.setattr(
+        "core.tiktok_recorder.VideoManagement.convert_flv_to_mp4",
+        lambda *args: converted.append(args),
+    )
+
+    recorder.start_recording("creator", "123")
+
+    assert output.exists()
+    assert converted == [(str(output), None, None)]
+    assert recorder._stop_requested is True
 
 
 def test_duration_is_not_reset_after_a_network_retry(monkeypatch, tmp_path):
