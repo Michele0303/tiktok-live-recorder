@@ -122,6 +122,10 @@ class RecordingTikTokAPI:
             yield item
 
 
+def interrupt_sleep(*args, **kwargs):
+    raise KeyboardInterrupt
+
+
 def test_start_recording_finalizes_after_keyboard_interrupt(monkeypatch, tmp_path):
     recorder = TikTokRecorder(RecorderConfig(mode=Mode.AUTOMATIC, cookies={}))
     recorder.tiktok = RecordingTikTokAPI([[b"x" * 4096, KeyboardInterrupt()]])
@@ -167,7 +171,7 @@ def test_automatic_mode_exits_when_interrupted_while_waiting(monkeypatch):
     monkeypatch.setattr(recorder, "manual_mode", user_is_not_live)
     monkeypatch.setattr(
         "core.tiktok_recorder.time.sleep",
-        lambda seconds: (_ for _ in ()).throw(KeyboardInterrupt()),
+        interrupt_sleep,
     )
 
     recorder.automatic_mode()
@@ -186,7 +190,7 @@ def test_start_recording_finalizes_when_interrupted_during_retry_sleep(
     monkeypatch.setattr(recorder, "_build_output_path", lambda user: str(output))
     monkeypatch.setattr(
         "core.tiktok_recorder.time.sleep",
-        lambda seconds: (_ for _ in ()).throw(KeyboardInterrupt()),
+        interrupt_sleep,
     )
 
     converted = []
