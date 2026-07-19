@@ -173,3 +173,36 @@ def test_get_live_url_candidates_returns_ordered_unique_streams():
         "https://cdn/audio.flv",
         "https://cdn/sd.flv",
     ]
+
+
+def test_get_live_url_candidates_logs_quality_without_signed_query(caplog):
+    api = build_api(
+        {
+            "data": {
+                "status": 2,
+                "stream_url": {
+                    "live_core_sdk_data": {
+                        "pull_data": {
+                            "stream_data": (
+                                '{"data": {"hd": {"main": {'
+                                '"flv": "https://cdn/hd.flv?sign=secret"}}}}'
+                            ),
+                            "options": {
+                                "qualities": [
+                                    {"sdk_key": "hd", "level": 3, "name": "720p"}
+                                ]
+                            },
+                        }
+                    }
+                },
+            },
+            "status_code": 0,
+        }
+    )
+
+    with caplog.at_level("INFO", logger="logger"):
+        assert api.get_live_url_candidates("123") == ["https://cdn/hd.flv?sign=secret"]
+
+    assert "quality=720p, protocol=flv" in caplog.text
+    assert "https://cdn/hd.flv" in caplog.text
+    assert "sign=secret" not in caplog.text

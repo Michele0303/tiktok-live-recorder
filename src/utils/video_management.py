@@ -23,6 +23,46 @@ class VideoManagement:
         return False
 
     @staticmethod
+    def log_media_properties(file, ffmpeg_path=None):
+        """Log the recorded file's video properties without failing conversion."""
+        ffprobe_path = "ffprobe"
+        if ffmpeg_path and os.path.dirname(ffmpeg_path):
+            ffprobe_path = str(
+                Path(ffmpeg_path).with_name(f"ffprobe{Path(ffmpeg_path).suffix}")
+            )
+
+        try:
+            probe_data = ffmpeg.probe(file, cmd=ffprobe_path)
+        except (ffmpeg.Error, OSError) as error:
+            logger.warning("Unable to inspect recorded media: %s", error)
+            return
+
+        video_stream = next(
+            (
+                stream
+                for stream in probe_data.get("streams", [])
+                if stream.get("codec_type") == "video"
+            ),
+            None,
+        )
+        if not video_stream:
+            logger.warning("Recorded media does not contain a video stream.")
+            return
+
+        bitrate = probe_data.get("format", {}).get("bit_rate")
+        try:
+            bitrate_kbps = f"{int(bitrate) // 1000} kbps" if bitrate else "unknown"
+        except (TypeError, ValueError):
+            bitrate_kbps = "unknown"
+        logger.info(
+            "Recorded media properties: codec=%s, resolution=%sx%s, bitrate=%s",
+            video_stream.get("codec_name", "unknown"),
+            video_stream.get("width", "unknown"),
+            video_stream.get("height", "unknown"),
+            bitrate_kbps,
+        )
+
+    @staticmethod
     def convert_flv_to_mp4(file, bitrate=None, ffmpeg_path=None):
         """
         Convert the video from flv format to mp4 format
@@ -43,6 +83,10 @@ class VideoManagement:
             output_file = file.replace("_flv.mp4", ".mp4")
 
             if bitrate:
+                logger.warning(
+                    "The -bitrate option re-encodes video with libx264 and may reduce "
+                    "source quality. Omit it to preserve the original stream."
+                )
                 output_args["b:v"] = bitrate
                 del output_args["c"]
                 output_args["c:v"] = "libx264"
@@ -59,4 +103,5 @@ class VideoManagement:
             return
 
         os.remove(file)
+        VideoManagement.log_media_properties(output_file, ffmpeg_path)
         logger.info(f"Finished converting {Path(output_file).resolve()}\n")
