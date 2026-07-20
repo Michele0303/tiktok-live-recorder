@@ -1,6 +1,8 @@
 import json
 import os
-import subprocess
+
+# subprocess is required to enforce a timeout on ffprobe.
+import subprocess  # nosec B404
 import time
 from pathlib import Path
 
@@ -36,7 +38,8 @@ class VideoManagement:
             )
 
         try:
-            result = subprocess.run(
+            # Arguments are passed as a list and never through a shell.
+            result = subprocess.run(  # nosec B603
                 [
                     ffprobe_path,
                     "-show_format",
