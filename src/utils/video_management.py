@@ -1,4 +1,6 @@
+import json
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -8,6 +10,8 @@ from utils.logger_manager import logger
 
 
 class VideoManagement:
+    FFPROBE_TIMEOUT_SECONDS = 10
+
     @staticmethod
     def wait_for_file_release(file, timeout=10):
         """
@@ -32,8 +36,27 @@ class VideoManagement:
             )
 
         try:
-            probe_data = ffmpeg.probe(file, cmd=ffprobe_path)
-        except (ffmpeg.Error, OSError) as error:
+            result = subprocess.run(
+                [
+                    ffprobe_path,
+                    "-show_format",
+                    "-show_streams",
+                    "-of",
+                    "json",
+                    file,
+                ],
+                capture_output=True,
+                check=True,
+                text=True,
+                timeout=VideoManagement.FFPROBE_TIMEOUT_SECONDS,
+            )
+            probe_data = json.loads(result.stdout)
+        except (
+            OSError,
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            ValueError,
+        ) as error:
             logger.warning("Unable to inspect recorded media: %s", error)
             return
 
