@@ -226,7 +226,7 @@ class TikTokAPI:
         cursor = 0
         has_more = True
 
-        ms_token = self.http_client.get(
+        token_response = self.http_client.get(
             f"{self.BASE_URL}/api/user/list/?"
             "WebIdLastTime=1747672102&aid=1988&app_language=it-IT&app_name=tiktok_web&"
             "browser_language=it-IT&browser_name=Mozilla&browser_online=true&"
@@ -240,7 +240,18 @@ class TikTokAPI:
             "screen_height=1080&screen_width=1920&tz_name=Europe%2FRome&user_is_login=true&"
             "verifyFp=verify_mh4yf0uq_rdjp1Xwt_OoTk_4Jrf_AS8H_sp31opbnJFre&webcast_language=it-IT&"
             "msToken=GphHoLvRR4QxA5AWVwDkrs3AbumoK5H8toE8LVHtj6cce3ToGdXhMfvDWzOXG-0GXUWoaGVHrwGNA4k_NnjuFFnHgv2S5eMjsvtkAhwMPa13xLmvP7tumx0KreFjPwTNnOj-BvAkPdO5Zrev3hoFBD9lHVo=&X-Bogus=&X-Gnarly="
-        ).cookies["msToken"]
+        )
+
+        if token_response.status_code != StatusCode.OK:
+            raise TikTokRecorderError(
+                "Failed to initialize TikTok followers API session."
+            )
+
+        ms_token = token_response.cookies.get("msToken")
+        if not ms_token:
+            raise TikTokRecorderError(
+                "TikTok followers API did not return an msToken cookie."
+            )
 
         while has_more:
             url = (
@@ -266,8 +277,23 @@ class TikTokAPI:
             if not response.content:
                 raise TikTokRecorderError("Empty response from TikTok followers API.")
 
-            data = response.json()
+            try:
+                data = response.json()
+            except ValueError as error:
+                raise TikTokRecorderError(
+                    "Invalid JSON response from TikTok followers API."
+                ) from error
+
+            if not isinstance(data, dict):
+                raise TikTokRecorderError(
+                    "Unexpected response format from TikTok followers API."
+                )
+
             user_list = data.get("userList", [])
+            if not isinstance(user_list, list):
+                raise TikTokRecorderError(
+                    "Unexpected followers list format from TikTok API."
+                )
 
             for user in user_list:
                 username = user.get("user", {}).get("uniqueId")
