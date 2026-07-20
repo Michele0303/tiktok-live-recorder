@@ -27,11 +27,104 @@ class FakeHttpClient:
         return FakeResponse(self.responses.pop(0))
 
 
+class RoomIdResponse:
+    def __init__(self, status_code=200, text='{"data": {}}', data=None):
+        self.status_code = status_code
+        self.text = text
+        self._data = data
+
+    def json(self):
+        if isinstance(self._data, Exception):
+            raise self._data
+        return self._data
+
+    def raise_for_status(self):
+        if self.status_code != 200:
+            raise RuntimeError(f"HTTP {self.status_code}")
+
+
+class RoomIdHttpClient:
+    def __init__(self, responses):
+        self.responses = responses
+
+    def get(self, *args, **kwargs):
+        return self.responses.pop(0)
+
+
 def build_api(*responses):
     api = TikTokAPI.__new__(TikTokAPI)
     api.WEBCAST_URL = "https://webcast.tiktok.com"
     api.http_client = FakeHttpClient(list(responses))
     return api
+
+
+def build_room_id_api(*responses):
+    api = TikTokAPI.__new__(TikTokAPI)
+    api.BASE_URL = "https://www.tiktok.com"
+    api.EULER_API = "https://tiktok.eulerstream.com"
+    api.TIKREC_API = "https://tikrec.com"
+    api.http_client = RoomIdHttpClient(list(responses))
+    return api
+
+
+def test_get_room_id_falls_back_after_signed_lookup_http_error(caplog):
+    api = build_room_id_api(
+        RoomIdResponse(data={"signed_path": "/signed-room"}),
+        RoomIdResponse(status_code=522),
+        RoomIdResponse(data={"data": {"room_info": {"id": "123"}}}),
+    )
+
+    with caplog.at_level("WARNING", logger="logger"):
+        assert api.get_room_id_from_user("creator") == "123"
+
+    assert "signed room lookup returned HTTP 522" in caplog.text
+
+
+def test_get_room_id_falls_back_after_invalid_signed_json(caplog):
+    api = build_room_id_api(
+        RoomIdResponse(data={"signed_path": "/signed-room"}),
+        RoomIdResponse(text="invalid", data=ValueError("invalid JSON")),
+        RoomIdResponse(data={"data": {"room_info": {"id": "123"}}}),
+    )
+
+    with caplog.at_level("WARNING", logger="logger"):
+        assert api.get_room_id_from_user("creator") == "123"
+
+    assert "signed room lookup returned invalid JSON" in caplog.text
+
+
+def test_get_room_id_falls_back_when_signed_response_has_no_room_id(caplog):
+    api = build_room_id_api(
+        RoomIdResponse(data={"signed_path": "/signed-room"}),
+        RoomIdResponse(data={"data": {"user": {}}}),
+        RoomIdResponse(data={"data": {"room_info": {"id": "123"}}}),
+    )
+
+    with caplog.at_level("WARNING", logger="logger"):
+        assert api.get_room_id_from_user("creator") == "123"
+
+    assert "signed room lookup did not include a RoomID" in caplog.text
+
+
+def test_get_room_id_rejects_invalid_json_from_fallback():
+    api = build_room_id_api(
+        RoomIdResponse(data={"signed_path": "/signed-room"}),
+        RoomIdResponse(status_code=522),
+        RoomIdResponse(data=ValueError("invalid JSON")),
+    )
+
+    with pytest.raises(UserLiveError, match="Error extracting RoomID"):
+        api.get_room_id_from_user("creator")
+
+
+def test_get_room_id_preserves_waf_error_from_signed_lookup():
+    api = build_room_id_api(
+        RoomIdResponse(data={"signed_path": "/signed-room"}),
+        RoomIdResponse(text="Please wait", data={}),
+    )
+
+    with pytest.raises(UserLiveError, match="blocked by TikTok WAF"):
+        api.get_room_id_from_user("creator")
 
 
 def test_is_room_alive_rejects_fake_check_alive_positive():
