@@ -34,7 +34,9 @@ class TikTokRecorder:
         self._stop_requested = False
 
     def _shutdown_requested(self):
-        return self.shutdown_event is not None and self.shutdown_event.is_set()
+        return self._stop_requested or (
+            self.shutdown_event is not None and self.shutdown_event.is_set()
+        )
 
     def _wait_or_shutdown(self, timeout):
         if self.shutdown_event is not None:
@@ -139,8 +141,11 @@ class TikTokRecorder:
 
             except KeyboardInterrupt:
                 logger.info("Recording stopped by user.")
-                self._stop_requested = True
-                return
+                self._stop_requested = (
+                    self.exit_on_interrupt or self._shutdown_requested()
+                )
+                if self._stop_requested:
+                    return
 
     def followers_mode(self):
         active_recordings = {}  # follower -> Thread
@@ -202,6 +207,13 @@ class TikTokRecorder:
             except (ConnectionError, RequestException, HTTPException):
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+
+            except KeyboardInterrupt:
+                logger.info("Recording stopped by user.")
+                self._stop_requested = True
+                for thread in active_recordings.values():
+                    thread.join()
+                return
 
     def _build_output_path(self, user: str) -> str:
         filename = (
@@ -277,6 +289,7 @@ class TikTokRecorder:
 
                                 elapsed_time = time.monotonic() - recording_started_at
                                 if self.duration and elapsed_time >= self.duration:
+                                    duration_expired = True
                                     stop_recording = True
                                     break
                             else:

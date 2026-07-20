@@ -57,16 +57,19 @@ def run_recordings(args, mode, cookies):
         except KeyboardInterrupt:
             print("\n[!] Ctrl-C detected. Stopping recordings...")
             shutdown_event.set()
-            deadline = time.monotonic() + SHUTDOWN_GRACE_SECONDS
-            for p in processes:
-                p.join(max(0, deadline - time.monotonic()))
+            try:
+                deadline = time.monotonic() + SHUTDOWN_GRACE_SECONDS
+                for p in processes:
+                    p.join(max(0, deadline - time.monotonic()))
+            except KeyboardInterrupt:
+                pass
+            finally:
+                for p in processes:
+                    if p.is_alive():
+                        p.terminate()
 
-            for p in processes:
-                if p.is_alive():
-                    p.terminate()
-
-            for p in processes:
-                p.join(SHUTDOWN_GRACE_SECONDS)
+                for p in processes:
+                    p.join(SHUTDOWN_GRACE_SECONDS)
     else:
         config = _build_config(args, mode, cookies, user=args.user)
         record_user(config)

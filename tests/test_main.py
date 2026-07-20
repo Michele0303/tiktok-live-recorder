@@ -18,6 +18,9 @@ class FakeShutdownEvent:
 
 class FakeProcess:
     instances = []
+    interrupt_during_grace_period = False
+    initial_interrupt_sent = False
+    grace_interrupt_sent = False
 
     def __init__(self, target, args):
         self.args = args
@@ -30,7 +33,15 @@ class FakeProcess:
 
     def join(self, timeout=None):
         self.join_timeouts.append(timeout)
-        if timeout is None:
+        if timeout is None and not FakeProcess.initial_interrupt_sent:
+            FakeProcess.initial_interrupt_sent = True
+            raise KeyboardInterrupt
+        if (
+            timeout is not None
+            and FakeProcess.interrupt_during_grace_period
+            and not FakeProcess.grace_interrupt_sent
+        ):
+            FakeProcess.grace_interrupt_sent = True
             raise KeyboardInterrupt
 
     def is_alive(self):
@@ -43,6 +54,9 @@ class FakeProcess:
 def test_multi_user_interrupt_requests_shutdown_before_termination(monkeypatch):
     shutdown_event = FakeShutdownEvent()
     FakeProcess.instances = []
+    FakeProcess.interrupt_during_grace_period = True
+    FakeProcess.initial_interrupt_sent = False
+    FakeProcess.grace_interrupt_sent = False
     args = SimpleNamespace(
         user=["creator-one", "creator-two"],
         url=None,

@@ -205,7 +205,12 @@ def test_automatic_mode_exits_when_parent_requests_shutdown():
 
 def test_automatic_mode_exits_when_interrupted_while_waiting(monkeypatch):
     recorder = TikTokRecorder(
-        RecorderConfig(mode=Mode.AUTOMATIC, user="creator", cookies={})
+        RecorderConfig(
+            mode=Mode.AUTOMATIC,
+            user="creator",
+            exit_on_interrupt=True,
+            cookies={},
+        )
     )
     recorder.tiktok = FakeTikTokAPI(blacklisted=False)
 
@@ -221,6 +226,61 @@ def test_automatic_mode_exits_when_interrupted_while_waiting(monkeypatch):
     recorder.automatic_mode()
 
     assert recorder._stop_requested is True
+
+
+def test_automatic_mode_rechecks_after_an_idle_interrupt(monkeypatch):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.AUTOMATIC, user="creator", cookies={})
+    )
+    recorder.tiktok = FakeTikTokAPI(blacklisted=False)
+    manual_mode_calls = 0
+    sleep_calls = 0
+
+    def manual_mode():
+        nonlocal manual_mode_calls
+        manual_mode_calls += 1
+        if manual_mode_calls == 1:
+            raise UserLiveError("not live")
+        recorder._stop_requested = True
+
+    def interrupt_once(*args, **kwargs):
+        nonlocal sleep_calls
+        sleep_calls += 1
+        if sleep_calls == 1:
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(recorder, "manual_mode", manual_mode)
+    monkeypatch.setattr("core.tiktok_recorder.time.sleep", interrupt_once)
+
+    recorder.automatic_mode()
+
+    assert manual_mode_calls == 2
+
+
+def test_start_recording_finalizes_when_followers_mode_requests_stop(
+    monkeypatch, tmp_path
+):
+    recorder = TikTokRecorder(RecorderConfig(mode=Mode.FOLLOWERS, cookies={}))
+
+    class StopAwareRecordingAPI(RecordingTikTokAPI):
+        def download_live_stream(self, live_url):
+            self.download_calls += 1
+            yield b"x" * 4096
+            recorder._stop_requested = True
+            yield b"x"
+
+    recorder.tiktok = StopAwareRecordingAPI([])
+    output = tmp_path / "recording_flv.mp4"
+    monkeypatch.setattr(recorder, "_build_output_path", lambda user: str(output))
+    converted = []
+    monkeypatch.setattr(
+        "core.tiktok_recorder.VideoManagement.convert_flv_to_mp4",
+        lambda *args: converted.append(args),
+    )
+
+    recorder.start_recording("creator", "123")
+
+    assert converted == [(str(output), None, None)]
 
 
 def test_start_recording_finalizes_when_interrupted_during_retry_sleep(
@@ -270,6 +330,25 @@ def test_duration_is_not_reset_after_a_network_retry(monkeypatch, tmp_path):
     recorder.start_recording("creator", "123")
 
     assert api.download_calls == 1
+    assert not output.exists()
+
+
+def test_duration_expiry_during_a_chunk_discards_short_recordings(
+    monkeypatch, tmp_path
+):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.AUTOMATIC, duration=5, cookies={})
+    )
+    recorder.tiktok = RecordingTikTokAPI([[b"x"]])
+    output = tmp_path / "out_flv.mp4"
+    monkeypatch.setattr(recorder, "_build_output_path", lambda user: str(output))
+    monotonic_times = iter([0, 0, 6])
+    monkeypatch.setattr(
+        "core.tiktok_recorder.time.monotonic", lambda: next(monotonic_times)
+    )
+
+    recorder.start_recording("creator", "123")
+
     assert not output.exists()
 
 
