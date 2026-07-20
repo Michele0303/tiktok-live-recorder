@@ -28,6 +28,7 @@ def _build_config(args, mode, cookies, user=None):
         proxy=args.proxy,
         output=args.output,
         duration=args.duration,
+        exit_on_interrupt=args.exit_on_interrupt,
         use_telegram=args.telegram,
         bitrate=args.bitrate,
         ffmpeg_path=args.ffmpeg_path,

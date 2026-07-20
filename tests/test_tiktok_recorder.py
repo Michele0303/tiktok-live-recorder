@@ -142,6 +142,23 @@ def test_start_recording_finalizes_after_keyboard_interrupt(monkeypatch, tmp_pat
 
     assert output.exists()
     assert converted == [(str(output), None, None)]
+    assert recorder._stop_requested is False
+
+
+def test_start_recording_exits_automatic_mode_when_requested(monkeypatch, tmp_path):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.AUTOMATIC, exit_on_interrupt=True, cookies={})
+    )
+    recorder.tiktok = RecordingTikTokAPI([[b"x" * 4096, KeyboardInterrupt()]])
+    monkeypatch.setattr(
+        recorder, "_build_output_path", lambda user: str(tmp_path / "recording_flv.mp4")
+    )
+    monkeypatch.setattr(
+        "core.tiktok_recorder.VideoManagement.convert_flv_to_mp4", lambda *args: None
+    )
+
+    recorder.start_recording("creator", "123")
+
     assert recorder._stop_requested is True
 
 
@@ -203,7 +220,7 @@ def test_start_recording_finalizes_when_interrupted_during_retry_sleep(
 
     assert output.exists()
     assert converted == [(str(output), None, None)]
-    assert recorder._stop_requested is True
+    assert recorder._stop_requested is False
 
 
 def test_duration_is_not_reset_after_a_network_retry(monkeypatch, tmp_path):

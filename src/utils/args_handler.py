@@ -84,6 +84,16 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-exit-on-interrupt",
+        dest="exit_on_interrupt",
+        action="store_true",
+        help=(
+            "Exit automatic mode after Ctrl+C finishes the current recording. "
+            "By default, automatic mode starts a new recording instead."
+        ),
+    )
+
+    parser.add_argument(
         "-telegram",
         dest="telegram",
         action="store_true",

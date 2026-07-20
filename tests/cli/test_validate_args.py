@@ -204,3 +204,22 @@ def test_automatic_interval_less_than_one(monkeypatch):
         match="Incorrect automatic_interval value. Must be one minute or more.",
     ):
         validate_and_parse_args()
+
+
+def test_exit_on_interrupt(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "tiktok-live-recorder",
+            "-mode",
+            "automatic",
+            "-user",
+            "test",
+            "-exit-on-interrupt",
+        ],
+    )
+
+    args, _ = validate_and_parse_args()
+
+    assert args.exit_on_interrupt is True

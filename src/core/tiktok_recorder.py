@@ -26,6 +26,7 @@ class TikTokRecorder:
         self.output = config.output
         self.bitrate = config.bitrate
         self.ffmpeg_path = config.ffmpeg_path
+        self.exit_on_interrupt = config.exit_on_interrupt
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
@@ -293,7 +294,7 @@ class TikTokRecorder:
                     stop_recording = True
 
             if interrupted_by_user:
-                self._stop_requested = True
+                self._stop_requested = self.exit_on_interrupt
                 if bytes_written < min_stream_bytes:
                     Path(output).unlink(missing_ok=True)
                 else:
