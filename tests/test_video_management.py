@@ -9,10 +9,8 @@ from utils.video_management import VideoManagement
 
 
 def test_log_media_properties_reports_probe_data(monkeypatch, caplog):
-    monkeypatch.setattr(
-        subprocess,
-        "run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
+    def run_probe(*args, **kwargs):
+        return subprocess.CompletedProcess(
             args=args,
             returncode=0,
             stdout=(
@@ -20,10 +18,15 @@ def test_log_media_properties_reports_probe_data(monkeypatch, caplog):
                 '"codec_type": "video", "codec_name": "h264", '
                 '"width": 1920, "height": 1080}]}'
             ),
-        ),
+        )
+
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        run_probe,
     )
 
-    with caplog.at_level(logging.INFO, logger="logger"):
+    with caplog.at_level(logging.INFO):
         VideoManagement.log_media_properties("recording.mp4")
 
     assert "codec=h264, resolution=1920x1080, bitrate=5120 kbps" in caplog.text
@@ -31,18 +34,20 @@ def test_log_media_properties_reports_probe_data(monkeypatch, caplog):
 
 def test_log_media_properties_uses_sibling_ffprobe(monkeypatch, caplog):
     commands = []
+
+    def run_probe(args, **kwargs):
+        commands.append((args, kwargs))
+        return subprocess.CompletedProcess(
+            args=args, returncode=0, stdout='{"streams": []}'
+        )
+
     monkeypatch.setattr(
         subprocess,
         "run",
-        lambda args, **kwargs: (
-            commands.append((args, kwargs))
-            or subprocess.CompletedProcess(
-                args=args, returncode=0, stdout='{"streams": []}'
-            )
-        ),
+        run_probe,
     )
 
-    with caplog.at_level(logging.WARNING, logger="logger"):
+    with caplog.at_level(logging.WARNING):
         VideoManagement.log_media_properties(
             "recording.mp4", "C:/tools/ffmpeg/bin/ffmpeg.exe"
         )
@@ -69,10 +74,8 @@ def test_log_media_properties_uses_sibling_ffprobe(monkeypatch, caplog):
 
 
 def test_log_media_properties_handles_an_invalid_bitrate(monkeypatch, caplog):
-    monkeypatch.setattr(
-        subprocess,
-        "run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
+    def run_probe(*args, **kwargs):
+        return subprocess.CompletedProcess(
             args=args,
             returncode=0,
             stdout=(
@@ -80,40 +83,47 @@ def test_log_media_properties_handles_an_invalid_bitrate(monkeypatch, caplog):
                 '"codec_type": "video", "codec_name": "h264", '
                 '"width": 1280, "height": 720}]}'
             ),
-        ),
+        )
+
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        run_probe,
     )
 
-    with caplog.at_level(logging.INFO, logger="logger"):
+    with caplog.at_level(logging.INFO):
         VideoManagement.log_media_properties("recording.mp4")
 
     assert "bitrate=unknown" in caplog.text
 
 
 def test_log_media_properties_handles_a_probe_timeout(monkeypatch, caplog):
+    def timeout_probe(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd="ffprobe", timeout=10)
+
     monkeypatch.setattr(
         subprocess,
         "run",
-        lambda *args, **kwargs: (_ for _ in ()).throw(
-            subprocess.TimeoutExpired(cmd="ffprobe", timeout=10)
-        ),
+        timeout_probe,
     )
 
-    with caplog.at_level(logging.WARNING, logger="logger"):
+    with caplog.at_level(logging.WARNING):
         VideoManagement.log_media_properties("recording.mp4")
 
     assert "Unable to inspect recorded media" in caplog.text
 
 
 def test_log_media_properties_handles_invalid_probe_output(monkeypatch, caplog):
+    def run_probe(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout="not-json")
+
     monkeypatch.setattr(
         subprocess,
         "run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
-            args=args, returncode=0, stdout="not-json"
-        ),
+        run_probe,
     )
 
-    with caplog.at_level(logging.WARNING, logger="logger"):
+    with caplog.at_level(logging.WARNING):
         VideoManagement.log_media_properties("recording.mp4")
 
     assert "Unable to inspect recorded media" in caplog.text
