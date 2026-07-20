@@ -32,6 +32,26 @@ def test_log_media_properties_reports_probe_data(monkeypatch, caplog):
     assert "codec=h264, resolution=1920x1080, bitrate=5120 kbps" in caplog.text
 
 
+def test_log_media_properties_uses_video_stream_bitrate(monkeypatch, caplog):
+    def run_probe(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=(
+                '{"format": {}, "streams": [{"codec_type": "video", '
+                '"codec_name": "h264", "width": 1920, "height": 1080, '
+                '"bit_rate": "2500000"}]}'
+            ),
+        )
+
+    monkeypatch.setattr(subprocess, "run", run_probe)
+
+    with caplog.at_level(logging.INFO):
+        VideoManagement.log_media_properties("recording.mp4")
+
+    assert "codec=h264, resolution=1920x1080, bitrate=2500 kbps" in caplog.text
+
+
 def test_log_media_properties_uses_sibling_ffprobe(monkeypatch, caplog):
     commands = []
 

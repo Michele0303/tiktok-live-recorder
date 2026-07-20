@@ -75,7 +75,9 @@ class VideoManagement:
             logger.warning("Recorded media does not contain a video stream.")
             return
 
-        bitrate = probe_data.get("format", {}).get("bit_rate")
+        bitrate = probe_data.get("format", {}).get("bit_rate") or video_stream.get(
+            "bit_rate"
+        )
         try:
             bitrate_kbps = f"{int(bitrate) // 1000} kbps" if bitrate else "unknown"
         except (TypeError, ValueError):
