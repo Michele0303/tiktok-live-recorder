@@ -1,6 +1,7 @@
 import sys
 import os
 import multiprocessing
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,7 +16,10 @@ def record_user(config):
         logger.error(f"{e}", exc_info=True)
 
 
-def _build_config(args, mode, cookies, user=None):
+SHUTDOWN_GRACE_SECONDS = 10
+
+
+def _build_config(args, mode, cookies, user=None, shutdown_event=None):
     from utils.recorder_config import RecorderConfig
 
     return RecorderConfig(
@@ -29,6 +33,7 @@ def _build_config(args, mode, cookies, user=None):
         output=args.output,
         duration=args.duration,
         exit_on_interrupt=args.exit_on_interrupt,
+        shutdown_event=shutdown_event,
         use_telegram=args.telegram,
         bitrate=args.bitrate,
         ffmpeg_path=args.ffmpeg_path,
@@ -38,8 +43,11 @@ def _build_config(args, mode, cookies, user=None):
 def run_recordings(args, mode, cookies):
     if isinstance(args.user, list):
         processes = []
+        shutdown_event = multiprocessing.Event()
         for user in args.user:
-            config = _build_config(args, mode, cookies, user=user)
+            config = _build_config(
+                args, mode, cookies, user=user, shutdown_event=shutdown_event
+            )
             p = multiprocessing.Process(target=record_user, args=(config,))
             p.start()
             processes.append(p)
@@ -47,15 +55,18 @@ def run_recordings(args, mode, cookies):
             for p in processes:
                 p.join()
         except KeyboardInterrupt:
-            print("\n[!] Ctrl-C detected.")
-            try:
-                for p in processes:
-                    p.join()
-            except KeyboardInterrupt:
-                print("\n[!] Forcefully terminating all processes.")
-                for p in processes:
-                    if p.is_alive():
-                        p.terminate()
+            print("\n[!] Ctrl-C detected. Stopping recordings...")
+            shutdown_event.set()
+            deadline = time.monotonic() + SHUTDOWN_GRACE_SECONDS
+            for p in processes:
+                p.join(max(0, deadline - time.monotonic()))
+
+            for p in processes:
+                if p.is_alive():
+                    p.terminate()
+
+            for p in processes:
+                p.join(SHUTDOWN_GRACE_SECONDS)
     else:
         config = _build_config(args, mode, cookies, user=args.user)
         record_user(config)

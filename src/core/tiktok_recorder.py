@@ -27,10 +27,21 @@ class TikTokRecorder:
         self.bitrate = config.bitrate
         self.ffmpeg_path = config.ffmpeg_path
         self.exit_on_interrupt = config.exit_on_interrupt
+        self.shutdown_event = config.shutdown_event
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
         self._stop_requested = False
+
+    def _shutdown_requested(self):
+        return self.shutdown_event is not None and self.shutdown_event.is_set()
+
+    def _wait_or_shutdown(self, timeout):
+        if self.shutdown_event is not None:
+            return self.shutdown_event.wait(timeout)
+
+        time.sleep(timeout)
+        return False
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -101,12 +112,12 @@ class TikTokRecorder:
         self.start_recording(self.user, self.room_id)
 
     def automatic_mode(self):
-        while True:
+        while not self._shutdown_requested():
             try:
                 try:
                     self.room_id = self.tiktok.get_room_id_from_user(self.user)
                     self.manual_mode()
-                    if self._stop_requested:
+                    if self._stop_requested or self._shutdown_requested():
                         return
 
                 except (UserLiveError, LiveNotFound) as ex:
@@ -114,11 +125,17 @@ class TikTokRecorder:
                     logger.info(
                         f"Waiting {self.automatic_interval} minutes before recheck\n"
                     )
-                    time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
+                    if self._wait_or_shutdown(
+                        self.automatic_interval * TimeOut.ONE_MINUTE
+                    ):
+                        return
 
                 except (ConnectionError, RequestException, HTTPException):
                     logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                    time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+                    if self._wait_or_shutdown(
+                        TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
+                    ):
+                        return
 
             except KeyboardInterrupt:
                 logger.info("Recording stopped by user.")
@@ -228,6 +245,10 @@ class TikTokRecorder:
                 try:
                     while not stop_recording:
                         try:
+                            if self._shutdown_requested():
+                                stop_recording = True
+                                break
+
                             if (
                                 self.duration
                                 and time.monotonic() - recording_started_at
@@ -244,6 +265,10 @@ class TikTokRecorder:
                                 break
 
                             for chunk in self.tiktok.download_live_stream(live_url):
+                                if self._shutdown_requested():
+                                    stop_recording = True
+                                    break
+
                                 buffer.extend(chunk)
                                 bytes_written += len(chunk)
                                 if len(buffer) >= buffer_size:
@@ -263,18 +288,18 @@ class TikTokRecorder:
                         except ConnectionError:
                             if self.mode == Mode.AUTOMATIC:
                                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                                time.sleep(
+                                stop_recording = self._wait_or_shutdown(
                                     TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
                                 )
                             else:
                                 logger.warning(
                                     "Connection closed. Retrying in 2 seconds."
                                 )
-                                time.sleep(2)
+                                stop_recording = self._wait_or_shutdown(2)
 
                         except (RequestException, HTTPException) as ex:
                             logger.warning(f"Network hiccup, retrying: {ex}")
-                            time.sleep(2)
+                            stop_recording = self._wait_or_shutdown(2)
 
                         except Exception as ex:
                             logger.error(
@@ -294,7 +319,9 @@ class TikTokRecorder:
                     stop_recording = True
 
             if interrupted_by_user:
-                self._stop_requested = self.exit_on_interrupt
+                self._stop_requested = (
+                    self.exit_on_interrupt or self._shutdown_requested()
+                )
                 if bytes_written < min_stream_bytes:
                     Path(output).unlink(missing_ok=True)
                 else:
@@ -303,6 +330,12 @@ class TikTokRecorder:
                         output, self.bitrate, self.ffmpeg_path
                     )
                 return
+
+            if self._shutdown_requested():
+                if bytes_written < min_stream_bytes:
+                    Path(output).unlink(missing_ok=True)
+                    return
+                break
 
             if duration_expired and bytes_written < min_stream_bytes:
                 Path(output).unlink(missing_ok=True)

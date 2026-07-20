@@ -38,6 +38,17 @@ class FakeTikTokAPI:
         return True
 
 
+class FakeShutdownEvent:
+    def __init__(self, is_set=False):
+        self._is_set = is_set
+
+    def is_set(self):
+        return self._is_set
+
+    def wait(self, timeout):
+        return self._is_set
+
+
 def test_setup_resolves_room_id_before_country_check_for_manual_user():
     recorder = TikTokRecorder(
         RecorderConfig(mode=Mode.MANUAL, user="creator", cookies={})
@@ -174,6 +185,22 @@ def test_automatic_mode_exits_after_a_user_stop_request(monkeypatch):
     recorder.automatic_mode()
 
     assert recorder.tiktok.calls == ["get_room_id_from_user:creator"]
+
+
+def test_automatic_mode_exits_when_parent_requests_shutdown():
+    recorder = TikTokRecorder(
+        RecorderConfig(
+            mode=Mode.AUTOMATIC,
+            user="creator",
+            cookies={},
+            shutdown_event=FakeShutdownEvent(is_set=True),
+        )
+    )
+    recorder.tiktok = FakeTikTokAPI(blacklisted=False)
+
+    recorder.automatic_mode()
+
+    assert recorder.tiktok.calls == []
 
 
 def test_automatic_mode_exits_when_interrupted_while_waiting(monkeypatch):
