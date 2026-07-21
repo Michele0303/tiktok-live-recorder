@@ -59,6 +59,21 @@ def test_is_room_alive_accepts_confirmed_stream_room():
 
     assert api.is_room_alive("123") is True
 
+def test_is_room_alive_accepts_paused_stream_room():
+    api = build_api(
+        {"data": [{"alive": True, "room_id": 123}], "status_code": 0},
+        {
+            "data": {
+                "status": 3,
+                "stream_url": {
+                    "live_core_sdk_data": {"pull_data": {"stream_data": '{"data": {}}'}}
+                },
+            },
+            "status_code": 0,
+        },
+    )
+
+    assert api.is_room_alive("123") is True
 
 def test_is_room_alive_keeps_restricted_live_as_alive():
     api = build_api(
