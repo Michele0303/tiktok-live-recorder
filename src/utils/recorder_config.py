@@ -16,4 +16,5 @@ class RecorderConfig:
     duration: int | None = None
     use_telegram: bool = False
     bitrate: str | None = None
+    ffmpeg_path: str | None = None
     tikrec_url: str | None = None

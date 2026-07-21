@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 import requests
@@ -17,6 +18,44 @@ def delete_tmp_file():
         os.remove(FILE_TEMP)
     except Exception as ex:
         print(ex)
+
+
+def _merge_cookies(existing_path: Path, new_path: Path) -> None:
+    """
+    Merge cookies.json from the new version into the existing one.
+
+    New keys from the update are added with their default values.
+    All existing keys are kept as-is, so user session data is never overwritten.
+
+    Args:
+        existing_path (Path): Path to the user's current cookies.json.
+        new_path (Path): Path to the cookies.json shipped with the new version.
+    """
+    try:
+        with open(existing_path, "r", encoding="utf-8") as f:
+            existing = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        existing = {}
+    if not isinstance(existing, dict):
+        existing = {}
+
+    try:
+        with open(new_path, "r", encoding="utf-8") as f:
+            new_defaults = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(new_defaults, dict):
+        return
+
+    # Preserve all existing user cookies and add only new defaults shipped by updates.
+    merged = dict(existing)
+    for key, default in new_defaults.items():
+        if key not in merged:
+            merged[key] = default
+
+    with open(existing_path, "w", encoding="utf-8") as f:
+        json.dump(merged, f, indent=2)
+        f.write("\n")
 
 
 def check_file(path: str) -> bool:
@@ -40,7 +79,7 @@ def download_file(url: str, file_name: str) -> None:
         url (str): URL to download the file from.
         file_name (str): Name of the file to save.
     """
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, timeout=30)
 
     if response.status_code == 200:
         with open(file_name, "wb") as file:
@@ -103,10 +142,16 @@ def check_updates() -> bool:
     extracted_folder = temp_update_dir / "tiktok-live-recorder-main" / "src"
 
     # Copy all files and folders from the extracted folder to the main directory
-    files_to_preserve = {"check_updates.py", "cookies.json", "telegram.json"}
+    files_to_preserve = {"check_updates.py", "telegram.json"}
     for item in extracted_folder.iterdir():
         source = item
         destination = dir_path / item.name
+
+        # Merge cookies.json so user session values are kept but new keys are
+        # picked up from the updated version.
+        if source.name == "cookies.json":
+            _merge_cookies(destination, source)
+            continue
 
         # Skip overwriting the files we want to preserve
         if source.name in files_to_preserve or source.suffix == ".session":

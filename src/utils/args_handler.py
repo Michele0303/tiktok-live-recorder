@@ -99,6 +99,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-ffmpeg-path",
+        dest="ffmpeg_path",
+        help="Specify a custom path to the ffmpeg binary. [Default: 'ffmpeg']",
+        default=None,
+        action="store",
+    )
+
+    parser.add_argument(
         "-no-update-check",
         dest="update_check",
         action="store_false",

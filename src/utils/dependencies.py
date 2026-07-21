@@ -5,10 +5,10 @@ from subprocess import SubprocessError
 from .logger_manager import logger
 
 
-def check_ffmpeg_binary():
+def check_ffmpeg_binary(ffmpeg_path="ffmpeg"):
     try:
         subprocess.run(
-            ["ffmpeg"],
+            [ffmpeg_path],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
         )
@@ -157,11 +157,12 @@ def check_and_install_dependencies():
         check_curl_cffi_library(),
         check_requests_library(),
         check_telethon_library(),
-        check_ffmpeg_binary(),
     ]
 
     if False in dependencies:
         install_requirements()
 
-    if not check_ffmpeg_binary():
+
+def check_ffmpeg(ffmpeg_path="ffmpeg"):
+    if not check_ffmpeg_binary(ffmpeg_path):
         install_ffmpeg_binary()

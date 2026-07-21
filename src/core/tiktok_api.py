@@ -1,3 +1,4 @@
+import html
 import json
 import re
 
@@ -8,6 +9,7 @@ from utils.custom_exceptions import (
     UserLiveError,
     TikTokRecorderError,
     LiveNotFound,
+    TikRecUnavailableError,
 )
 
 
@@ -44,15 +46,50 @@ class TikTokAPI:
         if not room_id:
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
-        data = self.http_client.get(
+        alive_data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/check_alive/"
             f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
         ).json()
 
-        if "data" not in data or len(data["data"]) == 0:
+        data_list = alive_data.get("data")
+        if (
+            not isinstance(data_list, list)
+            or not data_list
+            or not isinstance(data_list[0], dict)
+            or not data_list[0].get("alive", False)
+        ):
             return False
 
-        return data["data"][0].get("alive", False)
+        room_info = self.http_client.get(
+            f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
+        ).json()
+
+        status_code = room_info.get("status_code", 0)
+        if status_code == 4003110:
+            return True
+
+        if status_code != 0:
+            return False
+
+        room_data = room_info.get("data") or {}
+        room_status = room_data.get("status")
+        if room_status is not None and str(room_status) != "2":
+            return False
+
+        stream_url = room_data.get("stream_url") or {}
+        sdk_stream_data = (
+            (stream_url.get("live_core_sdk_data") or {})
+            .get("pull_data", {})
+            .get("stream_data")
+        )
+
+        return bool(
+            sdk_stream_data
+            or stream_url.get("flv_pull_url")
+            or stream_url.get("hls_pull_url")
+            or stream_url.get("hls_pull_url_map")
+            or stream_url.get("rtmp_pull_url")
+        )
 
     def get_sec_uid(self):
         """
@@ -133,19 +170,44 @@ class TikTokAPI:
         return room_id
 
     def _tikrec_get_room_id_signed_url(self, user: str) -> str:
-        response = self.http_client.get(
-            f"{self.tikrec_url}/tiktok/room/api/sign",
-            params={"unique_id": user},
-        )
+        try:
+            response = self.http_client.get(
+                f"{self.tikrec_url}/tiktok/room/api/sign",
+                params={"unique_id": user},
+            )
+            response.raise_for_status()
+        except Exception as e:
+            raise TikRecUnavailableError(
+                f"tikrec signing service is unreachable: {e}"
+            ) from e
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError as e:
+            raise TikRecUnavailableError(
+                "tikrec signing service returned an invalid response "
+                "(expected JSON, got something else — the service may be down)."
+            ) from e
 
         signed_path = data.get("signed_path")
+        if not signed_path:
+            raise TikRecUnavailableError(
+                "tikrec signing service did not return a signed_path "
+                "(the service may be down or overloaded)."
+            )
+
         return f"{self.BASE_URL}{signed_path}"
 
     def get_room_id_from_user(self, user: str) -> str | None:
         """Given a username, get the room_id."""
-        signed_url = self._tikrec_get_room_id_signed_url(user)
+        try:
+            signed_url = self._tikrec_get_room_id_signed_url(user)
+        except TikRecUnavailableError as e:
+            logger.warning(
+                f"[!] tikrec is unavailable ({e}). "
+                "Falling back to unsigned API — recording continues but may be less reliable."
+            )
+            return self._old_get_room_id_from_user(user)
 
         response = self.http_client.get(signed_url)
         content = response.text
@@ -225,9 +287,44 @@ class TikTokAPI:
 
         return followers
 
-    def get_live_url(self, room_id: str) -> str | None:
+    def _get_stream_url_from_page(self, user: str) -> str | None:
         """
-        Return the cdn (flv or m3u8) of the streaming
+        Fallback: fetch the live page HTML and extract the stream URL directly.
+        Used when the webcast API returns status code 4003110 (WAF/access restriction).
+        """
+        try:
+            live_page_url = f"{self.BASE_URL}/@{user}/live"
+            response = self.http_client.get(live_page_url)
+            content = response.text
+
+            flv_matches = re.findall(r'https?://[^\s"\'<>]+\.flv[^\s"\'<>]*', content)
+            if flv_matches:
+                # Prefer original (_or4) or SD quality
+                for url in flv_matches:
+                    url = html.unescape(url.rstrip("\\"))
+                    if "_or4" in url or "_sd" in url:
+                        logger.info(f"Found stream URL from page: {url[:80]}...")
+                        return url
+                return html.unescape(flv_matches[0].rstrip("\\"))
+
+            hls_matches = re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)
+            if hls_matches:
+                return html.unescape(hls_matches[0].rstrip("\\"))
+
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to extract stream URL from page: {e}")
+            return None
+
+    def _add_live_url_candidate(self, candidates: list[str], url: str | None) -> None:
+        if url and url not in candidates:
+            candidates.append(url)
+
+    def get_live_urls(self, room_id: str, user: str = None) -> list[str]:
+        """
+        Return candidate CDN URLs (flv or m3u8) for the streaming.
+        If the API returns status code 4003110 and a username is provided,
+        falls back to scraping the live page directly.
         """
         data = self.http_client.get(
             f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
@@ -236,24 +333,42 @@ class TikTokAPI:
         if "This account is private" in data:
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
 
-        stream_url = data.get("data", {}).get("stream_url", {})
+        status_code = data.get("status_code", 0)
+
+        if status_code == 4003110:
+            if user:
+                logger.info(
+                    "API blocked by WAF (4003110). Trying fallback: extract stream URL from live page..."
+                )
+                fallback_url = self._get_stream_url_from_page(user)
+                if fallback_url:
+                    return [fallback_url]
+
+            raise UserLiveError(TikTokError.LIVE_RESTRICTION)
+
+        room_data = data.get("data") or {}
+        room_status = room_data.get("status")
+        if room_status is not None and str(room_status) != "2":
+            raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
+
+        stream_url = room_data.get("stream_url", {})
 
         sdk_data_str = (
             stream_url.get("live_core_sdk_data", {})
             .get("pull_data", {})
             .get("stream_data")
         )
+        candidates = []
         if not sdk_data_str:
             logger.warning(
                 "No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code."
             )
-            return (
-                stream_url.get("flv_pull_url", {}).get("FULL_HD1")
-                or stream_url.get("flv_pull_url", {}).get("HD1")
-                or stream_url.get("flv_pull_url", {}).get("SD2")
-                or stream_url.get("flv_pull_url", {}).get("SD1")
-                or stream_url.get("rtmp_pull_url", "")
-            )
+            flv_pull_url = stream_url.get("flv_pull_url", {})
+            for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
+                self._add_live_url_candidate(candidates, flv_pull_url.get(key))
+            self._add_live_url_candidate(candidates, stream_url.get("hls_pull_url"))
+            self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
+            return candidates
 
         # Extract stream options
         sdk_data = json.loads(sdk_data_str).get("data", {})
@@ -265,22 +380,38 @@ class TikTokAPI:
         )
         if not qualities:
             logger.warning("No qualities found in the stream data. Returning None.")
-            return None
+            return candidates
         level_map = {q["sdk_key"]: q["level"] for q in qualities}
 
-        best_level = -1
-        best_flv = None
-        for sdk_key, entry in sdk_data.items():
-            level = level_map.get(sdk_key, -1)
+        ordered_sdk_keys = sorted(
+            sdk_data.keys(), key=lambda key: level_map.get(key, -1), reverse=True
+        )
+        for sdk_key in ordered_sdk_keys:
+            entry = sdk_data[sdk_key]
             stream_main = entry.get("main", {})
-            if level > best_level:
-                best_level = level
-                best_flv = stream_main.get("flv")
+            self._add_live_url_candidate(candidates, stream_main.get("flv"))
+            self._add_live_url_candidate(
+                candidates, stream_main.get("hls") or stream_main.get("m3u8")
+            )
 
-        if not best_flv and data.get("status_code") == 4003110:
-            raise UserLiveError(TikTokError.LIVE_RESTRICTION)
+        flv_pull_url = stream_url.get("flv_pull_url", {})
+        for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
+            self._add_live_url_candidate(candidates, flv_pull_url.get(key))
+        self._add_live_url_candidate(candidates, stream_url.get("hls_pull_url"))
+        self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
 
-        return best_flv
+        return candidates
+
+    def get_live_url(self, room_id: str, user: str = None) -> str | None:
+        """Return the first candidate CDN URL for the streaming."""
+        live_urls = self.get_live_urls(room_id, user=user)
+        if live_urls:
+            return live_urls[0]
+        return None
+
+    def get_live_url_candidates(self, room_id: str, user: str = None) -> list[str]:
+        """Return candidate CDN URLs for the streaming."""
+        return self.get_live_urls(room_id, user=user)
 
     def download_live_stream(self, live_url: str):
         """Generator that returns the live stream for a given room_id."""
