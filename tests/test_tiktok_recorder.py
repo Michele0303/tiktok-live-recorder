@@ -1,11 +1,16 @@
 import sys
 from pathlib import Path
+import threading
+import time
+import tempfile
+import glob
+from utils.video_management import VideoManagement
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from core.tiktok_recorder import TikTokRecorder  # noqa: E402
+from core.tiktok_recorder import TikTokRecorder, stop_event  # noqa: E402
 from utils.custom_exceptions import TikTokRecorderError  # noqa: E402
 from utils.enums import Mode  # noqa: E402
 from utils.recorder_config import RecorderConfig  # noqa: E402
@@ -35,6 +40,18 @@ class FakeTikTokAPI:
     def is_room_alive(self, room_id):
         self.calls.append(f"is_room_alive:{room_id}")
         return True
+
+    def get_live_url_candidates(self,room_id: any ,user = None):
+        return [b"A" * 4096]
+
+    def download_live_stream(self, live_urls: str):
+        yield b"A" * 4096
+        time.sleep(0.5)
+        yield b"A" * 4096
+        time.sleep(0.5)
+        yield b"A" * 4096
+
+
 
 
 def test_setup_resolves_room_id_before_country_check_for_manual_user():
@@ -97,3 +114,28 @@ def test_setup_keeps_manual_room_id_allowed_when_country_check_is_blocked():
         "is_country_blacklisted",
         "is_room_alive:1234567890",
     ]
+
+def test_stop_event_inturpt_recording(monkeypatch):
+    stop_event.clear()
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.MANUAL, room_id="1234567890", cookies={}, output=tempfile.mkdtemp())
+    )
+    fake_api = FakeTikTokAPI(blacklisted=False)
+    recorder.tiktok = fake_api
+    recorder._setup()
+    monkeypatch.setattr(
+        VideoManagement,
+        "convert_flv_to_mp4",
+        lambda *args, **kwargs: None,
+    )
+
+    thread = threading.Thread(target=recorder.start_recording, args=("test_user", "1234567890"))
+
+    thread.start()
+    time.sleep(2)
+    stop_event.set()
+    thread.join(timeout = 5)
+    assert not thread.is_alive()
+
+
+

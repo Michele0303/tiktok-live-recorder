@@ -140,3 +140,6 @@ dmypy.json
 
 .idea/
 .vscode/
+
+#notes files
+./notes.md 
