@@ -107,6 +107,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-audio-only",
+        "--audio-only",
+        dest="audio_only",
+        action="store_true",
+        help="Record audio stream only (no video).",
+    )
+
+    parser.add_argument(
         "-no-update-check",
         dest="update_check",
         action="store_false",
