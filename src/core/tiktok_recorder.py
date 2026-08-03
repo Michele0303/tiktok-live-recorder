@@ -192,9 +192,7 @@ class TikTokRecorder:
 
     def _build_output_path(self, user: str) -> str:
         safe_user = _sanitize_filename_part(user)
-        filename = (
-            f"TK_{safe_user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
-        )
+        filename = f"TK_{safe_user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
         # Base folder is whatever -output points to (defaulting to a local
         # "Downloads" folder when it isn't set), with one subfolder per
         # profile so each user's video + audio files stay together.

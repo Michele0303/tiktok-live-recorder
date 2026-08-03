@@ -141,8 +141,13 @@ class TikTokAPI:
                 user = matches[0]
 
         if user is None:
-            # https://www.tiktok.com/@<username>/live
-            match = re.match(r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live", live_url)
+            # https://www.tiktok.com/@<username> or .../@<username>/live —
+            # keep this in sync with Regex.IS_TIKTOK_LIVE in enums.py, which
+            # also accepts the bare profile URL without the "/live" suffix.
+            match = re.match(
+                r"https?://(?:www\.)?tiktok\.com/@([\w.-]+)(?:/live)?(?:[/?#].*)?$",
+                live_url,
+            )
             if match:
                 user = match.group(1)
 

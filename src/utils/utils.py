@@ -23,12 +23,25 @@ def _load_or_create_json_config(filename: str, default: dict) -> dict:
     """
     Load a local JSON config file from the project root's `src/` directory,
     creating it from `default` if it doesn't exist yet.
+
+    The file is created atomically (O_CREAT | O_EXCL) with owner-only
+    permissions (0o600): cookies.json can hold a TikTok session cookie and
+    telegram.json can hold Telegram API credentials, and a plain
+    open(path, "w") would create the file with the process's default
+    (commonly world-readable, e.g. 0o644) permissions on POSIX systems.
+    O_EXCL also means a second process starting at the same time can't read
+    a partially-written file — it just falls through to reading what the
+    first process wrote.
     """
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, "..", filename)
 
-    if not os.path.exists(config_path):
-        with open(config_path, "w") as f:
+    try:
+        fd = os.open(config_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(fd, "w") as f:
             json.dump(default, f, indent=2)
             f.write("\n")
         return dict(default)

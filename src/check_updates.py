@@ -41,11 +41,33 @@ def _fetch_remote_version_info() -> dict | None:
     return {"version": version_match.group(1), "features": features}
 
 
-def _parse_version(v):
-    try:
-        return (float(str(v)),)
-    except ValueError:
-        return tuple(int(x) for x in str(v).split("."))
+def _parse_version(v) -> tuple[int, ...]:
+    """
+    Parse a version string like "7.7.1" or "7.7.1-rc1" into a tuple of ints
+    for ordinal comparison.
+
+    Each dot-separated chunk is reduced to its leading digits (0 if a chunk
+    has none), so this never raises on unexpected input and never mixes
+    float/int tuples of different lengths/types the way the previous
+    float(str(v)) implementation did (which also silently collapsed
+    distinct versions like "7.10" and "7.1" into the same float, 7.1).
+    """
+    parts = []
+    for chunk in str(v).split("."):
+        match = re.match(r"\d+", chunk)
+        parts.append(int(match.group()) if match else 0)
+    return tuple(parts)
+
+
+def _is_newer(remote: tuple[int, ...], current: tuple[int, ...]) -> bool:
+    """
+    True if `remote` is strictly greater than `current`, treating missing
+    trailing components as 0 (so (7, 7) == (7, 7, 0)).
+    """
+    length = max(len(remote), len(current))
+    remote = remote + (0,) * (length - len(remote))
+    current = current + (0,) * (length - len(current))
+    return remote > current
 
 
 def check_updates() -> bool:
@@ -69,7 +91,9 @@ def check_updates() -> bool:
     if remote is None:
         return False
 
-    if _parse_version(remote["version"]) == _parse_version(CurrentInfo.VERSION):
+    if not _is_newer(
+        _parse_version(remote["version"]), _parse_version(CurrentInfo.VERSION)
+    ):
         return False
 
     print(
@@ -81,6 +105,8 @@ def check_updates() -> bool:
         for feature in remote["features"]:
             print("*", feature)
 
-    print(f"\nTo update, review and install the latest release yourself: {RELEASES_URL}")
+    print(
+        f"\nTo update, review and install the latest release yourself: {RELEASES_URL}"
+    )
 
     return False
