@@ -5,7 +5,18 @@ class Regex(Enum):
     def __str__(self):
         return str(self.value)
 
-    IS_TIKTOK_LIVE = r".*www\.tiktok\.com.*|.*vm\.tiktok\.com.*"
+    # Accepts a TikTok profile or live URL: the "/live" suffix is optional
+    # here because a bare profile URL (e.g. .../@user) is resolved to a
+    # live room later on (TikTok redirects it, or get_room_and_user_from_url
+    # looks the room up from the username). What's enforced is the scheme
+    # and host, so this no longer matches arbitrary URLs that merely contain
+    # "tiktok.com" somewhere in the query string or a lookalike domain.
+    IS_TIKTOK_LIVE = (
+        r"^https?://(?:"
+        r"(?:www\.)?tiktok\.com/@[\w.-]+(?:/live)?(?:[/?#].*)?"
+        r"|vm\.tiktok\.com/[\w-]+/?(?:[/?#].*)?"
+        r")$"
+    )
 
 
 class TimeOut(IntEnum):

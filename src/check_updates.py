@@ -1,185 +1,112 @@
-import json
-import os
-from pathlib import Path
+import re
+
 import requests
-import zipfile
-import shutil
 
 URL = "https://raw.githubusercontent.com/Michele0303/tiktok-live-recorder/main/src/utils/enums.py"
-URL_REPO = (
-    "https://github.com/Michele0303/tiktok-live-recorder/archive/refs/heads/main.zip"
-)
-FILE_TEMP = "enums_temp.py"
-FILE_NAME_UPDATE = URL_REPO.split("/")[-1]
+RELEASES_URL = "https://github.com/Michele0303/tiktok-live-recorder/releases"
 
 
-def delete_tmp_file():
-    try:
-        os.remove(FILE_TEMP)
-    except Exception as ex:
-        print(ex)
-
-
-def _merge_cookies(existing_path: Path, new_path: Path) -> None:
+def _fetch_remote_version_info() -> dict | None:
     """
-    Merge cookies.json from the new version into the existing one.
+    Fetch the raw enums.py source from the main branch and pull the VERSION /
+    NEW_FEATURES values out of it with regex.
 
-    New keys from the update are added with their default values.
-    All existing keys are kept as-is, so user session data is never overwritten.
-
-    Args:
-        existing_path (Path): Path to the user's current cookies.json.
-        new_path (Path): Path to the cookies.json shipped with the new version.
+    This deliberately does NOT execute or import the downloaded file, and
+    does NOT download/extract a source zip over the local install like the
+    previous updater did. Importing remote code and overwriting local files
+    based on a network response is a supply-chain risk: a compromised repo,
+    a tampered response (e.g. on a hostile network), or even an accidental
+    bad push to `main` could run arbitrary code on the user's machine, and
+    it also made installs non-reproducible. This function only reads plain
+    text to decide whether a newer version exists; it changes nothing.
     """
     try:
-        with open(existing_path, "r", encoding="utf-8") as f:
-            existing = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        existing = {}
-    if not isinstance(existing, dict):
-        existing = {}
+        response = requests.get(URL, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as ex:
+        print(f"Could not check for updates: {ex}")
+        return None
 
-    try:
-        with open(new_path, "r", encoding="utf-8") as f:
-            new_defaults = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return
-    if not isinstance(new_defaults, dict):
-        return
+    text = response.text
 
-    # Preserve all existing user cookies and add only new defaults shipped by updates.
-    merged = dict(existing)
-    for key, default in new_defaults.items():
-        if key not in merged:
-            merged[key] = default
+    version_match = re.search(r'VERSION\s*=\s*"([^"]+)"', text)
+    if not version_match:
+        return None
 
-    with open(existing_path, "w", encoding="utf-8") as f:
-        json.dump(merged, f, indent=2)
-        f.write("\n")
+    features = []
+    features_block_match = re.search(r"NEW_FEATURES\s*=\s*\[(.*?)\]", text, re.DOTALL)
+    if features_block_match:
+        features = re.findall(r'"((?:[^"\\]|\\.)*)"', features_block_match.group(1))
+
+    return {"version": version_match.group(1), "features": features}
 
 
-def check_file(path: str) -> bool:
+def _parse_version(v) -> tuple[int, ...]:
     """
-    Check if a file exists at the given path.
+    Parse a version string like "7.7.1" or "7.7.1-rc1" into a tuple of ints
+    for ordinal comparison.
 
-    Args:
-        path (str): Path to the file.
-
-    Returns:
-        bool: True if the file exists, False otherwise.
+    Each dot-separated chunk is reduced to its leading digits (0 if a chunk
+    has none), so this never raises on unexpected input and never mixes
+    float/int tuples of different lengths/types the way the previous
+    float(str(v)) implementation did (which also silently collapsed
+    distinct versions like "7.10" and "7.1" into the same float, 7.1).
     """
-    return Path(path).exists()
+    parts = []
+    for chunk in str(v).split("."):
+        match = re.match(r"\d+", chunk)
+        parts.append(int(match.group()) if match else 0)
+    return tuple(parts)
 
 
-def download_file(url: str, file_name: str) -> None:
+def _is_newer(remote: tuple[int, ...], current: tuple[int, ...]) -> bool:
     """
-    Download a file from a URL and save it locally.
-
-    Args:
-        url (str): URL to download the file from.
-        file_name (str): Name of the file to save.
+    True if `remote` is strictly greater than `current`, treating missing
+    trailing components as 0 (so (7, 7) == (7, 7, 0)).
     """
-    response = requests.get(url, stream=True, timeout=30)
-
-    if response.status_code == 200:
-        with open(file_name, "wb") as file:
-            for chunk in response.iter_content(1024):
-                file.write(chunk)
-    else:
-        print("Error downloading the file.")
+    length = max(len(remote), len(current))
+    remote = remote + (0,) * (length - len(remote))
+    current = current + (0,) * (length - len(current))
+    return remote > current
 
 
 def check_updates() -> bool:
     """
-    Check if there is a new version available and update if necessary.
+    Check whether a newer version is available on the main branch and, if
+    so, print a notice pointing the user to the releases page.
+
+    This function never downloads, imports, or executes remote code, and
+    never modifies local files. Installing an update is an explicit, manual
+    step left to the user — e.g. reviewing and pulling a tagged/versioned
+    release — so a compromised or tampered response can't run code on this
+    machine or silently change the installed program.
 
     Returns:
-        bool: True if the update was successful, False otherwise.
+        bool: Always False. The updater only notifies; it never triggers an
+        exit-and-update flow the way the old auto-updater did.
     """
-    download_file(URL, FILE_TEMP)
+    from utils.enums import Info as CurrentInfo
 
-    if not check_file(FILE_TEMP):
-        delete_tmp_file()
-        print("The temporary file does not exist.")
+    remote = _fetch_remote_version_info()
+    if remote is None:
         return False
 
-    try:
-        from enums_temp import Info
-        from utils.enums import Info as InfoOld
-    except ImportError:
-        print("Error importing the file or missing module.")
-        delete_tmp_file()
+    if not _is_newer(
+        _parse_version(remote["version"]), _parse_version(CurrentInfo.VERSION)
+    ):
         return False
 
-    def _parse_version(v):
-        try:
-            return (float(str(v)),)
-        except ValueError:
-            return tuple(int(x) for x in str(v).split("."))
-
-    if _parse_version(Info.VERSION) != _parse_version(InfoOld.VERSION):
-        print(
-            f"Current version: {InfoOld.__str__(InfoOld.VERSION)}\nNew version available: {Info.__str__(Info.VERSION)}"
-        )
+    print(
+        f"Current version: {CurrentInfo.VERSION}\n"
+        f"New version available: {remote['version']}"
+    )
+    if remote["features"]:
         print("\nNew features:")
-        for feature in Info.NEW_FEATURES:
+        for feature in remote["features"]:
             print("*", feature)
-    else:
-        delete_tmp_file()
-        # print("No updates available.")
-        return False
 
-    download_file(URL_REPO, FILE_NAME_UPDATE)
+    print(
+        f"\nTo update, review and install the latest release yourself: {RELEASES_URL}"
+    )
 
-    dir_path = Path(__file__).parent
-    temp_update_dir = dir_path / "update_temp"
-
-    # Extract content from zip to a temporary update directory
-    with zipfile.ZipFile(dir_path / FILE_NAME_UPDATE, "r") as zip_ref:
-        zip_ref.extractall(temp_update_dir)
-
-    # Find the extracted folder (it will have the name 'tiktok-live-recorder-main')
-    extracted_folder = temp_update_dir / "tiktok-live-recorder-main" / "src"
-
-    # Copy all files and folders from the extracted folder to the main directory
-    files_to_preserve = {"check_updates.py", "telegram.json"}
-    for item in extracted_folder.iterdir():
-        source = item
-        destination = dir_path / item.name
-
-        # Merge cookies.json so user session values are kept but new keys are
-        # picked up from the updated version.
-        if source.name == "cookies.json":
-            _merge_cookies(destination, source)
-            continue
-
-        # Skip overwriting the files we want to preserve
-        if source.name in files_to_preserve or source.suffix == ".session":
-            continue
-
-        # If it's a file, overwrite it
-        if source.is_file():
-            shutil.copy2(source, destination)
-        # If it's a directory, copy its contents file by file
-        elif source.is_dir():
-            for sub_item in source.rglob("*"):
-                sub_destination = destination / sub_item.relative_to(source)
-                if sub_item.is_file():
-                    sub_destination.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(sub_item, sub_destination)
-
-    # Delete the temporary files and folders
-    shutil.rmtree(temp_update_dir)
-    try:
-        Path(FILE_TEMP).unlink()
-    except Exception as e:
-        print(f"Failed to remove the temporary file {FILE_TEMP}: {e}")
-
-    delete_tmp_file()
-
-    try:
-        Path(FILE_NAME_UPDATE).unlink()
-    except Exception as e:
-        print(f"Failed to remove the temporary file {FILE_NAME_UPDATE}: {e}")
-
-    return True
+    return False

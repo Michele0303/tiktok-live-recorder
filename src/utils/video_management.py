@@ -33,7 +33,7 @@ class VideoManagement:
             logger.error(
                 f"File {file} is still locked after waiting. Skipping conversion."
             )
-            return
+            return None
 
         try:
             output_args = {
@@ -56,7 +56,47 @@ class VideoManagement:
             logger.error(
                 f"ffmpeg conversion failed: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"
             )
-            return
+            return None
 
         os.remove(file)
         logger.info(f"Finished converting {Path(output_file).resolve()}\n")
+        return output_file
+
+    @staticmethod
+    def extract_audio(file, ffmpeg_path=None):
+        """
+        Extract the audio track from `file` into a sibling .m4a file.
+
+        Tries a stream copy first (fast, no quality loss, since TikTok
+        streams are AAC audio already); falls back to re-encoding to AAC
+        only if the copy fails (e.g. an incompatible audio codec).
+        """
+        audio_file = str(Path(file).with_suffix("")) + ".m4a"
+        logger.info(f"Extracting audio to {audio_file}...")
+
+        try:
+            (
+                ffmpeg.input(file)
+                .output(audio_file, vn=None, acodec="copy")
+                .run(quiet=True, cmd=ffmpeg_path or "ffmpeg", overwrite_output=True)
+            )
+        except ffmpeg.Error:
+            try:
+                (
+                    ffmpeg.input(file)
+                    .output(audio_file, vn=None, acodec="aac")
+                    .run(
+                        quiet=True,
+                        cmd=ffmpeg_path or "ffmpeg",
+                        overwrite_output=True,
+                    )
+                )
+            except ffmpeg.Error as e:
+                logger.error(
+                    "Audio extraction failed: "
+                    f"{e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"
+                )
+                return None
+
+        logger.info(f"Finished extracting audio: {Path(audio_file).resolve()}\n")
+        return audio_file

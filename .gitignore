@@ -135,6 +135,12 @@ dmypy.json
 # telegram session file
 *.session
 
+# User-specific credentials (session cookies, Telegram API keys). These are
+# auto-created as empty templates on first run (see src/utils/utils.py) so
+# the app works without them; never commit real values here.
+src/cookies.json
+src/telegram.json
+
 # macOS folder metadata
 .DS_Store
 

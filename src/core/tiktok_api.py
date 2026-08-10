@@ -133,17 +133,26 @@ class TikTokAPI:
         if response.status_code == StatusCode.REDIRECT:
             raise UserLiveError(TikTokError.COUNTRY_BLACKLISTED)
 
+        user = None
+
         if response.status_code == StatusCode.MOVED:  # MOBILE URL
             matches = re.findall("com/@(.*?)/live", content)
-            if len(matches) < 1:
-                raise LiveNotFound(TikTokError.INVALID_TIKTOK_LIVE_URL)
+            if len(matches) >= 1:
+                user = matches[0]
 
-            user = matches[0]
+        if user is None:
+            # https://www.tiktok.com/@<username> or .../@<username>/live —
+            # keep this in sync with Regex.IS_TIKTOK_LIVE in enums.py, which
+            # also accepts the bare profile URL without the "/live" suffix.
+            match = re.match(
+                r"https?://(?:www\.)?tiktok\.com/@([\w.-]+)(?:/live)?(?:[/?#].*)?$",
+                live_url,
+            )
+            if match:
+                user = match.group(1)
 
-        # https://www.tiktok.com/@<username>/live
-        match = re.match(r"https?://(?:www\.)?tiktok\.com/@([^/]+)/live", live_url)
-        if match:
-            user = match.group(1)
+        if user is None:
+            raise LiveNotFound(TikTokError.INVALID_TIKTOK_LIVE_URL)
 
         room_id = self.get_room_id_from_user(user)
 
@@ -415,7 +424,12 @@ class TikTokAPI:
 
     def download_live_stream(self, live_url: str):
         """Generator that returns the live stream for a given room_id."""
-        stream = self._http_client_stream.get(live_url, stream=True)
-        for chunk in stream.iter_content(chunk_size=4096):
-            if chunk:
-                yield chunk
+        # (connect_timeout, read_timeout): read_timeout applies per socket
+        # read, not to the whole stream, so long-lived live streams are fine.
+        with self._http_client_stream.get(
+            live_url, stream=True, timeout=(10, 15)
+        ) as stream:
+            stream.raise_for_status()
+            for chunk in stream.iter_content(chunk_size=4096):
+                if chunk:
+                    yield chunk

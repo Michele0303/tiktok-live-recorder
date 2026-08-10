@@ -92,6 +92,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-extract-audio",
+        dest="extract_audio",
+        action="store_true",
+        help="Also save an audio-only copy of the recording (.m4a) "
+        "alongside the video, once it finishes converting.",
+    )
+
+    parser.add_argument(
         "-bitrate",
         dest="bitrate",
         help="Specify the bitrate for the output file (e.g. 1000k, 1M). Default: None (keep original)",

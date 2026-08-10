@@ -117,11 +117,12 @@ uv run python src/main.py [options]
 | `-room_id <ROOM_ID>` | Room ID to record from. |
 | `-mode <MODE>` | Recording mode: `manual`, `automatic`, `followers`. |
 | `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). |
-| `-output <DIRECTORY>` | Directory where recordings will be saved. |
+| `-output <DIRECTORY>` | Base directory for recordings. Each profile gets its own subfolder inside it (defaults to `./Downloads` when omitted). |
 | `-duration <SECONDS>` | Stop recording after this many seconds. |
 | `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
 | `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
 | `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
+| `-extract-audio` | Also save an audio-only `.m4a` copy alongside the video. |
 | `-no-update-check` | Skip the automatic update check on startup. |
 
 ### Recording Modes

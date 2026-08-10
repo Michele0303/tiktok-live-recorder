@@ -1,3 +1,4 @@
+import re
 import time
 from http.client import HTTPException
 from pathlib import Path
@@ -11,6 +12,17 @@ from utils.recorder_config import RecorderConfig
 from utils.video_management import VideoManagement
 from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderError
 from utils.enums import Mode, Error, TimeOut, TikTokError
+
+# Characters that are unsafe/invalid in filenames on common filesystems
+# (Windows reserves <>:"/\|?* and control chars; POSIX just needs / and NUL,
+# but we sanitize for the superset so recordings are portable).
+_FILENAME_UNSAFE_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def _sanitize_filename_part(value: str) -> str:
+    """Strip characters that are unsafe in filenames on common OSes."""
+    cleaned = _FILENAME_UNSAFE_RE.sub("_", str(value)).strip(" .")
+    return cleaned or "unknown"
 
 
 class TikTokRecorder:
@@ -27,8 +39,7 @@ class TikTokRecorder:
         self.bitrate = config.bitrate
         self.ffmpeg_path = config.ffmpeg_path
         self.use_telegram = config.use_telegram
-        self._proxy = config.proxy
-        self._cookies = config.cookies
+        self.extract_audio = config.extract_audio
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -61,10 +72,13 @@ class TikTokRecorder:
                     + ("\n" if not self.tiktok.is_room_alive(self.room_id) else "")
                 )
 
-        # If proxy was used for the initial checks, switch to a direct connection
-        # for the actual stream download to avoid proxy bottlenecks
-        if self._proxy:
-            self.tiktok = TikTokAPI(proxy=None, cookies=self._cookies)
+        # Note: TikTokAPI already keeps the proxy on its metadata/API client
+        # (http_client) while the stream-download client (_http_client_stream)
+        # stays direct. We deliberately do NOT swap self.tiktok for a fresh,
+        # proxy-less instance here: doing so used to also strip the proxy from
+        # every later metadata call (room checks, URL resolution, automatic
+        # mode rechecks), which breaks recording in regions where the proxy
+        # is required to reach TikTok at all.
 
     def run(self):
         """
@@ -177,12 +191,15 @@ class TikTokRecorder:
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def _build_output_path(self, user: str) -> str:
-        filename = (
-            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
-        )
-        if self.output:
-            return str(Path(self.output) / filename)
-        return filename
+        safe_user = _sanitize_filename_part(user)
+        filename = f"TK_{safe_user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
+        # Base folder is whatever -output points to (defaulting to a local
+        # "Downloads" folder when it isn't set), with one subfolder per
+        # profile so each user's video + audio files stay together.
+        base_dir = Path(self.output) if self.output else Path("Downloads")
+        user_dir = base_dir / safe_user
+        user_dir.mkdir(parents=True, exist_ok=True)
+        return str(user_dir / filename)
 
     def start_recording(self, user, room_id):
         """
@@ -194,11 +211,21 @@ class TikTokRecorder:
 
         output = self._build_output_path(user)
 
+        # Computed once, before any attempt/reconnect/CDN-switch, so
+        # `-duration` bounds the total wall-clock recording time rather than
+        # resetting every time the stream reconnects.
+        recording_deadline = time.time() + self.duration if self.duration else None
+
         min_stream_bytes = 4096
         for index, live_url in enumerate(live_urls, start=1):
+            if recording_deadline and time.time() >= recording_deadline:
+                logger.info("Requested duration already reached; stopping.")
+                break
+
             if self.duration:
+                remaining = max(0, int(recording_deadline - time.time()))
                 logger.info(
-                    f"Started recording for {self.duration} seconds "
+                    f"Started recording for up to {remaining} more second(s) "
                     f"(stream {index}/{len(live_urls)})"
                 )
             else:
@@ -218,7 +245,10 @@ class TikTokRecorder:
                             logger.info("User is no longer live. Stopping recording.")
                             break
 
-                        start_time = time.time()
+                        if recording_deadline and time.time() >= recording_deadline:
+                            stop_recording = True
+                            break
+
                         for chunk in self.tiktok.download_live_stream(live_url):
                             buffer.extend(chunk)
                             bytes_written += len(chunk)
@@ -226,8 +256,7 @@ class TikTokRecorder:
                                 out_file.write(buffer)
                                 buffer.clear()
 
-                            elapsed_time = time.time() - start_time
-                            if self.duration and elapsed_time >= self.duration:
+                            if recording_deadline and time.time() >= recording_deadline:
                                 stop_recording = True
                                 break
                         else:
@@ -274,7 +303,25 @@ class TikTokRecorder:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
-        VideoManagement.convert_flv_to_mp4(output, self.bitrate, self.ffmpeg_path)
+        final_path = VideoManagement.convert_flv_to_mp4(
+            output, self.bitrate, self.ffmpeg_path
+        )
+
+        if self.extract_audio and final_path:
+            VideoManagement.extract_audio(final_path, self.ffmpeg_path)
+
+        if self.use_telegram:
+            if not final_path:
+                logger.warning(
+                    "Skipping Telegram upload: MP4 conversion did not complete."
+                )
+            else:
+                try:
+                    from upload.telegram import Telegram
+
+                    Telegram().upload(final_path)
+                except Exception as ex:
+                    logger.error(f"Telegram upload failed: {ex}", exc_info=True)
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
