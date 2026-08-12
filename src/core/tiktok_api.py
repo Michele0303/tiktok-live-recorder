@@ -161,7 +161,10 @@ class TikTokAPI:
         if response.status_code != 200:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError as error:
+            raise UserLiveError(TikTokError.ROOM_ID_ERROR) from error
 
         room_id = data.get("data", {}).get("room_info", {}).get("id")
         if not room_id:
@@ -209,14 +212,43 @@ class TikTokAPI:
             )
             return self._old_get_room_id_from_user(user)
 
-        response = self.http_client.get(signed_url)
+        try:
+            response = self.http_client.get(signed_url)
+        except Exception as error:
+            return self._fallback_room_id(user, f"signed room lookup failed: {error}")
+
+        if response.status_code != StatusCode.OK:
+            return self._fallback_room_id(
+                user, f"signed room lookup returned HTTP {response.status_code}"
+            )
+
         content = response.text
 
         if not content or "Please wait" in content:
             raise UserLiveError(TikTokError.WAF_BLOCKED)
 
-        data = response.json()
-        return (data.get("data") or {}).get("user", {}).get("roomId")
+        try:
+            data = response.json()
+        except ValueError:
+            return self._fallback_room_id(
+                user, "signed room lookup returned invalid JSON"
+            )
+
+        room_id = (data.get("data") or {}).get("user", {}).get("roomId")
+        if not room_id:
+            return self._fallback_room_id(
+                user, "signed room lookup did not include a RoomID"
+            )
+
+        return room_id
+
+    def _fallback_room_id(self, user: str, reason: str) -> str:
+        logger.warning(
+            "[!] tikrec signed room lookup failed (%s). "
+            "Falling back to unsigned API - recording continues but may be less reliable.",
+            reason,
+        )
+        return self._old_get_room_id_from_user(user)
 
     def get_followers_list(self, sec_uid) -> list:
         """
