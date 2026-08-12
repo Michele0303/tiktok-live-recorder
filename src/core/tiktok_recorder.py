@@ -1,7 +1,8 @@
 import time
 from http.client import HTTPException
 from pathlib import Path
-from threading import Thread
+from threading import Thread, Event
+import signal
 
 from requests import RequestException
 
@@ -12,6 +13,8 @@ from utils.video_management import VideoManagement
 from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderError
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
+stop_event = Event()
+signal.signal(signal.SIGINT, lambda sig, frame: stop_event.set())
 
 class TikTokRecorder:
     def __init__(self, config: RecorderConfig):
@@ -118,7 +121,7 @@ class TikTokRecorder:
     def followers_mode(self):
         active_recordings = {}  # follower -> Thread
 
-        while True:
+        while not stop_event.is_set():
             try:
                 followers = self.tiktok.get_followers_list(self.sec_uid)
 
@@ -146,7 +149,7 @@ class TikTokRecorder:
                         thread.start()
                         active_recordings[follower] = thread
 
-                        time.sleep(2.5)
+                        stop_event.wait(2.5)
 
                     except TikTokRecorderError as e:
                         logger.error(f"Error while processing @{follower}: {e}")
@@ -210,9 +213,8 @@ class TikTokRecorder:
 
             logger.info("[PRESS CTRL + C ONCE TO STOP]")
             with open(output, "wb") as out_file:
-                stop_recording = False
                 stream_ended = False
-                while not stop_recording:
+                while not stop_event.is_set():
                     try:
                         if not self.tiktok.is_room_alive(room_id):
                             logger.info("User is no longer live. Stopping recording.")
@@ -228,7 +230,7 @@ class TikTokRecorder:
 
                             elapsed_time = time.time() - start_time
                             if self.duration and elapsed_time >= self.duration:
-                                stop_recording = True
+                                stop_event.set()
                                 break
                         else:
                             stream_ended = True
@@ -247,14 +249,14 @@ class TikTokRecorder:
 
                     except KeyboardInterrupt:
                         logger.info("Recording stopped by user.")
-                        stop_recording = True
+                        stop_event.set()
 
                     except Exception as ex:
                         logger.error(
                             f"Unexpected error during recording: {ex}",
                             exc_info=True,
                         )
-                        stop_recording = True
+                        stop_event.set()
 
                     finally:
                         if buffer:
