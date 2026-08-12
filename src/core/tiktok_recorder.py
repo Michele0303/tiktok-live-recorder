@@ -27,8 +27,10 @@ class TikTokRecorder:
         self.bitrate = config.bitrate
         self.ffmpeg_path = config.ffmpeg_path
         self.use_telegram = config.use_telegram
+        self.audio_only = getattr(config, "audio_only", False)
         self._proxy = config.proxy
         self._cookies = config.cookies
+
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -177,12 +179,15 @@ class TikTokRecorder:
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def _build_output_path(self, user: str) -> str:
+        
+        ext = "m4a" if self.audio_only else "mp4"
         filename = (
-            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
+            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.{ext}"
         )
         if self.output:
             return str(Path(self.output) / filename)
         return filename
+    
 
     def start_recording(self, user, room_id):
         """
@@ -275,6 +280,17 @@ class TikTokRecorder:
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
         VideoManagement.convert_flv_to_mp4(output, self.bitrate, self.ffmpeg_path)
+        # start_recording() के अंत में यह लाइन बदलें:
+        logger.info(f"Recording finished: {Path(output).resolve()}\n")
+        
+        # ⚡ audio_only पैरामीटर जोड़ें:
+        VideoManagement.convert_flv_to_mp4(
+            output, 
+            self.bitrate, 
+            self.ffmpeg_path, 
+            audio_only=self.audio_only
+        )
+        
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()

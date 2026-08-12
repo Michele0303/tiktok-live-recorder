@@ -31,6 +31,7 @@ def _build_config(args, mode, cookies, user=None):
         use_telegram=args.telegram,
         bitrate=args.bitrate,
         ffmpeg_path=args.ffmpeg_path,
+        audio_only=getattr(args, "audio_only", False),
     )
 
 
