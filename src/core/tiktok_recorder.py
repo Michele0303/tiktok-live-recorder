@@ -176,13 +176,28 @@ class TikTokRecorder:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-    def _build_output_path(self, user: str) -> str:
-        filename = (
-            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
-        )
+    def _build_output_path(
+        self,
+        user: str,
+        protocol: str = "flv",
+        timestamp: str | None = None,
+    ) -> str:
+        timestamp = timestamp or time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
+        suffix = "_hls.ts" if protocol == "hls" else "_flv.mp4"
+        filename = f"TK_{user}_{timestamp}{suffix}"
         if self.output:
             return str(Path(self.output) / filename)
         return filename
+
+    def _download_stream(self, live_url: str, protocol: str):
+        if protocol == "hls":
+            return VideoManagement.download_hls_stream(
+                live_url,
+                duration=self.duration,
+                ffmpeg_path=self.ffmpeg_path,
+                headers=self.tiktok.get_stream_headers(),
+            )
+        return self.tiktok.download_flv_stream(live_url)
 
     def start_recording(self, user, room_id):
         """
@@ -192,17 +207,29 @@ class TikTokRecorder:
         if not live_urls:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
-        output = self._build_output_path(user)
-
         min_stream_bytes = 4096
+        recording_timestamp = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
+        output = None
+
         for index, live_url in enumerate(live_urls, start=1):
+            protocol = "hls" if self.tiktok.is_hls_url(live_url) else "flv"
+            output = self._build_output_path(
+                user,
+                protocol=protocol,
+                timestamp=recording_timestamp,
+            )
+            Path(output).unlink(missing_ok=True)
+
             if self.duration:
                 logger.info(
                     f"Started recording for {self.duration} seconds "
-                    f"(stream {index}/{len(live_urls)})"
+                    f"(stream {index}/{len(live_urls)}, {protocol.upper()})"
                 )
             else:
-                logger.info(f"Started recording (stream {index}/{len(live_urls)})...")
+                logger.info(
+                    f"Started recording (stream {index}/{len(live_urls)}, "
+                    f"{protocol.upper()})..."
+                )
 
             buffer_size = 512 * 1024  # 512 KB buffer
             buffer = bytearray()
@@ -219,19 +246,25 @@ class TikTokRecorder:
                             break
 
                         start_time = time.time()
-                        for chunk in self.tiktok.download_live_stream(live_url):
-                            buffer.extend(chunk)
-                            bytes_written += len(chunk)
-                            if len(buffer) >= buffer_size:
-                                out_file.write(buffer)
-                                buffer.clear()
+                        stream = self._download_stream(live_url, protocol)
+                        try:
+                            for chunk in stream:
+                                buffer.extend(chunk)
+                                bytes_written += len(chunk)
+                                if len(buffer) >= buffer_size:
+                                    out_file.write(buffer)
+                                    buffer.clear()
 
-                            elapsed_time = time.time() - start_time
-                            if self.duration and elapsed_time >= self.duration:
-                                stop_recording = True
-                                break
-                        else:
-                            stream_ended = True
+                                elapsed_time = time.time() - start_time
+                                if self.duration and elapsed_time >= self.duration:
+                                    stop_recording = True
+                                    break
+                            else:
+                                stream_ended = True
+                        finally:
+                            close_stream = getattr(stream, "close", None)
+                            if close_stream:
+                                close_stream()
 
                         if stream_ended and bytes_written < min_stream_bytes:
                             break
@@ -269,12 +302,12 @@ class TikTokRecorder:
                 f"Stream {index}/{len(live_urls)} returned only {bytes_written} bytes. "
                 "Trying another CDN/quality..."
             )
-        else:
             Path(output).unlink(missing_ok=True)
+        else:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
-        VideoManagement.convert_flv_to_mp4(output, self.bitrate, self.ffmpeg_path)
+        VideoManagement.convert_to_mp4(output, self.bitrate, self.ffmpeg_path)
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
