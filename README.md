@@ -120,7 +120,7 @@ uv run python src/main.py [options]
 | `-output <DIRECTORY>` | Directory where recordings will be saved. |
 | `-duration <SECONDS>` | Stop recording after this many seconds. |
 | `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
-| `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
+| `-bitrate <BITRATE>` | Re-encode the output video at this bitrate (e.g. `1M`, `1000k`). Omit it to preserve the original stream. |
 | `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
 | `-no-update-check` | Skip the automatic update check on startup. |
 
@@ -129,6 +129,17 @@ uv run python src/main.py [options]
 - **`manual`** *(default)*: Records immediately if the user is currently live.
 - **`automatic`**: Polls at regular intervals and records whenever the user goes live.
 - **`followers`**: Automatically records live streams from all followed users.
+
+### Recording quality diagnostics
+
+Before recording, the program logs the official stream variants returned by
+TikTok and the preferred candidate. Signed query parameters are omitted from
+these logs. After conversion, it also reports the recorded file's codec,
+resolution, and bitrate when `ffprobe` is available.
+
+The `-bitrate` option intentionally re-encodes video with `libx264`. Use it
+only when a specific output bitrate is required; omitting it preserves the
+source stream whenever the container supports stream copying.
 
 ## Guide
 

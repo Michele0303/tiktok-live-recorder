@@ -1,6 +1,7 @@
 import html
 import json
 import re
+from urllib.parse import urlsplit, urlunsplit
 
 from http_utils.http_client import HttpClient
 from utils.enums import StatusCode, TikTokError
@@ -316,9 +317,48 @@ class TikTokAPI:
             logger.warning(f"Failed to extract stream URL from page: {e}")
             return None
 
-    def _add_live_url_candidate(self, candidates: list[str], url: str | None) -> None:
+    def _add_live_url_candidate(
+        self,
+        candidates: list[str],
+        candidate_details: dict[str, tuple[str, str]],
+        url: str | None,
+        quality: str,
+        protocol: str,
+    ) -> None:
         if url and url not in candidates:
             candidates.append(url)
+            candidate_details[url] = (quality, protocol)
+
+    @staticmethod
+    def _sanitize_stream_url(url: str) -> str:
+        """Remove signed query parameters before logging a stream URL."""
+        parts = urlsplit(url)
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+
+    def _log_stream_candidates(
+        self,
+        candidates: list[str],
+        candidate_details: dict[str, tuple[str, str]],
+    ) -> None:
+        """Log the official stream variants without exposing signed URLs."""
+        if not candidates:
+            return
+
+        logger.info("Found %d official stream candidate(s).", len(candidates))
+        for index, candidate in enumerate(candidates, start=1):
+            quality, protocol = candidate_details.get(candidate, ("unknown", "unknown"))
+            logger.info(
+                "Stream candidate %d/%d: quality=%s, protocol=%s, source=%s",
+                index,
+                len(candidates),
+                quality,
+                protocol,
+                self._sanitize_stream_url(candidate),
+            )
+
+        logger.info(
+            "Selecting stream candidate 1/%d as the preferred source.", len(candidates)
+        )
 
     def get_live_urls(self, room_id: str, user: str = None) -> list[str]:
         """
@@ -359,15 +399,35 @@ class TikTokAPI:
             .get("stream_data")
         )
         candidates = []
+        candidate_details = {}
         if not sdk_data_str:
             logger.warning(
                 "No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code."
             )
             flv_pull_url = stream_url.get("flv_pull_url", {})
             for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
-                self._add_live_url_candidate(candidates, flv_pull_url.get(key))
-            self._add_live_url_candidate(candidates, stream_url.get("hls_pull_url"))
-            self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
+                self._add_live_url_candidate(
+                    candidates,
+                    candidate_details,
+                    flv_pull_url.get(key),
+                    key,
+                    "flv",
+                )
+            self._add_live_url_candidate(
+                candidates,
+                candidate_details,
+                stream_url.get("hls_pull_url"),
+                "legacy",
+                "hls",
+            )
+            self._add_live_url_candidate(
+                candidates,
+                candidate_details,
+                stream_url.get("rtmp_pull_url"),
+                "legacy",
+                "rtmp",
+            )
+            self._log_stream_candidates(candidates, candidate_details)
             return candidates
 
         # Extract stream options
@@ -381,7 +441,17 @@ class TikTokAPI:
         if not qualities:
             logger.warning("No qualities found in the stream data. Returning None.")
             return candidates
-        level_map = {q["sdk_key"]: q["level"] for q in qualities}
+        quality_details = {
+            quality["sdk_key"]: {
+                "level": quality.get("level", -1),
+                "name": quality.get("name") or quality["sdk_key"],
+            }
+            for quality in qualities
+            if isinstance(quality, dict) and quality.get("sdk_key")
+        }
+        level_map = {
+            sdk_key: details["level"] for sdk_key, details in quality_details.items()
+        }
 
         ordered_sdk_keys = sorted(
             sdk_data.keys(), key=lambda key: level_map.get(key, -1), reverse=True
@@ -389,16 +459,46 @@ class TikTokAPI:
         for sdk_key in ordered_sdk_keys:
             entry = sdk_data[sdk_key]
             stream_main = entry.get("main", {})
-            self._add_live_url_candidate(candidates, stream_main.get("flv"))
+            quality = quality_details.get(sdk_key, {}).get("name", sdk_key)
             self._add_live_url_candidate(
-                candidates, stream_main.get("hls") or stream_main.get("m3u8")
+                candidates,
+                candidate_details,
+                stream_main.get("flv"),
+                str(quality),
+                "flv",
+            )
+            self._add_live_url_candidate(
+                candidates,
+                candidate_details,
+                stream_main.get("hls") or stream_main.get("m3u8"),
+                str(quality),
+                "hls",
             )
 
         flv_pull_url = stream_url.get("flv_pull_url", {})
         for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
-            self._add_live_url_candidate(candidates, flv_pull_url.get(key))
-        self._add_live_url_candidate(candidates, stream_url.get("hls_pull_url"))
-        self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
+            self._add_live_url_candidate(
+                candidates,
+                candidate_details,
+                flv_pull_url.get(key),
+                key,
+                "flv",
+            )
+        self._add_live_url_candidate(
+            candidates,
+            candidate_details,
+            stream_url.get("hls_pull_url"),
+            "legacy",
+            "hls",
+        )
+        self._add_live_url_candidate(
+            candidates,
+            candidate_details,
+            stream_url.get("rtmp_pull_url"),
+            "legacy",
+            "rtmp",
+        )
+        self._log_stream_candidates(candidates, candidate_details)
 
         return candidates
 
