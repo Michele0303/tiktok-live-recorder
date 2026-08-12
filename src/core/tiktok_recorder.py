@@ -26,9 +26,24 @@ class TikTokRecorder:
         self.output = config.output
         self.bitrate = config.bitrate
         self.ffmpeg_path = config.ffmpeg_path
+        self.exit_on_interrupt = config.exit_on_interrupt
+        self.shutdown_event = config.shutdown_event
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
+        self._stop_requested = False
+
+    def _shutdown_requested(self):
+        return self._stop_requested or (
+            self.shutdown_event is not None and self.shutdown_event.is_set()
+        )
+
+    def _wait_or_shutdown(self, timeout):
+        if self.shutdown_event is not None:
+            return self.shutdown_event.wait(timeout)
+
+        time.sleep(timeout)
+        return False
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -99,21 +114,38 @@ class TikTokRecorder:
         self.start_recording(self.user, self.room_id)
 
     def automatic_mode(self):
-        while True:
+        while not self._shutdown_requested():
             try:
-                self.room_id = self.tiktok.get_room_id_from_user(self.user)
-                self.manual_mode()
+                try:
+                    self.room_id = self.tiktok.get_room_id_from_user(self.user)
+                    self.manual_mode()
+                    if self._stop_requested or self._shutdown_requested():
+                        return
 
-            except (UserLiveError, LiveNotFound) as ex:
-                logger.info(ex)
-                logger.info(
-                    f"Waiting {self.automatic_interval} minutes before recheck\n"
+                except (UserLiveError, LiveNotFound) as ex:
+                    logger.info(ex)
+                    logger.info(
+                        f"Waiting {self.automatic_interval} minutes before recheck\n"
+                    )
+                    if self._wait_or_shutdown(
+                        self.automatic_interval * TimeOut.ONE_MINUTE
+                    ):
+                        return
+
+                except (ConnectionError, RequestException, HTTPException):
+                    logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                    if self._wait_or_shutdown(
+                        TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
+                    ):
+                        return
+
+            except KeyboardInterrupt:
+                logger.info("Recording stopped by user.")
+                self._stop_requested = (
+                    self.exit_on_interrupt or self._shutdown_requested()
                 )
-                time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
-
-            except (ConnectionError, RequestException, HTTPException):
-                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+                if self._stop_requested:
+                    return
 
     def followers_mode(self):
         active_recordings = {}  # follower -> Thread
@@ -176,6 +208,13 @@ class TikTokRecorder:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
+            except KeyboardInterrupt:
+                logger.info("Recording stopped by user.")
+                self._stop_requested = True
+                for thread in active_recordings.values():
+                    thread.join()
+                return
+
     def _build_output_path(self, user: str) -> str:
         filename = (
             f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
@@ -195,6 +234,9 @@ class TikTokRecorder:
         output = self._build_output_path(user)
 
         min_stream_bytes = 4096
+        recording_started_at = time.monotonic()
+        interrupted_by_user = False
+        duration_expired = False
         for index, live_url in enumerate(live_urls, start=1):
             if self.duration:
                 logger.info(
@@ -212,55 +254,108 @@ class TikTokRecorder:
             with open(output, "wb") as out_file:
                 stop_recording = False
                 stream_ended = False
-                while not stop_recording:
-                    try:
-                        if not self.tiktok.is_room_alive(room_id):
-                            logger.info("User is no longer live. Stopping recording.")
-                            break
-
-                        start_time = time.time()
-                        for chunk in self.tiktok.download_live_stream(live_url):
-                            buffer.extend(chunk)
-                            bytes_written += len(chunk)
-                            if len(buffer) >= buffer_size:
-                                out_file.write(buffer)
-                                buffer.clear()
-
-                            elapsed_time = time.time() - start_time
-                            if self.duration and elapsed_time >= self.duration:
+                try:
+                    while not stop_recording:
+                        try:
+                            if self._shutdown_requested():
                                 stop_recording = True
                                 break
-                        else:
-                            stream_ended = True
 
-                        if stream_ended and bytes_written < min_stream_bytes:
-                            break
+                            if (
+                                self.duration
+                                and time.monotonic() - recording_started_at
+                                >= self.duration
+                            ):
+                                duration_expired = True
+                                stop_recording = True
+                                break
 
-                    except ConnectionError:
-                        if self.mode == Mode.AUTOMATIC:
-                            logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                            time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+                            if not self.tiktok.is_room_alive(room_id):
+                                logger.info(
+                                    "User is no longer live. Stopping recording."
+                                )
+                                break
 
-                    except (RequestException, HTTPException) as ex:
-                        logger.warning(f"Network hiccup, retrying: {ex}")
-                        time.sleep(2)
+                            for chunk in self.tiktok.download_live_stream(live_url):
+                                if self._shutdown_requested():
+                                    stop_recording = True
+                                    break
 
-                    except KeyboardInterrupt:
-                        logger.info("Recording stopped by user.")
-                        stop_recording = True
+                                buffer.extend(chunk)
+                                bytes_written += len(chunk)
+                                if len(buffer) >= buffer_size:
+                                    out_file.write(buffer)
+                                    buffer.clear()
 
-                    except Exception as ex:
-                        logger.error(
-                            f"Unexpected error during recording: {ex}",
-                            exc_info=True,
-                        )
-                        stop_recording = True
+                                elapsed_time = time.monotonic() - recording_started_at
+                                if self.duration and elapsed_time >= self.duration:
+                                    duration_expired = True
+                                    stop_recording = True
+                                    break
+                            else:
+                                stream_ended = True
 
-                    finally:
-                        if buffer:
-                            out_file.write(buffer)
-                            buffer.clear()
-                        out_file.flush()
+                            if stream_ended and bytes_written < min_stream_bytes:
+                                break
+
+                        except ConnectionError:
+                            if self.mode == Mode.AUTOMATIC:
+                                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                                stop_recording = self._wait_or_shutdown(
+                                    TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
+                                )
+                            else:
+                                logger.warning(
+                                    "Connection closed. Retrying in 2 seconds."
+                                )
+                                stop_recording = self._wait_or_shutdown(2)
+
+                        except (RequestException, HTTPException) as ex:
+                            logger.warning(f"Network hiccup, retrying: {ex}")
+                            stop_recording = self._wait_or_shutdown(2)
+
+                        except Exception as ex:
+                            logger.error(
+                                f"Unexpected error during recording: {ex}",
+                                exc_info=True,
+                            )
+                            stop_recording = True
+
+                        finally:
+                            if buffer:
+                                out_file.write(buffer)
+                                buffer.clear()
+                            out_file.flush()
+                except KeyboardInterrupt:
+                    logger.info("Recording stopped by user.")
+                    interrupted_by_user = True
+                    stop_recording = True
+
+            if interrupted_by_user:
+                self._stop_requested = (
+                    self.exit_on_interrupt or self._shutdown_requested()
+                )
+                if bytes_written < min_stream_bytes:
+                    Path(output).unlink(missing_ok=True)
+                else:
+                    logger.info(f"Recording finished: {Path(output).resolve()}\n")
+                    VideoManagement.convert_flv_to_mp4(
+                        output, self.bitrate, self.ffmpeg_path
+                    )
+                return
+
+            if self._shutdown_requested():
+                if bytes_written < min_stream_bytes:
+                    Path(output).unlink(missing_ok=True)
+                    return
+                break
+
+            if duration_expired and bytes_written < min_stream_bytes:
+                Path(output).unlink(missing_ok=True)
+                logger.info(
+                    "Recording duration elapsed before stream data was received."
+                )
+                return
 
             if bytes_written >= min_stream_bytes:
                 break

@@ -119,6 +119,7 @@ uv run python src/main.py [options]
 | `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). |
 | `-output <DIRECTORY>` | Directory where recordings will be saved. |
 | `-duration <SECONDS>` | Stop recording after this many seconds. |
+| `-exit-on-interrupt` | Exit automatic mode after `Ctrl+C` finalizes the current recording. |
 | `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
 | `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
 | `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
@@ -129,6 +130,11 @@ uv run python src/main.py [options]
 - **`manual`** *(default)*: Records immediately if the user is currently live.
 - **`automatic`**: Polls at regular intervals and records whenever the user goes live.
 - **`followers`**: Automatically records live streams from all followed users.
+
+Press `Ctrl+C` once to stop the current recording. When enough stream data has
+been captured, the recorder finalizes the current file; very short recordings
+are discarded. In automatic mode, recording then resumes by default. Use
+`-exit-on-interrupt` to exit automatic mode after the current file is finalized.
 
 ## Guide
 
