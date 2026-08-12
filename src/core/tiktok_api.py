@@ -73,7 +73,7 @@ class TikTokAPI:
 
         room_data = room_info.get("data") or {}
         room_status = room_data.get("status")
-        if room_status is not None and str(room_status) != "2":
+        if room_status is not None and str(room_status) == "4":
             return False
 
         stream_url = room_data.get("stream_url") or {}
@@ -348,7 +348,7 @@ class TikTokAPI:
 
         room_data = data.get("data") or {}
         room_status = room_data.get("status")
-        if room_status is not None and str(room_status) != "2":
+        if room_status is not None and str(room_status) == "4":
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         stream_url = room_data.get("stream_url", {})
