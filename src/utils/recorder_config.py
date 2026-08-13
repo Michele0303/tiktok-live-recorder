@@ -17,3 +17,4 @@ class RecorderConfig:
     use_telegram: bool = False
     bitrate: str | None = None
     ffmpeg_path: str | None = None
+    audio_only: bool = False

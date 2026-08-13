@@ -29,6 +29,7 @@ class TikTokRecorder:
         self.use_telegram = config.use_telegram
         self._proxy = config.proxy
         self._cookies = config.cookies
+        self.audio_only = config.audio_only
 
     def _setup(self):
         """Resolve user/room data and validate prerequisites via network calls."""
@@ -274,7 +275,9 @@ class TikTokRecorder:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
-        VideoManagement.convert_flv_to_mp4(output, self.bitrate, self.ffmpeg_path)
+        VideoManagement.convert_flv_to_mp4(
+            output, self.bitrate, self.ffmpeg_path, self.audio_only
+        )
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()
