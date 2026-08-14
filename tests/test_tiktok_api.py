@@ -6,7 +6,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from core.tiktok_api import TikTokAPI  # noqa: E402
-from utils.custom_exceptions import UserLiveError  # noqa: E402
+from utils.custom_exceptions import TikTokRecorderError, UserLiveError  # noqa: E402
 
 
 class FakeResponse:
@@ -27,11 +27,104 @@ class FakeHttpClient:
         return FakeResponse(self.responses.pop(0))
 
 
+class FollowersResponse:
+    def __init__(self, data=None, status_code=200, content=b"response", cookies=None):
+        self._data = data
+        self.status_code = status_code
+        self.content = content
+        self.cookies = cookies or {}
+
+    def json(self):
+        if isinstance(self._data, Exception):
+            raise self._data
+        return self._data
+
+
+class FollowersHttpClient:
+    def __init__(self, responses):
+        self.responses = responses
+        self.urls = []
+
+    def get(self, url):
+        self.urls.append(url)
+        return self.responses.pop(0)
+
+
 def build_api(*responses):
     api = TikTokAPI.__new__(TikTokAPI)
     api.WEBCAST_URL = "https://webcast.tiktok.com"
     api.http_client = FakeHttpClient(list(responses))
     return api
+
+
+def build_followers_api(*responses):
+    api = TikTokAPI.__new__(TikTokAPI)
+    api.BASE_URL = "https://www.tiktok.com"
+    api.http_client = FollowersHttpClient(list(responses))
+    return api
+
+
+def test_get_followers_list_rejects_missing_ms_token():
+    api = build_followers_api(FollowersResponse(cookies={}))
+
+    with pytest.raises(TikTokRecorderError, match="msToken cookie"):
+        api.get_followers_list("sec-uid")
+
+
+def test_get_followers_list_rejects_a_failed_session_request():
+    api = build_followers_api(FollowersResponse(status_code=503))
+
+    with pytest.raises(TikTokRecorderError, match="Failed to initialize"):
+        api.get_followers_list("sec-uid")
+
+
+def test_get_followers_list_rejects_an_empty_response():
+    api = build_followers_api(
+        FollowersResponse(cookies={"msToken": "token"}),
+        FollowersResponse(content=b""),
+    )
+
+    with pytest.raises(TikTokRecorderError, match="Empty response"):
+        api.get_followers_list("sec-uid")
+
+
+def test_get_followers_list_rejects_invalid_json():
+    api = build_followers_api(
+        FollowersResponse(cookies={"msToken": "token"}),
+        FollowersResponse(data=ValueError("invalid JSON")),
+    )
+
+    with pytest.raises(TikTokRecorderError, match="Invalid JSON response"):
+        api.get_followers_list("sec-uid")
+
+
+def test_get_followers_list_rejects_an_unexpected_list_format():
+    api = build_followers_api(
+        FollowersResponse(cookies={"msToken": "token"}),
+        FollowersResponse(data={"userList": {"user": "creator"}}),
+    )
+
+    with pytest.raises(TikTokRecorderError, match="Unexpected followers list format"):
+        api.get_followers_list("sec-uid")
+
+
+def test_get_followers_list_returns_usernames_from_a_valid_response():
+    api = build_followers_api(
+        FollowersResponse(cookies={"msToken": "token"}),
+        FollowersResponse(
+            data={
+                "userList": [
+                    {"user": {"uniqueId": "creator"}},
+                    {"user": {"uniqueId": "viewer"}},
+                ],
+                "hasMore": False,
+                "minCursor": 0,
+            }
+        ),
+    )
+
+    assert api.get_followers_list("sec-uid") == ["creator", "viewer"]
+    assert "msToken=token" in api.http_client.urls[1]
 
 
 def test_is_room_alive_rejects_fake_check_alive_positive():
