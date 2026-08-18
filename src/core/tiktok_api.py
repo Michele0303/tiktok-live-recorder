@@ -287,39 +287,70 @@ class TikTokAPI:
 
         return followers
 
-    def _get_stream_url_from_page(self, user: str) -> str | None:
+    def _get_stream_url_from_page(self, user: str) -> list[str]:
         """
-        Fallback: fetch the live page HTML and extract the stream URL directly.
+        Fallback: fetch the live page HTML and extract all stream URLs directly.
         Used when the webcast API returns status code 4003110 (WAF/access restriction).
+        Returns all deduplicated FLV/HLS candidates in priority order.
         """
         try:
             live_page_url = f"{self.BASE_URL}/@{user}/live"
             response = self.http_client.get(live_page_url)
             content = response.text
 
+            candidates = []
+            seen = set()
+
+            # Extract FLV URLs
             flv_matches = re.findall(r'https?://[^\s"\'<>]+\.flv[^\s"\'<>]*', content)
             if flv_matches:
-                # Prefer highest quality: _or4 (original) > _sd (standard) > others
-                quality_priority = ["_or4", "_sd"]
-                for priority in quality_priority:
-                    for url in flv_matches:
-                        url = html.unescape(url.rstrip("\\"))
-                        if priority in url:
-                            logger.info(
-                                f"Found stream URL from page (quality {priority}): {url[:80]}..."
-                            )
-                            return url
-                # If no priority match, return first match
-                return html.unescape(flv_matches[0].rstrip("\\"))
+                # Deduplicate FLV URLs
+                deduplicated_flvs = []
+                for url in flv_matches:
+                    cleaned = html.unescape(url.rstrip("\\"))
+                    if cleaned not in seen:
+                        seen.add(cleaned)
+                        deduplicated_flvs.append(cleaned)
 
+                # Sort by priority: _or4 (original) > _sd (standard) > others
+                quality_priority = ["_or4", "_sd"]
+                priority_urls = {p: [] for p in quality_priority}
+                other_urls = []
+
+                for url in deduplicated_flvs:
+                    matched = False
+                    for priority in quality_priority:
+                        if priority in url:
+                            priority_urls[priority].append(url)
+                            matched = True
+                            break
+                    if not matched:
+                        other_urls.append(url)
+
+                # Add in priority order
+                for priority in quality_priority:
+                    for url in priority_urls[priority]:
+                        logger.info(f"Found stream URL from page (quality {priority}): {url[:80]}...")
+                        candidates.append(url)
+
+                for url in other_urls:
+                    logger.info(f"Found stream URL from page: {url[:80]}...")
+                    candidates.append(url)
+
+            # Extract HLS URLs
             hls_matches = re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)
             if hls_matches:
-                return html.unescape(hls_matches[0].rstrip("\\"))
+                for url in hls_matches:
+                    cleaned = html.unescape(url.rstrip("\\"))
+                    if cleaned not in seen:
+                        seen.add(cleaned)
+                        logger.info(f"Found HLS stream URL from page: {cleaned[:80]}...")
+                        candidates.append(cleaned)
 
-            return None
+            return candidates
         except Exception as e:
             logger.warning(f"Failed to extract stream URL from page: {e}")
-            return None
+            return []
 
     def _add_live_url_candidate(self, candidates: list[str], url: str | None) -> None:
         if url and url not in candidates:
@@ -345,9 +376,9 @@ class TikTokAPI:
                 logger.info(
                     "API blocked by WAF (4003110). Trying fallback: extract stream URL from live page..."
                 )
-                fallback_url = self._get_stream_url_from_page(user)
-                if fallback_url:
-                    return [fallback_url]
+                fallback_urls = self._get_stream_url_from_page(user)
+                if fallback_urls:
+                    return fallback_urls
 
             raise UserLiveError(TikTokError.LIVE_RESTRICTION)
 
