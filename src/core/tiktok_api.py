@@ -299,12 +299,17 @@ class TikTokAPI:
 
             flv_matches = re.findall(r'https?://[^\s"\'<>]+\.flv[^\s"\'<>]*', content)
             if flv_matches:
-                # Prefer original (_or4) or SD quality
-                for url in flv_matches:
-                    url = html.unescape(url.rstrip("\\"))
-                    if "_or4" in url or "_sd" in url:
-                        logger.info(f"Found stream URL from page: {url[:80]}...")
-                        return url
+                # Prefer highest quality: _or4 (original) > _sd (standard) > others
+                quality_priority = ["_or4", "_sd"]
+                for priority in quality_priority:
+                    for url in flv_matches:
+                        url = html.unescape(url.rstrip("\\"))
+                        if priority in url:
+                            logger.info(
+                                f"Found stream URL from page (quality {priority}): {url[:80]}..."
+                            )
+                            return url
+                # If no priority match, return first match
                 return html.unescape(flv_matches[0].rstrip("\\"))
 
             hls_matches = re.findall(r'https?://[^\s"\'<>]+\.m3u8[^\s"\'<>]*', content)
@@ -360,12 +365,16 @@ class TikTokAPI:
         )
         candidates = []
         if not sdk_data_str:
-            logger.warning(
-                "No SDK stream data found. Falling back to legacy URLs. Consider contacting the developer to update the code."
+            logger.info(
+                "No SDK stream data found. Using legacy URL format."
+                " Quality order: FULL_HD1 > HD1 > SD2 > SD1"
             )
             flv_pull_url = stream_url.get("flv_pull_url", {})
             for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
-                self._add_live_url_candidate(candidates, flv_pull_url.get(key))
+                url = flv_pull_url.get(key)
+                if url:
+                    logger.info(f"Legacy quality {key}: {url[:80]}...")
+                self._add_live_url_candidate(candidates, url)
             self._add_live_url_candidate(candidates, stream_url.get("hls_pull_url"))
             self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
             return candidates
@@ -383,22 +392,43 @@ class TikTokAPI:
             return candidates
         level_map = {q["sdk_key"]: q["level"] for q in qualities}
 
+        logger.info(f"Available stream qualities: {list(level_map.keys())}")
+
         ordered_sdk_keys = sorted(
             sdk_data.keys(), key=lambda key: level_map.get(key, -1), reverse=True
         )
+
+        if ordered_sdk_keys:
+            logger.info(f"Highest available quality: {ordered_sdk_keys[0]}")
+
         for sdk_key in ordered_sdk_keys:
             entry = sdk_data[sdk_key]
             stream_main = entry.get("main", {})
-            self._add_live_url_candidate(candidates, stream_main.get("flv"))
-            self._add_live_url_candidate(
-                candidates, stream_main.get("hls") or stream_main.get("m3u8")
-            )
+            flv_url = stream_main.get("flv")
+            hls_url = stream_main.get("hls") or stream_main.get("m3u8")
+            if flv_url:
+                logger.info(f"Quality {sdk_key} (FLV): {flv_url[:80]}...")
+            if hls_url:
+                logger.info(f"Quality {sdk_key} (HLS): {hls_url[:80]}...")
+            self._add_live_url_candidate(candidates, flv_url)
+            self._add_live_url_candidate(candidates, hls_url)
 
         flv_pull_url = stream_url.get("flv_pull_url", {})
+        logger.info("Adding legacy fallback URLs (quality order: FULL_HD1 > HD1 > SD2 > SD1)")
         for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
-            self._add_live_url_candidate(candidates, flv_pull_url.get(key))
-        self._add_live_url_candidate(candidates, stream_url.get("hls_pull_url"))
-        self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
+            url = flv_pull_url.get(key)
+            if url:
+                logger.info(f"Legacy quality {key}: {url[:80]}...")
+            self._add_live_url_candidate(candidates, url)
+        hls_url = stream_url.get("hls_pull_url")
+        if hls_url:
+            logger.info(f"HLS pull URL: {hls_url[:80]}...")
+        self._add_live_url_candidate(candidates, hls_url)
+        
+        rtmp_url = stream_url.get("rtmp_pull_url")
+        if rtmp_url:
+            logger.info(f"RTMP pull URL: {rtmp_url[:80]}...")
+        self._add_live_url_candidate(candidates, rtmp_url)
 
         return candidates
 
