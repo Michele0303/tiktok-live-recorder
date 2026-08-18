@@ -330,7 +330,9 @@ class TikTokAPI:
                 # Add in priority order
                 for priority in quality_priority:
                     for url in priority_urls[priority]:
-                        logger.info(f"Found stream URL from page (quality {priority}): {url[:80]}...")
+                        logger.info(
+                            f"Found stream URL from page (quality {priority}): {url[:80]}..."
+                        )
                         candidates.append(url)
 
                 for url in other_urls:
@@ -344,7 +346,9 @@ class TikTokAPI:
                     cleaned = html.unescape(url.rstrip("\\"))
                     if cleaned not in seen:
                         seen.add(cleaned)
-                        logger.info(f"Found HLS stream URL from page: {cleaned[:80]}...")
+                        logger.info(
+                            f"Found HLS stream URL from page: {cleaned[:80]}..."
+                        )
                         candidates.append(cleaned)
 
             return candidates
@@ -445,7 +449,9 @@ class TikTokAPI:
             self._add_live_url_candidate(candidates, hls_url)
 
         flv_pull_url = stream_url.get("flv_pull_url", {})
-        logger.info("Adding legacy fallback URLs (quality order: FULL_HD1 > HD1 > SD2 > SD1)")
+        logger.info(
+            "Adding legacy fallback URLs (quality order: FULL_HD1 > HD1 > SD2 > SD1)"
+        )
         for key in ("FULL_HD1", "HD1", "SD2", "SD1"):
             url = flv_pull_url.get(key)
             if url:
@@ -455,7 +461,7 @@ class TikTokAPI:
         if hls_url:
             logger.info(f"HLS pull URL: {hls_url[:80]}...")
         self._add_live_url_candidate(candidates, hls_url)
-        
+
         rtmp_url = stream_url.get("rtmp_pull_url")
         if rtmp_url:
             logger.info(f"RTMP pull URL: {rtmp_url[:80]}...")
