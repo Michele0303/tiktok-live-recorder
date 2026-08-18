@@ -194,6 +194,11 @@ class TikTokRecorder:
 
         output = self._build_output_path(user)
 
+        logger.info(f"Total stream candidates available: {len(live_urls)}")
+        logger.info("Stream selection order (highest quality first):")
+        for idx, url in enumerate(live_urls, 1):
+            logger.info(f"  {idx}. {url[:100]}...")
+
         min_stream_bytes = 4096
         for index, live_url in enumerate(live_urls, start=1):
             if self.duration:
@@ -202,7 +207,10 @@ class TikTokRecorder:
                     f"(stream {index}/{len(live_urls)})"
                 )
             else:
-                logger.info(f"Started recording (stream {index}/{len(live_urls)})...")
+                logger.info(
+                    f"Started recording (stream {index}/{len(live_urls)})...\n"
+                    f"Stream URL: {live_url[:100]}..."
+                )
 
             buffer_size = 512 * 1024  # 512 KB buffer
             buffer = bytearray()
