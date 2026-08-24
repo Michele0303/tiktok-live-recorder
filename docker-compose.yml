@@ -1,0 +1,45 @@
+services:
+  recorder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tiktok-live-recorder
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - RECORDING_PATH=/data/recordings
+      - DATABASE_PATH=/data/watch.db
+      - TELEGRAM_BOT_API_BASE_URL=http://telegram-bot-api:8081/bot
+      - TELEGRAM_BOT_API_FILE_BASE_URL=http://telegram-bot-api:8081/file/bot
+    volumes:
+      - recorder_data:/data
+    depends_on:
+      - telegram-bot-api
+    networks:
+      - recorder_net
+
+  telegram-bot-api:
+    image: aiogram/telegram-bot-api:latest
+    container_name: telegram-bot-api
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_LOCAL=1
+    volumes:
+      - telegram_bot_api_data:/var/lib/telegram-bot-api
+      - recorder_data:/data
+    networks:
+      - recorder_net
+
+volumes:
+  recorder_data:
+    name: tiktok_recorder_data
+  telegram_bot_api_data:
+    name: tiktok_telegram_bot_api_data
+
+networks:
+  recorder_net:
+    name: tiktok_recorder_network
+    driver: bridge

@@ -15,7 +15,7 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Install dependencies first for better layer caching
+# Install dependencies first for layer caching
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
@@ -32,14 +32,20 @@ ENV PATH="/app/.venv/bin:$PATH"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ffmpeg \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Create default data directory for volume persistence
+RUN mkdir -p /data/recordings
+
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app /app
 
 RUN chmod +x /app/entrypoint.sh
+
+VOLUME ["/data"]
 
 ENTRYPOINT ["/app/entrypoint.sh"]
