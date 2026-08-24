@@ -1,145 +1,120 @@
 <div align="center">
 
-# TikTok Live Recorder 🎥
+# TikTok Live Recorder & Telegram Watch Service 🎥🤖
 
-_TikTok Live Recorder is a tool for recording live streaming TikTok._
+_A self-hosted personal TikTok LIVE recording service with private Telegram bot control, 24/7 persistent monitoring, and standalone CLI recorder._
 
-[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.me/tiktokliverecorder)
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-[![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE)
-[![Stars](https://img.shields.io/github/stars/Michele0303/tiktok-live-recorder?style=for-the-badge)](https://github.com/Michele0303/tiktok-live-recorder/stargazers)
-[![Release](https://img.shields.io/github/v/release/Michele0303/tiktok-live-recorder?style=for-the-badge)](https://github.com/Michele0303/tiktok-live-recorder/releases/latest)
-[![Docker Pulls](https://img.shields.io/docker/pulls/michele0303/tiktok-live-recorder?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/michele0303/tiktok-live-recorder)
-
-The TikTok Live Recorder is a tool designed to easily capture and save live streaming sessions from TikTok. It records both audio and video, allowing users to revisit and preserve engaging live content for later enjoyment and analysis. It's a valuable resource for creators, researchers, and anyone who wants to capture memorable moments from TikTok live streams.
-
-![preview](https://i.ibb.co/YTHp5DT/image.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg?logo=docker&logoColor=white)](./docker-compose.yml)
+[![Dokploy Ready](https://img.shields.io/badge/Dokploy-Ready-purple.svg)](./docs/DEPLOYMENT_DOKPLOY.md)
 
 </div>
 
-## Table of Contents
+---
 
-- [Installation](#installation)
-- [Usage](#command-line-usage)
-- [Guide](#guide)
+## 🌟 Overview
 
-## Installation
+This repository is a production-quality fork of [Michele0303/tiktok-live-recorder](https://github.com/Michele0303/tiktok-live-recorder), extended to provide a persistent, self-hosted **Telegram Watch Service** designed to run 24/7 on a VPS via **Dokploy** or **Docker Compose**.
 
-**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html)
+It supports two distinct execution modes:
+1. **🤖 Telegram Watch Service Mode (`src/bot_main.py`)**: A persistent background service controlled via a private Telegram bot. Monitors creators, auto-detects when they go LIVE, records streams, remuxes to MP4, segments large files (< 1.8 GB), and delivers completed recordings to your private Telegram chat.
+2. **💻 Standalone CLI Mode (`src/main.py`)**: The original manual/batch command-line recording tool.
 
-<details>
-<summary>Windows 💻</summary>
+---
 
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder
-uv venv
+## 🚀 Telegram Watch Service
+
+Deploy this repository on your VPS using Dokploy or Docker Compose, configure your private Telegram Bot token, and control recording directly from Telegram!
+
+### 📱 Bot Commands
+
+| Command | Description |
+|---|---|
+| `/watch <username>` | Add creator to persistent auto-record watch list. Immediately starts recording if user is already LIVE. |
+| `/unwatch <username>` | Remove creator from persistent watch list (running recordings finish naturally). |
+| `/watching` | List all monitored creators with live status indicators (🔴 LIVE, ⚪ Offline). |
+| `/status <username>` | View creator state, last checked time, and active recording info. |
+| `/record <username>` | One-time instant recording if the creator is currently LIVE. |
+| `/stop <username>` | Gracefully stop an active recording and upload the captured video. |
+| `/latest <username>` | Resend the latest recorded video file to your chat. |
+| `/recordings <username>` | View list of 10 most recent recordings for a creator. |
+| `/storage` | Check disk space, total recording count, and retention policy. |
+| `/help` | Show command documentation and usage guide. |
+| `/start` | Service health status and summary. |
+
+### 🛠 Quick Start (Docker Compose / Dokploy)
+
+1. Clone the repository and configure `.env`:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set your TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USER_ID, and TELEGRAM_ALLOWED_CHAT_ID
+   ```
+2. Start the services:
+   ```bash
+   docker compose up -d
+   ```
+3. Open your Telegram bot and send `/start`.
+
+For complete step-by-step Dokploy deployment instructions, see [Dokploy Deployment Guide](docs/DEPLOYMENT_DOKPLOY.md).
+
+---
+
+## 💻 Standalone CLI Mode
+
+The original command-line interface remains fully functional:
+
+```bash
+# Install dependencies
 uv sync
-uv run python src/main.py -h
+
+# Run manual recording
+uv run python src/main.py -user username
+
+# Run automatic polling mode
+uv run python src/main.py -user username -mode automatic -automatic_interval 5
+
+# Record multiple creators
+uv run python src/main.py -user creator1,creator2 -mode automatic
 ```
 
-</details>
-
-<details>
-<summary>Linux 🐧</summary>
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder
-uv venv
-uv sync
-uv run python src/main.py -h
-```
-
-</details>
-
-<details>
-<summary>macOS 🍎</summary>
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-brew install ffmpeg
-git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder
-uv venv
-uv sync
-uv run python src/main.py -h
-```
-
-</details>
-
-<details>
-<summary>Android — Termux 📱</summary>
-
-Install Termux from [F-Droid](https://f-droid.org/packages/com.termux/) (avoid the Play Store version).
-
-```bash
-pkg update && pkg upgrade
-pkg install git ffmpeg uv tur-repo
-pkg uninstall python
-pkg install python3.11
-git clone https://github.com/Michele0303/tiktok-live-recorder
-cd tiktok-live-recorder
-uv venv
-uv sync
-uv run python src/main.py -h
-```
-
-</details>
-
-<details>
-<summary>Docker 🐳</summary>
-
-```bash
-sudo docker run \
-  -v ./output:/output \
-  michele0303/tiktok-live-recorder:latest \
-  -output /output \
-  -user <username>
-```
-
-</details>
-
-## Command-Line Usage
-
-```bash
-uv run python src/main.py [options]
-```
-
-### Options
+### CLI Flags
 
 | Flag | Description |
-|------|-------------|
-| `-user <USERNAME>` | Username(s) to record. Separate multiple with commas. |
-| `-url <URL>` | TikTok live URL to record from. |
-| `-room_id <ROOM_ID>` | Room ID to record from. |
-| `-mode <MODE>` | Recording mode: `manual`, `automatic`, `followers`. |
-| `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). |
-| `-output <DIRECTORY>` | Directory where recordings will be saved. |
-| `-duration <SECONDS>` | Stop recording after this many seconds. |
-| `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
-| `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
-| `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
-| `-no-update-check` | Skip the automatic update check on startup. |
+|---|---|
+| `-user <USERNAME>` | Username(s) to record (comma-separated). |
+| `-url <URL>` | TikTok live stream URL. |
+| `-room_id <ROOM_ID>` | TikTok room ID to record. |
+| `-mode <MODE>` | `manual`, `automatic`, `followers`. |
+| `-automatic_interval <MIN>` | Check interval in minutes for automatic mode. |
+| `-output <DIR>` | Destination directory for recordings. |
+| `-duration <SECONDS>` | Stop recording after N seconds. |
+| `-proxy <URL>` | HTTP/SOCKS proxy for geo-restricted regions. |
+| `-bitrate <BITRATE>` | Output video bitrate (e.g. `1M`, `1000k`). |
+| `-ffmpeg-path <PATH>` | Custom FFmpeg binary path. |
+| `-telegram` | Upload to Telegram via Telethon user account (`telegram.json`). |
+| `-no-update-check` | Disable startup update check. |
 
-### Recording Modes
+---
 
-- **`manual`** *(default)*: Records immediately if the user is currently live.
-- **`automatic`**: Polls at regular intervals and records whenever the user goes live.
-- **`followers`**: Automatically records live streams from all followed users.
+## 📚 Documentation
 
-## Guide
+- 📐 [Architecture & Mermaid Diagrams](docs/ARCHITECTURE.md)
+- 🤖 [Telegram Bot Setup & Commands](docs/TELEGRAM.md)
+- 🚀 [Dokploy Deployment Guide](docs/DEPLOYMENT_DOKPLOY.md)
+- 🔧 [Operations, Storage & Retention](docs/OPERATIONS.md)
+- 💻 [Local Development & Testing](docs/DEVELOPMENT.md)
+- 🤖 [Agent Reference (AGENTS.md)](AGENTS.md)
 
-- [How to set cookies in cookies.json](https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-set-cookies)
-- [How to get room_id](https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-get-room_id)
-- [How to enable upload to Telegram](https://github.com/Michele0303/tiktok-live-recorder/blob/main/docs/GUIDE.md#how-to-enable-upload-to-telegram)
+---
 
-## Contributing
+## 📜 Upstream Attribution & License
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/Michele0303/tiktok-live-recorder/issues) or submit a [pull request](https://github.com/Michele0303/tiktok-live-recorder/pulls).
+This project is a fork of [TikTok Live Recorder](https://github.com/Michele0303/tiktok-live-recorder) originally created by Michele0303.
+The project is licensed under the [MIT License](./LICENSE).
 
-## Legal ⚖️
+---
 
-This code is in no way affiliated with, authorized, maintained, sponsored or endorsed by TikTok or any of its affiliates or subsidiaries. Use at your own risk.
+## ⚖️ Legal Disclaimer
+
+This tool is in no way affiliated with, authorized, maintained, sponsored, or endorsed by TikTok or any of its affiliates. Use responsibly and in accordance with local regulations.

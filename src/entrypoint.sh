@@ -1,5 +1,10 @@
 #!/bin/bash
 set -e
 
-# Execute main.py with the prebuilt virtual environment.
-exec /app/.venv/bin/python main.py -no-update-check "$@"
+# If arguments are passed, forward to CLI mode (main.py)
+if [ "$#" -gt 0 ]; then
+    exec /app/.venv/bin/python main.py -no-update-check "$@"
+else
+    # Default: execute Telegram Watch Service mode (bot_main.py)
+    exec /app/.venv/bin/python bot_main.py
+fi
