@@ -414,8 +414,23 @@ class TikTokAPI:
         return self.get_live_urls(room_id, user=user)
 
     def download_live_stream(self, live_url: str):
-        """Generator that returns the live stream for a given room_id."""
-        stream = self._http_client_stream.get(live_url, stream=True)
-        for chunk in stream.iter_content(chunk_size=4096):
-            if chunk:
-                yield chunk
+        """
+        Generator that returns the live stream for a given room_id.
+
+        A read timeout is mandatory here: when a live ends, the CDN may keep
+        the connection open without sending any data. Without a timeout the
+        iterator would block forever and the recorder would never notice that
+        the stream is over. A live stream continuously sends data, so 30
+        seconds of silence reliably means the live has ended.
+        """
+        stream = self._http_client_stream.get(live_url, stream=True, timeout=(10, 30))
+        try:
+            # Reject HTTP errors (e.g. 403/404 returned by the CDN once the
+            # live is over) instead of writing their body into the recording.
+            stream.raise_for_status()
+
+            for chunk in stream.iter_content(chunk_size=4096):
+                if chunk:
+                    yield chunk
+        finally:
+            stream.close()

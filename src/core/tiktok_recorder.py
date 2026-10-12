@@ -3,7 +3,7 @@ from http.client import HTTPException
 from pathlib import Path
 from threading import Thread
 
-from requests import RequestException
+from requests import HTTPError, RequestException
 
 from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
@@ -186,7 +186,13 @@ class TikTokRecorder:
 
     def start_recording(self, user, room_id):
         """
-        Start recording live
+        Start recording live.
+
+        The recording loop always terminates on its own when the live ends:
+        the stream download uses a read timeout, a bounded number of
+        reconnect attempts is allowed, and once the stream is over the file
+        is finalized and converted. This prevents the recorder from hanging
+        forever on a dead CDN connection (issue #117).
         """
         live_urls = self.tiktok.get_live_url_candidates(room_id, user=user)
         if not live_urls:
@@ -195,6 +201,7 @@ class TikTokRecorder:
         output = self._build_output_path(user)
 
         min_stream_bytes = 4096
+        max_reconnect_attempts = 5
         for index, live_url in enumerate(live_urls, start=1):
             if self.duration:
                 logger.info(
@@ -206,22 +213,25 @@ class TikTokRecorder:
 
             buffer_size = 512 * 1024  # 512 KB buffer
             buffer = bytearray()
-            bytes_written = 0
+            total_bytes_written = 0
 
             logger.info("[PRESS CTRL + C ONCE TO STOP]")
             with open(output, "wb") as out_file:
                 stop_recording = False
-                stream_ended = False
+                reconnect_attempts = 0
                 while not stop_recording:
+                    attempt_bytes = 0
                     try:
                         if not self.tiktok.is_room_alive(room_id):
                             logger.info("User is no longer live. Stopping recording.")
                             break
 
                         start_time = time.time()
+                        stream_ended = False
                         for chunk in self.tiktok.download_live_stream(live_url):
                             buffer.extend(chunk)
-                            bytes_written += len(chunk)
+                            attempt_bytes += len(chunk)
+                            total_bytes_written += len(chunk)
                             if len(buffer) >= buffer_size:
                                 out_file.write(buffer)
                                 buffer.clear()
@@ -233,21 +243,66 @@ class TikTokRecorder:
                         else:
                             stream_ended = True
 
-                        if stream_ended and bytes_written < min_stream_bytes:
-                            break
+                        if attempt_bytes >= min_stream_bytes:
+                            # The stream is healthy again, reset the counter.
+                            reconnect_attempts = 0
 
-                    except ConnectionError:
-                        if self.mode == Mode.AUTOMATIC:
-                            logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
-                            time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
+                        if stream_ended:
+                            if total_bytes_written < min_stream_bytes:
+                                # The CDN closed the connection without sending
+                                # any usable data: this URL is dead, fall back
+                                # to the next candidate.
+                                break
 
-                    except (RequestException, HTTPException) as ex:
-                        logger.warning(f"Network hiccup, retrying: {ex}")
-                        time.sleep(2)
+                            # The server closed the connection. It may be the
+                            # end of the live or a mid-live drop: retry a
+                            # bounded number of times and let the room check
+                            # at the top of the loop decide whether the user
+                            # is still live. Never retry forever.
+                            reconnect_attempts += 1
+                            if reconnect_attempts >= max_reconnect_attempts:
+                                logger.info("Stream ended. Stopping recording.")
+                                stop_recording = True
+                            else:
+                                logger.warning(
+                                    "Stream interrupted, reconnecting... "
+                                    f"(attempt {reconnect_attempts}/{max_reconnect_attempts})"
+                                )
+                                time.sleep(3)
 
                     except KeyboardInterrupt:
                         logger.info("Recording stopped by user.")
                         stop_recording = True
+
+                    except HTTPError:
+                        if total_bytes_written < min_stream_bytes:
+                            # The CDN rejected this URL outright (e.g. 403/404
+                            # once the live is over): no point retrying, fall
+                            # back to the next candidate.
+                            break
+                        logger.warning(
+                            "Stream URL was rejected by the server. Stopping recording."
+                        )
+                        stop_recording = True
+
+                    except (RequestException, HTTPException) as ex:
+                        # Covers connection errors and read timeouts on the
+                        # stream (the connection may stay open but silent when
+                        # the live ends). Retry a bounded number of times,
+                        # re-checking whether the room is still alive.
+                        reconnect_attempts += 1
+                        if reconnect_attempts >= max_reconnect_attempts:
+                            logger.warning(
+                                "Connection lost after "
+                                f"{reconnect_attempts} attempts. Stopping recording."
+                            )
+                            stop_recording = True
+                        else:
+                            logger.warning(
+                                f"Network error, reconnecting "
+                                f"({reconnect_attempts}/{max_reconnect_attempts}): {ex}"
+                            )
+                            time.sleep(3)
 
                     except Exception as ex:
                         logger.error(
@@ -262,11 +317,11 @@ class TikTokRecorder:
                             buffer.clear()
                         out_file.flush()
 
-            if bytes_written >= min_stream_bytes:
+            if total_bytes_written >= min_stream_bytes:
                 break
 
             logger.warning(
-                f"Stream {index}/{len(live_urls)} returned only {bytes_written} bytes. "
+                f"Stream {index}/{len(live_urls)} returned only {total_bytes_written} bytes. "
                 "Trying another CDN/quality..."
             )
         else:
