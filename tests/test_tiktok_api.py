@@ -12,6 +12,8 @@ from utils.custom_exceptions import UserLiveError  # noqa: E402
 class FakeResponse:
     def __init__(self, data):
         self._data = data
+        # strings stand for raw HTML bodies (live page fallback)
+        self.text = data if isinstance(data, str) else ""
 
     def json(self):
         return self._data
@@ -29,6 +31,7 @@ class FakeHttpClient:
 
 def build_api(*responses):
     api = TikTokAPI.__new__(TikTokAPI)
+    api.BASE_URL = "https://www.tiktok.com"
     api.WEBCAST_URL = "https://webcast.tiktok.com"
     api.http_client = FakeHttpClient(list(responses))
     return api
@@ -58,6 +61,70 @@ def test_is_room_alive_accepts_confirmed_stream_room():
     )
 
     assert api.is_room_alive("123") is True
+
+
+def test_audio_only_candidate_is_moved_to_the_end():
+    # real payloads carry the audio variant as <same>.flv?...&only_audio=1
+    api = build_api(
+        {
+            "data": {
+                "status": 2,
+                "stream_url": {
+                    "flv_pull_url": {
+                        "HD1": "https://cdn/audio.flv?sign=a&only_audio=1",
+                        "SD1": "https://cdn/hd.flv?sign=b",
+                    }
+                },
+            },
+            "status_code": 0,
+        },
+    )
+
+    assert api.get_live_urls("123") == [
+        "https://cdn/hd.flv?sign=b",
+        "https://cdn/audio.flv?sign=a&only_audio=1",
+    ]
+
+
+def test_page_fallback_prefers_video_over_audio_url():
+    # WAF fallback (4003110) scrapes the live page; the page lists the audio
+    # variant first, the video url must still win.
+    page = (
+        '<script>{"flv":"https://cdn/audio.flv?sign=1&only_audio=1"}'
+        '{"flv":"https://cdn/video_sd.flv?sign=2"}</script>'
+    )
+    api = build_api({"data": {}, "status_code": 4003110}, page)
+
+    assert api.get_live_urls("123", user="creator") == [
+        "https://cdn/video_sd.flv?sign=2",
+        "https://cdn/audio.flv?sign=1&only_audio=1",
+    ]
+
+
+def test_page_fallback_keeps_audio_when_nothing_else_is_available():
+    page = '{"flv":"https://cdn/audio.flv?sign=1&only_audio=1"}'
+    api = build_api({"data": {}, "status_code": 4003110}, page)
+
+    assert api.get_live_urls("123", user="creator") == [
+        "https://cdn/audio.flv?sign=1&only_audio=1"
+    ]
+
+
+def test_audio_only_live_still_returns_a_url():
+    # a live that ships nothing but the audio variant must still be recordable
+    api = build_api(
+        {
+            "data": {
+                "status": 2,
+                "stream_url": {
+                    "flv_pull_url": {"SD1": "https://cdn/audio.flv?sign=a&only_audio=1"}
+                },
+            },
+            "status_code": 0,
+        },
+    )
+
+    assert api.get_live_urls("123") == ["https://cdn/audio.flv?sign=a&only_audio=1"]
 
 
 def test_is_room_alive_keeps_restricted_live_as_alive():
