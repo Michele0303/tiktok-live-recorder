@@ -11,6 +11,7 @@ from utils.custom_exceptions import (
     LiveNotFound,
     TikRecUnavailableError,
 )
+from utils.utils import parse_json
 
 
 class TikTokAPI:
@@ -46,10 +47,13 @@ class TikTokAPI:
         if not room_id:
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
-        alive_data = self.http_client.get(
-            f"{self.WEBCAST_URL}/webcast/room/check_alive/"
-            f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
-        ).json()
+        alive_data = parse_json(
+            self.http_client.get(
+                f"{self.WEBCAST_URL}/webcast/room/check_alive/"
+                f"?aid=1988&region=CH&room_ids={room_id}&user_is_login=true"
+            ),
+            "check_alive",
+        )
 
         data_list = alive_data.get("data")
         if (
@@ -60,9 +64,12 @@ class TikTokAPI:
         ):
             return False
 
-        room_info = self.http_client.get(
-            f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
-        ).json()
+        room_info = parse_json(
+            self.http_client.get(
+                f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
+            ),
+            "room info",
+        )
 
         status_code = room_info.get("status_code", 0)
         if status_code == 4003110:
@@ -107,9 +114,12 @@ class TikTokAPI:
         """
         Given a room_id, I get the username
         """
-        data = self.http_client.get(
-            f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
-        ).json()
+        data = parse_json(
+            self.http_client.get(
+                f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
+            ),
+            "room info",
+        )
 
         if "Follow the creator to watch their LIVE" in json.dumps(data):
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE_FOLLOW)
@@ -161,7 +171,7 @@ class TikTokAPI:
         if response.status_code != 200:
             raise UserLiveError(TikTokError.ROOM_ID_ERROR)
 
-        data = response.json()
+        data = parse_json(response, "euler room_info")
 
         room_id = data.get("data", {}).get("room_info", {}).get("id")
         if not room_id:
@@ -215,7 +225,7 @@ class TikTokAPI:
         if not content or "Please wait" in content:
             raise UserLiveError(TikTokError.WAF_BLOCKED)
 
-        data = response.json()
+        data = parse_json(response, "signed room lookup")
         return (data.get("data") or {}).get("user", {}).get("roomId")
 
     def get_followers_list(self, sec_uid) -> list:
@@ -266,7 +276,7 @@ class TikTokAPI:
             if not response.content:
                 raise TikTokRecorderError("Empty response from TikTok followers API.")
 
-            data = response.json()
+            data = parse_json(response, "followers list")
             user_list = data.get("userList", [])
 
             for user in user_list:
@@ -326,9 +336,12 @@ class TikTokAPI:
         If the API returns status code 4003110 and a username is provided,
         falls back to scraping the live page directly.
         """
-        data = self.http_client.get(
-            f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
-        ).json()
+        data = parse_json(
+            self.http_client.get(
+                f"{self.WEBCAST_URL}/webcast/room/info/?aid=1988&room_id={room_id}"
+            ),
+            "room info",
+        )
 
         if "This account is private" in data:
             raise UserLiveError(TikTokError.ACCOUNT_PRIVATE)
@@ -370,15 +383,22 @@ class TikTokAPI:
             self._add_live_url_candidate(candidates, stream_url.get("rtmp_pull_url"))
             return candidates
 
-        # Extract stream options
-        sdk_data = json.loads(sdk_data_str).get("data", {})
+        # Extract stream options; a truncated, dict-shaped or otherwise broken
+        # payload must not kill the run, the legacy urls below are still usable.
+        malformed_sdk_data = False
+        try:
+            sdk_data = json.loads(sdk_data_str).get("data", {})
+        except (TypeError, ValueError, AttributeError) as ex:
+            logger.warning(f"Malformed stream_data payload ({ex}); using legacy urls.")
+            sdk_data = {}
+            malformed_sdk_data = True
         qualities = (
             stream_url.get("live_core_sdk_data", {})
             .get("pull_data", {})
             .get("options", {})
             .get("qualities", [])
         )
-        if not qualities:
+        if not qualities and not malformed_sdk_data:
             logger.warning("No qualities found in the stream data. Returning None.")
             return candidates
         level_map = {q["sdk_key"]: q["level"] for q in qualities}

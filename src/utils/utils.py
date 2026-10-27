@@ -1,7 +1,45 @@
 import json
 import os
 
+from utils.custom_exceptions import TikTokRecorderError
 from utils.enums import Info
+
+
+def parse_json(response, context="TikTok"):
+    """
+    Decode a TikTok response body as JSON, with a readable error on failure.
+
+    TikTok answers with an HTML/captcha page, an empty body or a truncated
+    payload when a request is rate-limited, blocked by the WAF or when the
+    signing service is in a bad state. Calling ``response.json()`` directly on
+    such a response raises ``json.JSONDecodeError`` and kills the whole process
+    with a traceback that says nothing about the actual cause.
+
+    Args:
+        response: object exposing ``json()`` (requests/curl_cffi response).
+        context (str): where the response came from, used in the message.
+
+    Raises:
+        TikTokRecorderError: when the body is not valid JSON.
+    """
+    try:
+        payload = response.json()
+    except ValueError as ex:  # JSONDecodeError is a ValueError
+        body = getattr(response, "text", "") or ""
+        snippet = " ".join(str(body).split())[:120]
+        detail = f" ({snippet!r})" if snippet else " (empty body)"
+        raise TikTokRecorderError(
+            f"{context}: TikTok returned a non-JSON response{detail}. "
+            "This usually means the request was blocked or rate-limited; "
+            "retry later, use a proxy (-proxy) or add cookies (cookies.json)."
+        ) from ex
+
+    if not isinstance(payload, dict):
+        raise TikTokRecorderError(
+            f"{context}: unexpected JSON payload ({type(payload).__name__})"
+        )
+
+    return payload
 
 
 def banner() -> None:
