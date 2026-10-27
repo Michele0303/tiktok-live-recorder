@@ -13,6 +13,12 @@ from utils.custom_exceptions import (
 )
 
 
+# room_info "status": 2 = live, 3 = live but paused by the creator, 4 = ended.
+# A pause is not the end of the session: the CDN stops sending for a while and
+# resumes, so the room counts as live until TikTok reports 4 (or no room data).
+LIVE_ROOM_STATUSES = frozenset({"2", "3"})
+
+
 class TikTokAPI:
     def __init__(self, proxy, cookies):
         self.BASE_URL = "https://www.tiktok.com"
@@ -73,7 +79,7 @@ class TikTokAPI:
 
         room_data = room_info.get("data") or {}
         room_status = room_data.get("status")
-        if room_status is not None and str(room_status) != "2":
+        if room_status is not None and str(room_status) not in LIVE_ROOM_STATUSES:
             return False
 
         stream_url = room_data.get("stream_url") or {}
@@ -348,7 +354,7 @@ class TikTokAPI:
 
         room_data = data.get("data") or {}
         room_status = room_data.get("status")
-        if room_status is not None and str(room_status) != "2":
+        if room_status is not None and str(room_status) not in LIVE_ROOM_STATUSES:
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         stream_url = room_data.get("stream_url", {})

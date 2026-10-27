@@ -173,3 +173,42 @@ def test_get_live_url_candidates_returns_ordered_unique_streams():
         "https://cdn/audio.flv",
         "https://cdn/sd.flv",
     ]
+
+
+def test_is_room_alive_keeps_paused_room_alive():
+    # status 3 = the creator paused the stream: the CDN goes quiet for a while
+    # but the session is not over, so the recorder must keep retrying (#463).
+    api = build_api(
+        {"data": [{"alive": True, "room_id": 123}], "status_code": 0},
+        {
+            "data": {
+                "status": 3,
+                "stream_url": {"flv_pull_url": {"HD1": "https://cdn.example/x.flv"}},
+            },
+            "status_code": 0,
+        },
+    )
+
+    assert api.is_room_alive("123") is True
+
+
+def test_is_room_alive_rejects_ended_room():
+    api = build_api(
+        {"data": [{"alive": False, "room_id": 123}], "status_code": 0},
+    )
+
+    assert api.is_room_alive("123") is False
+
+
+def test_get_live_urls_accepts_paused_room():
+    api = build_api(
+        {
+            "data": {
+                "status": 3,
+                "stream_url": {"flv_pull_url": {"HD1": "https://cdn.example/x.flv"}},
+            },
+            "status_code": 0,
+        },
+    )
+
+    assert api.get_live_urls("123") == ["https://cdn.example/x.flv"]
