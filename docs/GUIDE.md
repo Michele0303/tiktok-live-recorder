@@ -48,7 +48,7 @@
 
 ### How To Use a Standalone FFmpeg
 
-1) Download a standalone FFmpeg build for your platform from https://ffmpeg.org/download.html
+1) Download a standalone FFmpeg build for your platform from <https://ffmpeg.org/download.html>
 2) Extract it to a folder of your choice, for example:
    - Windows: `C:\ffmpeg\bin\ffmpeg.exe`
    - Linux/macOS: `/opt/ffmpeg/bin/ffmpeg`

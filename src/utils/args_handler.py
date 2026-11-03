@@ -183,7 +183,8 @@ def validate_and_parse_args():
         )
 
     if args.ffmpeg_path is not None:
-        resolved_ffmpeg_path = shutil.which(os.path.expanduser(args.ffmpeg_path))
+        expanded_path = os.path.expanduser(args.ffmpeg_path)
+        resolved_ffmpeg_path = shutil.which(expanded_path)
         if resolved_ffmpeg_path is None:
             raise ArgsParseError(
                 f"Invalid FFmpeg path: '{args.ffmpeg_path}'. "

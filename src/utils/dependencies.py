@@ -167,16 +167,14 @@ def check_and_install_dependencies():
 
 
 def check_ffmpeg(ffmpeg_path=None):
-    """Ensure a usable FFmpeg binary is available, using a custom path if given."""
+    """Ensure FFmpeg is available, using a custom path if given."""
     path = ffmpeg_path or "ffmpeg"
     if check_ffmpeg_binary(path):
         return
 
     if ffmpeg_path:
-        logger.error("Unable to execute FFmpeg at the provided path: %s", ffmpeg_path)
-        logger.error(
-            "Please verify that the path exists and is a valid FFmpeg executable."
-        )
+        logger.error("Unable to execute FFmpeg at path: %s", ffmpeg_path)
+        logger.error("Please verify the path is a valid FFmpeg executable.")
         sys.exit(1)
 
     logger.error("FFmpeg binary is not installed")
