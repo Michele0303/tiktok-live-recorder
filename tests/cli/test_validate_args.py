@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pytest
@@ -6,6 +7,14 @@ import pytest
 from utils.args_handler import validate_and_parse_args
 from utils.custom_exceptions import ArgsParseError
 from utils.enums import Mode
+
+
+def _create_ffmpeg_stub(directory):
+    name = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+    path = directory / name
+    path.write_bytes(b"stub")
+    path.chmod(0o755)
+    return path
 
 
 def test_manual_mode_valid_with_user(monkeypatch):
@@ -203,4 +212,71 @@ def test_automatic_interval_less_than_one(monkeypatch):
         ArgsParseError,
         match="Incorrect automatic_interval value. Must be one minute or more.",
     ):
+        validate_and_parse_args()
+
+
+def test_ffmpeg_path_defaults_to_none(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["tiktok-live-recorder", "-user", "test"])
+    args, _ = validate_and_parse_args()
+    assert args.ffmpeg_path is None
+
+
+def test_ffmpeg_path_single_dash(monkeypatch, tmp_path):
+    ffmpeg = _create_ffmpeg_stub(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["tiktok-live-recorder", "-user", "test", "-ffmpeg-path", str(ffmpeg)],
+    )
+    args, _ = validate_and_parse_args()
+    assert args.ffmpeg_path == str(ffmpeg)
+
+
+def test_ffmpeg_path_double_dash(monkeypatch, tmp_path):
+    ffmpeg = _create_ffmpeg_stub(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["tiktok-live-recorder", "-user", "test", "--ffmpeg-path", str(ffmpeg)],
+    )
+    args, _ = validate_and_parse_args()
+    assert args.ffmpeg_path == str(ffmpeg)
+
+
+def test_ffmpeg_path_missing_file(monkeypatch, tmp_path):
+    missing = tmp_path / "ffmpeg-missing"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["tiktok-live-recorder", "-user", "test", "--ffmpeg-path", str(missing)],
+    )
+    with pytest.raises(ArgsParseError, match="Invalid FFmpeg path"):
+        validate_and_parse_args()
+
+
+def test_ffmpeg_path_directory(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["tiktok-live-recorder", "-user", "test", "--ffmpeg-path", str(tmp_path)],
+    )
+    with pytest.raises(ArgsParseError, match="Invalid FFmpeg path"):
+        validate_and_parse_args()
+
+
+def test_ffmpeg_path_not_executable(monkeypatch, tmp_path):
+    not_executable = tmp_path / "ffmpeg.txt"
+    not_executable.write_text("not a binary")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "tiktok-live-recorder",
+            "-user",
+            "test",
+            "--ffmpeg-path",
+            str(not_executable),
+        ],
+    )
+    with pytest.raises(ArgsParseError, match="Invalid FFmpeg path"):
         validate_and_parse_args()

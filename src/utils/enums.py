@@ -124,7 +124,7 @@ class Info(Enum):
         "Resolved room IDs before country checks for manual username recordings.",
         "Validated live rooms with stream info to avoid fake recordings.",
         "Added restricted LIVE fallback for TikTok 4003110 responses.",
-        "Added -ffmpeg-path for custom FFmpeg binaries.",
+        "Added --ffmpeg-path option for custom FFmpeg binaries.",
     ]
 
     VERSION = "7.7.1"

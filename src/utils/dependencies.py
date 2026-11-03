@@ -7,14 +7,14 @@ from .logger_manager import logger
 
 def check_ffmpeg_binary(ffmpeg_path="ffmpeg"):
     try:
-        subprocess.run(
-            [ffmpeg_path],
-            stdout=subprocess.DEVNULL,
+        result = subprocess.run(
+            [ffmpeg_path, "-version"],
+            stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            timeout=10,
         )
-        return True
-    except FileNotFoundError:
-        logger.error("FFmpeg binary is not installed")
+        return result.returncode == 0 and b"ffmpeg version" in result.stdout
+    except (OSError, SubprocessError):
         return False
 
 
@@ -163,6 +163,17 @@ def check_and_install_dependencies():
         install_requirements()
 
 
-def check_ffmpeg(ffmpeg_path="ffmpeg"):
-    if not check_ffmpeg_binary(ffmpeg_path):
-        install_ffmpeg_binary()
+def check_ffmpeg(ffmpeg_path=None):
+    path = ffmpeg_path or "ffmpeg"
+    if check_ffmpeg_binary(path):
+        return
+
+    if ffmpeg_path:
+        logger.error(f"Unable to execute FFmpeg at the provided path: {ffmpeg_path}")
+        logger.error(
+            "Please verify that the path exists and is a valid FFmpeg executable."
+        )
+        exit(1)
+
+    logger.error("FFmpeg binary is not installed")
+    install_ffmpeg_binary()
