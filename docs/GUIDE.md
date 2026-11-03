@@ -46,7 +46,27 @@
 
 <br />
 
+### How To Use a Standalone FFmpeg
+
+1) Download a standalone FFmpeg build for your platform from <https://ffmpeg.org/download.html>
+2) Extract it to a folder of your choice, for example:
+   - Windows: `C:\ffmpeg\bin\ffmpeg.exe`
+   - Linux/macOS: `/opt/ffmpeg/bin/ffmpeg`
+3) Pass the full path of the executable with `-ffmpeg-path`:
+
+```bash
+uv run python src/main.py -user <username> --ffmpeg-path /opt/ffmpeg/bin/ffmpeg
+```
+
+```powershell
+uv run python src/main.py -user <username> --ffmpeg-path "C:\ffmpeg\bin\ffmpeg.exe"
+```
+
+If the path does not exist or is not executable, the recorder
+reports an error at startup and exits.
+
 ### Restricted Country
+
 1) Italy
 2) Hong Kong
 3) UK

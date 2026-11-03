@@ -52,7 +52,7 @@ class VideoManagement:
                 quiet=True, cmd=ffmpeg_path or "ffmpeg"
             )
 
-        except ffmpeg.Error as e:
+        except (ffmpeg.Error, OSError) as e:
             logger.error(
                 f"ffmpeg conversion failed: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}"
             )

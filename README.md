@@ -25,7 +25,8 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 ## Installation
 
-**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/), [FFmpeg](https://ffmpeg.org/download.html)
+**Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/),
+[FFmpeg](https://ffmpeg.org/download.html) (or standalone via `--ffmpeg-path`)
 
 <details>
 <summary>Windows 💻</summary>
@@ -121,8 +122,30 @@ uv run python src/main.py [options]
 | `-duration <SECONDS>` | Stop recording after this many seconds. |
 | `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
 | `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
+| `-ffmpeg-path <PATH>` | Standalone FFmpeg binary (also `--ffmpeg-path`). |
 | `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
 | `-no-update-check` | Skip the automatic update check on startup. |
+
+### Custom FFmpeg Path
+
+By default the FFmpeg binary is resolved from the system `PATH`. To use a standalone
+FFmpeg build without installing it system-wide, pass the full path to the executable
+with `-ffmpeg-path` (or `--ffmpeg-path`):
+
+Linux / macOS:
+
+```bash
+uv run python src/main.py -user <username> --ffmpeg-path /opt/ffmpeg/bin/ffmpeg
+```
+
+Windows (PowerShell):
+
+```powershell
+uv run python src/main.py -user <username> --ffmpeg-path "C:\ffmpeg\bin\ffmpeg.exe"
+```
+
+If the path is invalid or the file cannot be executed, the recorder reports a clear
+error at startup and exits.
 
 ### Recording Modes
 

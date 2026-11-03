@@ -72,8 +72,8 @@ def main():
         # validate and parse command line arguments
         args, mode = validate_and_parse_args()
 
-        # check ffmpeg binary (supports custom path via -ffmpeg-path)
-        check_ffmpeg(args.ffmpeg_path or "ffmpeg")
+        # check ffmpeg binary (supports custom path via --ffmpeg-path)
+        check_ffmpeg(args.ffmpeg_path)
 
         # check for updates
         if args.update_check is True:
