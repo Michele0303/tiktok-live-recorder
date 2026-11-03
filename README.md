@@ -26,7 +26,7 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 ## Installation
 
 **Prerequisites:** [Git](https://git-scm.com), [Python 3.11+](https://www.python.org/downloads/),
-[FFmpeg](https://ffmpeg.org/download.html) (or a standalone FFmpeg binary passed with `--ffmpeg-path`)
+[FFmpeg](https://ffmpeg.org/download.html) (or standalone via `--ffmpeg-path`)
 
 <details>
 <summary>Windows 💻</summary>
@@ -122,7 +122,7 @@ uv run python src/main.py [options]
 | `-duration <SECONDS>` | Stop recording after this many seconds. |
 | `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
 | `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
-| `-ffmpeg-path <PATH>` | Full path to a standalone FFmpeg binary (also `--ffmpeg-path`). Default: `ffmpeg`. |
+| `-ffmpeg-path <PATH>` | Standalone FFmpeg binary (also `--ffmpeg-path`). |
 | `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
 | `-no-update-check` | Skip the automatic update check on startup. |
 
