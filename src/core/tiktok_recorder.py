@@ -13,6 +13,41 @@ from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderE
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
 
+_BLOCKED_ERRORS = tuple(
+    str(e)
+    for e in (
+        TikTokError.COUNTRY_BLACKLISTED,
+        TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE,
+        TikTokError.COUNTRY_BLACKLISTED_FOLLOWERS_MODE,
+        TikTokError.WAF_BLOCKED,
+    )
+)
+_proxy_hint_shown = False
+
+
+def proxy_hint(proxy, error) -> None:
+    """Suggest a proxy once per process when the error is one a new IP can fix."""
+    global _proxy_hint_shown
+    if proxy or _proxy_hint_shown:
+        return
+
+    if any(msg in str(error) for msg in _BLOCKED_ERRORS):
+        reason = "TikTok is blocking your IP or country."
+    elif isinstance(error, (ConnectionError, RequestException, HTTPException)):
+        reason = "If this keeps happening, TikTok may be rate-limiting your IP."
+    else:
+        return
+
+    _proxy_hint_shown = True
+    logger.info(
+        f"Tip: {reason} A proxy in a country where TikTok LIVE works gives you "
+        "a clean IP: -proxy http://user:pass@host:port"
+    )
+    logger.info(
+        "Sponsored: Proxy-Seller residential & ISP proxies, 15% off with code "
+        "TIKTOKREC -> https://proxy-seller.com/?partner=OK4SIKMUFTY215\n"
+    )
+
 class TikTokRecorder:
     def __init__(self, config: RecorderConfig):
         self.tiktok = TikTokAPI(proxy=config.proxy, cookies=config.cookies)
@@ -109,13 +144,15 @@ class TikTokRecorder:
                 logger.info(
                     f"Waiting {self.automatic_interval} minutes before recheck\n"
                 )
+                proxy_hint(self._proxy, ex)
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except (ConnectionError, RequestException, HTTPException):
+            except (ConnectionError, RequestException, HTTPException) as ex:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def followers_mode(self):
+                proxy_hint(self._proxy, ex)
         active_recordings = {}  # follower -> Thread
 
         while True:
@@ -170,13 +207,15 @@ class TikTokRecorder:
                 logger.info(
                     f"Waiting {self.automatic_interval} minutes before recheck\n"
                 )
+                proxy_hint(self._proxy, ex)
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except (ConnectionError, RequestException, HTTPException):
+            except (ConnectionError, RequestException, HTTPException) as ex:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def _build_output_path(
+                proxy_hint(self._proxy, ex)
         self,
         user: str,
         protocol: str = "flv",

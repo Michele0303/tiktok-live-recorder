@@ -6,13 +6,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def record_user(config):
-    from core.tiktok_recorder import TikTokRecorder
+    from core.tiktok_recorder import TikTokRecorder, proxy_hint
     from utils.logger_manager import logger
 
     try:
         TikTokRecorder(config).run()
     except Exception as e:
         logger.error(f"{e}", exc_info=True)
+        proxy_hint(config.proxy, e)
 
 
 def _build_config(args, mode, cookies, user=None):
