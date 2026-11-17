@@ -1,5 +1,7 @@
 import argparse
+import os
 import re
+import shutil
 
 from utils.custom_exceptions import ArgsParseError
 from utils.enums import Mode, Regex
@@ -100,8 +102,13 @@ def parse_args():
 
     parser.add_argument(
         "-ffmpeg-path",
+        "--ffmpeg-path",
         dest="ffmpeg_path",
-        help="Specify a custom path to the ffmpeg binary. [Default: 'ffmpeg']",
+        help=(
+            "Specify a custom path to the ffmpeg binary. [Default: 'ffmpeg']\n"
+            "Example (Linux): --ffmpeg-path /opt/ffmpeg/bin/ffmpeg\n"
+            "Example (Windows): --ffmpeg-path C:\\ffmpeg\\bin\\ffmpeg.exe"
+        ),
         default=None,
         action="store",
     )
@@ -174,6 +181,17 @@ def validate_and_parse_args():
         raise ArgsParseError(
             "Incorrect automatic_interval value. Must be one minute or more."
         )
+
+    if args.ffmpeg_path is not None:
+        expanded_path = os.path.expanduser(args.ffmpeg_path)
+        resolved_ffmpeg_path = shutil.which(expanded_path)
+        if resolved_ffmpeg_path is None:
+            raise ArgsParseError(
+                f"Invalid FFmpeg path: '{args.ffmpeg_path}'. "
+                "The file was not found or is not executable. "
+                "Please provide the full path to the FFmpeg executable."
+            )
+        args.ffmpeg_path = resolved_ffmpeg_path
 
     if args.mode == "manual":
         mode = Mode.MANUAL
