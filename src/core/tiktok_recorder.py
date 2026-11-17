@@ -9,9 +9,22 @@ from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
 from utils.recorder_config import RecorderConfig
 from utils.video_management import VideoManagement
-from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderError
+from utils.custom_exceptions import (
+    LiveNotFound,
+    UserLiveError,
+    TikTokRecorderError,
+    TikRecUnavailableError,
+)
 from utils.enums import Mode, Error, TimeOut, TikTokError
 
+_NETWORK_ERRORS = (ConnectionError, RequestException, HTTPException)
+try:
+    # TikTok calls go through curl_cffi; its errors do not subclass requests'.
+    from curl_cffi.requests.exceptions import RequestException as CurlError
+
+    _NETWORK_ERRORS += (CurlError,)
+except ImportError:  # Termux uses plain requests
+    pass
 
 _BLOCKED_ERRORS = tuple(
     str(e)
@@ -25,6 +38,17 @@ _BLOCKED_ERRORS = tuple(
 _proxy_hint_shown = False
 
 
+def _is_tiktok_network_error(error) -> bool:
+    """True if a network error (or its cause) hit TikTok, not the TikRec service."""
+    while error is not None:
+        if isinstance(error, TikRecUnavailableError):
+            return False
+        if isinstance(error, _NETWORK_ERRORS):
+            return True
+        error = error.__cause__ or error.__context__
+    return False
+
+
 def proxy_hint(proxy, error) -> None:
     """Suggest a proxy once per process when the error is one a new IP can fix."""
     global _proxy_hint_shown
@@ -33,7 +57,7 @@ def proxy_hint(proxy, error) -> None:
 
     if any(msg in str(error) for msg in _BLOCKED_ERRORS):
         reason = "TikTok is blocking your IP or country."
-    elif isinstance(error, (ConnectionError, RequestException, HTTPException)):
+    elif _is_tiktok_network_error(error):
         reason = "If this keeps happening, TikTok may be rate-limiting your IP."
     else:
         return
