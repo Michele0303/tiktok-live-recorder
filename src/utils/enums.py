@@ -119,6 +119,11 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
+        "Kept automatic and followers modes running through network errors.",
+        "Stopped TikTok requests from hanging forever after a network drop.",
+        "Suggested a proxy on TikTok timeouts and connection errors too.",
+        "Suggested a proxy when TikTok blocks your IP or country.",
+        "Handled paused and HLS live streams.",
         "Rejected ended TikTok rooms that still expose stale stream URLs.",
         "Tried alternate stream URLs and skipped empty CDN responses.",
         "Resolved room IDs before country checks for manual username recordings.",
@@ -127,7 +132,7 @@ class Info(Enum):
         "Added --ffmpeg-path option for custom FFmpeg binaries.",
     ]
 
-    VERSION = "7.7.1"
+    VERSION = "7.8.1"
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         

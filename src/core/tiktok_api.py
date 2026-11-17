@@ -1,6 +1,8 @@
 import html
 import json
 import re
+import time
+from urllib.parse import urlparse
 
 from http_utils.http_client import HttpClient
 from utils.enums import StatusCode, TikTokError
@@ -14,11 +16,14 @@ from utils.custom_exceptions import (
 
 
 class TikTokAPI:
+    ACTIVE_ROOM_STATUSES = {"2", "3"}
+    TIKREC_MAX_ATTEMPTS = 3
+    TIKREC_BACKOFF_SECONDS = 1
+
     def __init__(self, proxy, cookies):
         self.BASE_URL = "https://www.tiktok.com"
         self.WEBCAST_URL = "https://webcast.tiktok.com"
         self.API_URL = "https://www.tiktok.com/api-live/user/room/"
-        self.EULER_API = "https://tiktok.eulerstream.com"
         self.TIKREC_API = "https://tikrec.com"
 
         self.http_client = HttpClient(proxy, cookies).req
@@ -73,7 +78,10 @@ class TikTokAPI:
 
         room_data = room_info.get("data") or {}
         room_status = room_data.get("status")
-        if room_status is not None and str(room_status) != "2":
+        if (
+            room_status is not None
+            and str(room_status) not in self.ACTIVE_ROOM_STATUSES
+        ):
             return False
 
         stream_url = room_data.get("stream_url") or {}
@@ -149,65 +157,45 @@ class TikTokAPI:
 
         return user, room_id
 
-    def _old_get_room_id_from_user(self, user: str) -> str:
-        params = {"uniqueId": user, "giftInfo": "false"}
-
-        response = self.http_client.get(
-            f"{self.EULER_API}/webcast/room_info",
-            params=params,
-            headers={"x-api-key": ""},
-        )
-
-        if response.status_code != 200:
-            raise UserLiveError(TikTokError.ROOM_ID_ERROR)
-
-        data = response.json()
-
-        room_id = data.get("data", {}).get("room_info", {}).get("id")
-        if not room_id:
-            raise UserLiveError(TikTokError.ROOM_ID_ERROR)
-
-        return room_id
-
     def _tikrec_get_room_id_signed_url(self, user: str) -> str:
-        try:
-            response = self.http_client.get(
-                f"{self.TIKREC_API}/tiktok/room/api/sign",
-                params={"unique_id": user},
-            )
-            response.raise_for_status()
-        except Exception as e:
-            raise TikRecUnavailableError(
-                f"tikrec signing service is unreachable: {e}"
-            ) from e
+        last_error = None
 
-        try:
-            data = response.json()
-        except ValueError as e:
-            raise TikRecUnavailableError(
-                "tikrec signing service returned an invalid response "
-                "(expected JSON, got something else — the service may be down)."
-            ) from e
+        for attempt in range(1, self.TIKREC_MAX_ATTEMPTS + 1):
+            try:
+                response = self.http_client.get(
+                    f"{self.TIKREC_API}/tiktok/room/api/sign",
+                    params={"unique_id": user},
+                    timeout=10,
+                )
+                response.raise_for_status()
+                data = response.json()
 
-        signed_path = data.get("signed_path")
-        if not signed_path:
-            raise TikRecUnavailableError(
-                "tikrec signing service did not return a signed_path "
-                "(the service may be down or overloaded)."
-            )
+                signed_path = data.get("signed_path")
+                if not signed_path:
+                    raise ValueError("response does not include signed_path")
 
-        return f"{self.BASE_URL}{signed_path}"
+                return f"{self.BASE_URL}{signed_path}"
+            except Exception as error:
+                last_error = error
+                if attempt == self.TIKREC_MAX_ATTEMPTS:
+                    break
+
+                delay = self.TIKREC_BACKOFF_SECONDS * (2 ** (attempt - 1))
+                logger.warning(
+                    f"TikRec request failed ({attempt}/{self.TIKREC_MAX_ATTEMPTS}). "
+                    f"Retrying in {delay} second(s)."
+                )
+                time.sleep(delay)
+
+        raise TikRecUnavailableError(
+            "TikRec could not resolve the RoomID after "
+            f"{self.TIKREC_MAX_ATTEMPTS} attempts. Retry later or pass "
+            f"-room_id <ROOM_ID>. Last error: {last_error}"
+        ) from last_error
 
     def get_room_id_from_user(self, user: str) -> str | None:
         """Given a username, get the room_id."""
-        try:
-            signed_url = self._tikrec_get_room_id_signed_url(user)
-        except TikRecUnavailableError as e:
-            logger.warning(
-                f"[!] tikrec is unavailable ({e}). "
-                "Falling back to unsigned API — recording continues but may be less reliable."
-            )
-            return self._old_get_room_id_from_user(user)
+        signed_url = self._tikrec_get_room_id_signed_url(user)
 
         response = self.http_client.get(signed_url)
         content = response.text
@@ -348,7 +336,10 @@ class TikTokAPI:
 
         room_data = data.get("data") or {}
         room_status = room_data.get("status")
-        if room_status is not None and str(room_status) != "2":
+        if (
+            room_status is not None
+            and str(room_status) not in self.ACTIVE_ROOM_STATUSES
+        ):
             raise UserLiveError(TikTokError.USER_NOT_CURRENTLY_LIVE)
 
         stream_url = room_data.get("stream_url", {})
@@ -413,9 +404,39 @@ class TikTokAPI:
         """Return candidate CDN URLs for the streaming."""
         return self.get_live_urls(room_id, user=user)
 
+    @staticmethod
+    def is_hls_url(live_url: str) -> bool:
+        """Return whether a stream URL points to an HLS playlist."""
+        return urlparse(live_url).path.lower().endswith((".m3u8", ".m3u"))
+
+    def get_stream_headers(self) -> dict[str, str]:
+        """Return HTTP headers used for direct stream requests."""
+        session_headers = self._http_client_stream.headers
+        headers = {
+            name: session_headers[name]
+            for name in ("User-Agent", "Referer", "Origin", "Accept-Language")
+            if name in session_headers
+        }
+        cookie_header = "; ".join(
+            f"{cookie.name}={cookie.value}"
+            for cookie in self._http_client_stream.cookies
+        )
+        if cookie_header:
+            headers["Cookie"] = cookie_header
+        return headers
+
+    def download_flv_stream(self, live_url: str):
+        """Yield FLV stream bytes from a direct HTTP response."""
+        with self._http_client_stream.get(
+            live_url,
+            stream=True,
+            timeout=(10, 30),
+        ) as stream:
+            stream.raise_for_status()
+            for chunk in stream.iter_content(chunk_size=4096):
+                if chunk:
+                    yield chunk
+
     def download_live_stream(self, live_url: str):
-        """Generator that returns the live stream for a given room_id."""
-        stream = self._http_client_stream.get(live_url, stream=True)
-        for chunk in stream.iter_content(chunk_size=4096):
-            if chunk:
-                yield chunk
+        """Backward-compatible alias for FLV stream downloads."""
+        yield from self.download_flv_stream(live_url)

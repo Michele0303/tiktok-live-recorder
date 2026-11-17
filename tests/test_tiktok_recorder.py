@@ -5,9 +5,17 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from curl_cffi.requests.exceptions import ConnectionError as CurlConnectionError  # noqa: E402
+from curl_cffi.requests.exceptions import Timeout as CurlTimeout  # noqa: E402
+
+import core.tiktok_recorder as tiktok_recorder  # noqa: E402
 from core.tiktok_recorder import TikTokRecorder  # noqa: E402
-from utils.custom_exceptions import TikTokRecorderError  # noqa: E402
-from utils.enums import Mode  # noqa: E402
+from utils.video_management import VideoManagement  # noqa: E402
+from utils.custom_exceptions import (  # noqa: E402
+    TikRecUnavailableError,
+    TikTokRecorderError,
+)
+from utils.enums import Mode, TimeOut  # noqa: E402
 from utils.recorder_config import RecorderConfig  # noqa: E402
 
 
@@ -35,6 +43,30 @@ class FakeTikTokAPI:
     def is_room_alive(self, room_id):
         self.calls.append(f"is_room_alive:{room_id}")
         return True
+
+
+class FakeRecordingTikTokAPI:
+    def __init__(self, live_urls, alive_results):
+        self.live_urls = live_urls
+        self.alive_results = iter(alive_results)
+        self.flv_downloads = []
+
+    def get_live_url_candidates(self, room_id, user=None):
+        return self.live_urls
+
+    def is_room_alive(self, room_id):
+        return next(self.alive_results)
+
+    @staticmethod
+    def is_hls_url(live_url):
+        return ".m3u8" in live_url
+
+    def get_stream_headers(self):
+        return {"User-Agent": "test-agent", "Referer": "https://www.tiktok.com/"}
+
+    def download_flv_stream(self, live_url):
+        self.flv_downloads.append(live_url)
+        yield b"F" * 4096
 
 
 def test_setup_resolves_room_id_before_country_check_for_manual_user():
@@ -97,3 +129,189 @@ def test_setup_keeps_manual_room_id_allowed_when_country_check_is_blocked():
         "is_country_blacklisted",
         "is_room_alive:1234567890",
     ]
+
+
+def test_start_recording_uses_flv_downloader(monkeypatch, tmp_path):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.MANUAL, cookies={}, output=str(tmp_path))
+    )
+    fake_api = FakeRecordingTikTokAPI(
+        ["https://cdn.example/live.flv"],
+        [True, False],
+    )
+    recorder.tiktok = fake_api
+    converted = []
+    monkeypatch.setattr(
+        VideoManagement,
+        "convert_to_mp4",
+        lambda file, bitrate, ffmpeg_path: converted.append(file),
+    )
+    monkeypatch.setattr(
+        VideoManagement,
+        "download_hls_stream",
+        lambda *args, **kwargs: pytest.fail("HLS downloader was used for FLV"),
+    )
+
+    recorder.start_recording("creator", "123")
+
+    assert fake_api.flv_downloads == ["https://cdn.example/live.flv"]
+    assert len(converted) == 1
+    assert converted[0].endswith("_flv.mp4")
+    assert Path(converted[0]).stat().st_size == 4096
+
+
+def test_start_recording_uses_ffmpeg_hls_downloader(monkeypatch, tmp_path):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.MANUAL, cookies={}, output=str(tmp_path))
+    )
+    fake_api = FakeRecordingTikTokAPI(
+        ["https://cdn.example/live/index.m3u8"],
+        [True, False],
+    )
+    recorder.tiktok = fake_api
+    hls_calls = []
+    converted = []
+
+    def fake_hls_download(live_url, **kwargs):
+        hls_calls.append((live_url, kwargs))
+        yield b"H" * 4096
+
+    monkeypatch.setattr(VideoManagement, "download_hls_stream", fake_hls_download)
+    monkeypatch.setattr(
+        VideoManagement,
+        "convert_to_mp4",
+        lambda file, bitrate, ffmpeg_path: converted.append(file),
+    )
+
+    recorder.start_recording("creator", "123")
+
+    assert fake_api.flv_downloads == []
+    assert hls_calls == [
+        (
+            "https://cdn.example/live/index.m3u8",
+            {
+                "duration": None,
+                "ffmpeg_path": None,
+                "headers": {
+                    "User-Agent": "test-agent",
+                    "Referer": "https://www.tiktok.com/",
+                },
+            },
+        )
+    ]
+    assert len(converted) == 1
+    assert converted[0].endswith("_hls.ts")
+    assert Path(converted[0]).stat().st_size == 4096
+
+
+def test_start_recording_removes_failed_hls_before_flv_fallback(
+    monkeypatch,
+    tmp_path,
+):
+    recorder = TikTokRecorder(
+        RecorderConfig(mode=Mode.MANUAL, cookies={}, output=str(tmp_path))
+    )
+    fake_api = FakeRecordingTikTokAPI(
+        [
+            "https://cdn.example/live/index.m3u8",
+            "https://cdn.example/live.flv",
+        ],
+        [True, True, False],
+    )
+    recorder.tiktok = fake_api
+    converted = []
+    monkeypatch.setattr(
+        VideoManagement,
+        "download_hls_stream",
+        lambda *args, **kwargs: iter([b"short"]),
+    )
+    monkeypatch.setattr(
+        VideoManagement,
+        "convert_to_mp4",
+        lambda file, bitrate, ffmpeg_path: converted.append(file),
+    )
+
+    recorder.start_recording("creator", "123")
+
+    assert len(converted) == 1
+    assert converted[0].endswith("_flv.mp4")
+    assert not list(tmp_path.glob("*_hls.ts"))
+
+
+class StopLoop(BaseException):
+    pass
+
+
+class FlakyPollingAPI:
+    """The first poll raises `error`; later polls find nobody live."""
+
+    def __init__(self, error):
+        self.error = error
+        self.polls = 0
+
+    def _poll(self):
+        self.polls += 1
+        if self.polls == 1:
+            raise self.error
+
+    def get_room_id_from_user(self, user):
+        self._poll()
+        return "1234567890"
+
+    def get_followers_list(self, sec_uid):
+        self._poll()
+        return []
+
+    def is_room_alive(self, room_id):
+        return False
+
+
+def _tikrec_down():
+    try:
+        raise TikRecUnavailableError("TikRec down") from CurlConnectionError("tikrec")
+    except TikRecUnavailableError as error:
+        return error
+
+
+def _run_loop(monkeypatch, mode, api):
+    recorder = TikTokRecorder(RecorderConfig(mode=mode, user="creator", cookies={}))
+    recorder.tiktok = api
+    recorder.sec_uid = "sec_uid"
+    sleeps = []
+
+    def fake_sleep(seconds):
+        sleeps.append(seconds)
+        if len(sleeps) == 2:
+            raise StopLoop
+
+    monkeypatch.setattr(tiktok_recorder.time, "sleep", fake_sleep)
+    loop = (
+        recorder.automatic_mode if mode == Mode.AUTOMATIC else recorder.followers_mode
+    )
+    with pytest.raises(StopLoop):
+        loop()
+    return sleeps
+
+
+@pytest.mark.parametrize("mode", [Mode.AUTOMATIC, Mode.FOLLOWERS])
+@pytest.mark.parametrize(
+    "make_error",
+    [
+        lambda: CurlConnectionError("curl: (7) refused"),
+        lambda: CurlTimeout("curl: (28) timed out"),
+        _tikrec_down,
+    ],
+)
+def test_loops_retry_after_transient_errors(monkeypatch, mode, make_error):
+    api = FlakyPollingAPI(make_error())
+
+    sleeps = _run_loop(monkeypatch, mode, api)
+
+    assert api.polls == 2
+    assert sleeps[0] == TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
+
+
+@pytest.mark.parametrize("mode", [Mode.AUTOMATIC, Mode.FOLLOWERS])
+def test_loops_stop_on_unexpected_errors(monkeypatch, mode):
+    with pytest.raises(ValueError, match="boom"):
+        _run_loop(monkeypatch, mode, FlakyPollingAPI(ValueError("boom")))

@@ -9,8 +9,71 @@ from core.tiktok_api import TikTokAPI
 from utils.logger_manager import logger
 from utils.recorder_config import RecorderConfig
 from utils.video_management import VideoManagement
-from utils.custom_exceptions import LiveNotFound, UserLiveError, TikTokRecorderError
+from utils.custom_exceptions import (
+    LiveNotFound,
+    UserLiveError,
+    TikTokRecorderError,
+    TikRecUnavailableError,
+)
 from utils.enums import Mode, Error, TimeOut, TikTokError
+
+_NETWORK_ERRORS = (ConnectionError, RequestException, HTTPException)
+try:
+    # TikTok calls go through curl_cffi; its errors do not subclass requests'.
+    from curl_cffi.requests.exceptions import RequestException as CurlError
+
+    _NETWORK_ERRORS += (CurlError,)
+except ImportError:  # Termux uses plain requests
+    pass
+
+# Transient failures the automatic and followers loops wait out and retry.
+_RETRYABLE_ERRORS = _NETWORK_ERRORS + (TikRecUnavailableError,)
+
+_BLOCKED_ERRORS = tuple(
+    str(e)
+    for e in (
+        TikTokError.COUNTRY_BLACKLISTED,
+        TikTokError.COUNTRY_BLACKLISTED_AUTO_MODE,
+        TikTokError.COUNTRY_BLACKLISTED_FOLLOWERS_MODE,
+        TikTokError.WAF_BLOCKED,
+    )
+)
+_proxy_hint_shown = False
+
+
+def _is_tiktok_network_error(error) -> bool:
+    """True if a network error (or its cause) hit TikTok, not the TikRec service."""
+    while error is not None:
+        if isinstance(error, TikRecUnavailableError):
+            return False
+        if isinstance(error, _NETWORK_ERRORS):
+            return True
+        error = error.__cause__ or error.__context__
+    return False
+
+
+def proxy_hint(proxy, error) -> None:
+    """Suggest a proxy once per process when the error is one a new IP can fix."""
+    global _proxy_hint_shown
+    if proxy or _proxy_hint_shown:
+        return
+
+    if any(msg in str(error) for msg in _BLOCKED_ERRORS):
+        reason = "TikTok is blocking your IP or country."
+    elif _is_tiktok_network_error(error):
+        reason = "If this keeps happening, TikTok may be rate-limiting your IP."
+    else:
+        return
+
+    _proxy_hint_shown = True
+    logger.info(
+        f"Tip: {reason} A proxy in a country where TikTok LIVE works gives you "
+        "a clean IP: -proxy http://user:pass@host:port"
+    )
+    logger.info(
+        "Sponsored: Proxy-Seller residential & ISP proxies, 15% off with code "
+        "TIKTOKREC -> https://proxy-seller.com/?partner=OK4SIKMUFTY215\n"
+    )
 
 
 class TikTokRecorder:
@@ -109,10 +172,14 @@ class TikTokRecorder:
                 logger.info(
                     f"Waiting {self.automatic_interval} minutes before recheck\n"
                 )
+                proxy_hint(self._proxy, ex)
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except (ConnectionError, RequestException, HTTPException):
-                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+            except _RETRYABLE_ERRORS as ex:
+                logger.error(
+                    f"{str(ex).rstrip('.')}. Retrying in {TimeOut.CONNECTION_CLOSED} minutes"
+                )
+                proxy_hint(self._proxy, ex)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def followers_mode(self):
@@ -170,19 +237,38 @@ class TikTokRecorder:
                 logger.info(
                     f"Waiting {self.automatic_interval} minutes before recheck\n"
                 )
+                proxy_hint(self._proxy, ex)
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except (ConnectionError, RequestException, HTTPException):
-                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+            except _RETRYABLE_ERRORS as ex:
+                logger.error(
+                    f"{str(ex).rstrip('.')}. Retrying in {TimeOut.CONNECTION_CLOSED} minutes"
+                )
+                proxy_hint(self._proxy, ex)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
-    def _build_output_path(self, user: str) -> str:
-        filename = (
-            f"TK_{user}_{time.strftime('%Y.%m.%d_%H-%M-%S', time.localtime())}_flv.mp4"
-        )
+    def _build_output_path(
+        self,
+        user: str,
+        protocol: str = "flv",
+        timestamp: str | None = None,
+    ) -> str:
+        timestamp = timestamp or time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
+        suffix = "_hls.ts" if protocol == "hls" else "_flv.mp4"
+        filename = f"TK_{user}_{timestamp}{suffix}"
         if self.output:
             return str(Path(self.output) / filename)
         return filename
+
+    def _download_stream(self, live_url: str, protocol: str):
+        if protocol == "hls":
+            return VideoManagement.download_hls_stream(
+                live_url,
+                duration=self.duration,
+                ffmpeg_path=self.ffmpeg_path,
+                headers=self.tiktok.get_stream_headers(),
+            )
+        return self.tiktok.download_flv_stream(live_url)
 
     def start_recording(self, user, room_id):
         """
@@ -192,17 +278,29 @@ class TikTokRecorder:
         if not live_urls:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
-        output = self._build_output_path(user)
-
         min_stream_bytes = 4096
+        recording_timestamp = time.strftime("%Y.%m.%d_%H-%M-%S", time.localtime())
+        output = None
+
         for index, live_url in enumerate(live_urls, start=1):
+            protocol = "hls" if self.tiktok.is_hls_url(live_url) else "flv"
+            output = self._build_output_path(
+                user,
+                protocol=protocol,
+                timestamp=recording_timestamp,
+            )
+            Path(output).unlink(missing_ok=True)
+
             if self.duration:
                 logger.info(
                     f"Started recording for {self.duration} seconds "
-                    f"(stream {index}/{len(live_urls)})"
+                    f"(stream {index}/{len(live_urls)}, {protocol.upper()})"
                 )
             else:
-                logger.info(f"Started recording (stream {index}/{len(live_urls)})...")
+                logger.info(
+                    f"Started recording (stream {index}/{len(live_urls)}, "
+                    f"{protocol.upper()})..."
+                )
 
             buffer_size = 512 * 1024  # 512 KB buffer
             buffer = bytearray()
@@ -219,19 +317,25 @@ class TikTokRecorder:
                             break
 
                         start_time = time.time()
-                        for chunk in self.tiktok.download_live_stream(live_url):
-                            buffer.extend(chunk)
-                            bytes_written += len(chunk)
-                            if len(buffer) >= buffer_size:
-                                out_file.write(buffer)
-                                buffer.clear()
+                        stream = self._download_stream(live_url, protocol)
+                        try:
+                            for chunk in stream:
+                                buffer.extend(chunk)
+                                bytes_written += len(chunk)
+                                if len(buffer) >= buffer_size:
+                                    out_file.write(buffer)
+                                    buffer.clear()
 
-                            elapsed_time = time.time() - start_time
-                            if self.duration and elapsed_time >= self.duration:
-                                stop_recording = True
-                                break
-                        else:
-                            stream_ended = True
+                                elapsed_time = time.time() - start_time
+                                if self.duration and elapsed_time >= self.duration:
+                                    stop_recording = True
+                                    break
+                            else:
+                                stream_ended = True
+                        finally:
+                            close_stream = getattr(stream, "close", None)
+                            if close_stream:
+                                close_stream()
 
                         if stream_ended and bytes_written < min_stream_bytes:
                             break
@@ -269,12 +373,12 @@ class TikTokRecorder:
                 f"Stream {index}/{len(live_urls)} returned only {bytes_written} bytes. "
                 "Trying another CDN/quality..."
             )
-        else:
             Path(output).unlink(missing_ok=True)
+        else:
             raise LiveNotFound(TikTokError.RETRIEVE_LIVE_URL)
 
         logger.info(f"Recording finished: {Path(output).resolve()}\n")
-        VideoManagement.convert_flv_to_mp4(output, self.bitrate, self.ffmpeg_path)
+        VideoManagement.convert_to_mp4(output, self.bitrate, self.ffmpeg_path)
 
     def check_country_blacklisted(self):
         is_blacklisted = self.tiktok.is_country_blacklisted()

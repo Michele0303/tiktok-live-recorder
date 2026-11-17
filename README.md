@@ -21,6 +21,7 @@ The TikTok Live Recorder is a tool designed to easily capture and save live stre
 
 - [Installation](#installation)
 - [Usage](#command-line-usage)
+- [Proxy](#proxy)
 - [Guide](#guide)
 
 ## Installation
@@ -120,7 +121,7 @@ uv run python src/main.py [options]
 | `-automatic_interval <MIN>` | Polling interval in minutes (automatic mode only). |
 | `-output <DIRECTORY>` | Directory where recordings will be saved. |
 | `-duration <SECONDS>` | Stop recording after this many seconds. |
-| `-proxy <URL>` | HTTP proxy to bypass regional restrictions. |
+| `-proxy <URL>` | HTTP proxy to bypass regional restrictions. [Setup →](#proxy) |
 | `-bitrate <BITRATE>` | Output bitrate for post-processing (e.g. `1M`, `1000k`). |
 | `-ffmpeg-path <PATH>` | Standalone FFmpeg binary (also `--ffmpeg-path`). |
 | `-telegram` | Upload the recording to Telegram when done. Requires `telegram.json`. |
@@ -148,6 +149,23 @@ If the path is invalid or the file cannot be executed, the recorder reports a cl
 error at startup and exits.
 
 ### Recording Modes
+
+### Proxy
+
+TikTok LIVE is unavailable in some countries. Point `-proxy` at an HTTP proxy
+located in a country where it works:
+
+```bash
+uv run python src/main.py -user <username> -proxy http://user:pass@host:port
+```
+
+Only TikTok's API checks go through the proxy. The video downloads over your
+direct connection, so a proxy uses very little traffic. Residential and ISP
+IPs get blocked less often than datacenter ones.
+
+> **Sponsored** · Need a proxy? [Proxy-Seller](https://proxy-seller.com/?partner=OK4SIKMUFTY215)
+> sells residential, ISP, IPv4/IPv6 and mobile proxies. Use code **`TIKTOKREC`**
+> at checkout for **15% off** any order.
 
 - **`manual`** *(default)*: Records immediately if the user is currently live.
 - **`automatic`**: Polls at regular intervals and records whenever the user goes live.

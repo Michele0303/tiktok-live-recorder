@@ -24,6 +24,13 @@
 
 ![image](https://user-images.githubusercontent.com/31160531/202849647-922d75d6-570c-43fe-a4b3-fcb795d39f92.png)
 
+The recorder retries the TikRec lookup three times. If TikRec is unavailable,
+pass the value directly:
+
+```bash
+uv run python src/main.py -room_id <ROOM_ID>
+```
+
 <br />
 
 ### How to Enable Upload To Telegram
