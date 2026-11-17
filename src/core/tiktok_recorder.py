@@ -26,6 +26,9 @@ try:
 except ImportError:  # Termux uses plain requests
     pass
 
+# Transient failures the automatic and followers loops wait out and retry.
+_RETRYABLE_ERRORS = _NETWORK_ERRORS + (TikRecUnavailableError,)
+
 _BLOCKED_ERRORS = tuple(
     str(e)
     for e in (
@@ -172,8 +175,10 @@ class TikTokRecorder:
                 proxy_hint(self._proxy, ex)
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except (ConnectionError, RequestException, HTTPException) as ex:
-                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+            except _RETRYABLE_ERRORS as ex:
+                logger.error(
+                    f"{str(ex).rstrip('.')}. Retrying in {TimeOut.CONNECTION_CLOSED} minutes"
+                )
                 proxy_hint(self._proxy, ex)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
@@ -235,8 +240,10 @@ class TikTokRecorder:
                 proxy_hint(self._proxy, ex)
                 time.sleep(self.automatic_interval * TimeOut.ONE_MINUTE)
 
-            except (ConnectionError, RequestException, HTTPException) as ex:
-                logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+            except _RETRYABLE_ERRORS as ex:
+                logger.error(
+                    f"{str(ex).rstrip('.')}. Retrying in {TimeOut.CONNECTION_CLOSED} minutes"
+                )
                 proxy_hint(self._proxy, ex)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 

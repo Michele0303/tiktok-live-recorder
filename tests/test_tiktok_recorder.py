@@ -5,10 +5,17 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from curl_cffi.requests.exceptions import ConnectionError as CurlConnectionError  # noqa: E402
+from curl_cffi.requests.exceptions import Timeout as CurlTimeout  # noqa: E402
+
+import core.tiktok_recorder as tiktok_recorder  # noqa: E402
 from core.tiktok_recorder import TikTokRecorder  # noqa: E402
 from utils.video_management import VideoManagement  # noqa: E402
-from utils.custom_exceptions import TikTokRecorderError  # noqa: E402
-from utils.enums import Mode  # noqa: E402
+from utils.custom_exceptions import (  # noqa: E402
+    TikRecUnavailableError,
+    TikTokRecorderError,
+)
+from utils.enums import Mode, TimeOut  # noqa: E402
 from utils.recorder_config import RecorderConfig  # noqa: E402
 
 
@@ -229,3 +236,82 @@ def test_start_recording_removes_failed_hls_before_flv_fallback(
     assert len(converted) == 1
     assert converted[0].endswith("_flv.mp4")
     assert not list(tmp_path.glob("*_hls.ts"))
+
+
+class StopLoop(BaseException):
+    pass
+
+
+class FlakyPollingAPI:
+    """The first poll raises `error`; later polls find nobody live."""
+
+    def __init__(self, error):
+        self.error = error
+        self.polls = 0
+
+    def _poll(self):
+        self.polls += 1
+        if self.polls == 1:
+            raise self.error
+
+    def get_room_id_from_user(self, user):
+        self._poll()
+        return "1234567890"
+
+    def get_followers_list(self, sec_uid):
+        self._poll()
+        return []
+
+    def is_room_alive(self, room_id):
+        return False
+
+
+def _tikrec_down():
+    try:
+        raise TikRecUnavailableError("TikRec down") from CurlConnectionError("tikrec")
+    except TikRecUnavailableError as error:
+        return error
+
+
+def _run_loop(monkeypatch, mode, api):
+    recorder = TikTokRecorder(RecorderConfig(mode=mode, user="creator", cookies={}))
+    recorder.tiktok = api
+    recorder.sec_uid = "sec_uid"
+    sleeps = []
+
+    def fake_sleep(seconds):
+        sleeps.append(seconds)
+        if len(sleeps) == 2:
+            raise StopLoop
+
+    monkeypatch.setattr(tiktok_recorder.time, "sleep", fake_sleep)
+    loop = (
+        recorder.automatic_mode if mode == Mode.AUTOMATIC else recorder.followers_mode
+    )
+    with pytest.raises(StopLoop):
+        loop()
+    return sleeps
+
+
+@pytest.mark.parametrize("mode", [Mode.AUTOMATIC, Mode.FOLLOWERS])
+@pytest.mark.parametrize(
+    "make_error",
+    [
+        lambda: CurlConnectionError("curl: (7) refused"),
+        lambda: CurlTimeout("curl: (28) timed out"),
+        _tikrec_down,
+    ],
+)
+def test_loops_retry_after_transient_errors(monkeypatch, mode, make_error):
+    api = FlakyPollingAPI(make_error())
+
+    sleeps = _run_loop(monkeypatch, mode, api)
+
+    assert api.polls == 2
+    assert sleeps[0] == TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE
+
+
+@pytest.mark.parametrize("mode", [Mode.AUTOMATIC, Mode.FOLLOWERS])
+def test_loops_stop_on_unexpected_errors(monkeypatch, mode):
+    with pytest.raises(ValueError, match="boom"):
+        _run_loop(monkeypatch, mode, FlakyPollingAPI(ValueError("boom")))
