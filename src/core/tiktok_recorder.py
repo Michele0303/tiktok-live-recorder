@@ -48,6 +48,7 @@ def proxy_hint(proxy, error) -> None:
         "TIKTOKREC -> https://proxy-seller.com/?partner=OK4SIKMUFTY215\n"
     )
 
+
 class TikTokRecorder:
     def __init__(self, config: RecorderConfig):
         self.tiktok = TikTokAPI(proxy=config.proxy, cookies=config.cookies)
@@ -149,10 +150,10 @@ class TikTokRecorder:
 
             except (ConnectionError, RequestException, HTTPException) as ex:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                proxy_hint(self._proxy, ex)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def followers_mode(self):
-                proxy_hint(self._proxy, ex)
         active_recordings = {}  # follower -> Thread
 
         while True:
@@ -212,10 +213,10 @@ class TikTokRecorder:
 
             except (ConnectionError, RequestException, HTTPException) as ex:
                 logger.error(Error.CONNECTION_CLOSED_AUTOMATIC)
+                proxy_hint(self._proxy, ex)
                 time.sleep(TimeOut.CONNECTION_CLOSED * TimeOut.ONE_MINUTE)
 
     def _build_output_path(
-                proxy_hint(self._proxy, ex)
         self,
         user: str,
         protocol: str = "flv",
