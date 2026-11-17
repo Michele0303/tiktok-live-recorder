@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tiktok-live-recorder"
-version = "7.7.1"
+version = "7.8.0"
 description = "A tool for recording TikTok live streams"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -52,7 +52,7 @@ testpaths = [
 ]
 
 [tool.bumpversion]
-current_version = "7.7.1"
+current_version = "7.8.0"
 commit = true
 tag = true
 tag_name = "v{new_version}"

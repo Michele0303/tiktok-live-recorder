@@ -119,15 +119,15 @@ class Info(Enum):
         return iter(self.value)
 
     NEW_FEATURES = [
+        "Suggested a proxy when TikTok blocks your IP or country.",
+        "Handled paused and HLS live streams.",
         "Rejected ended TikTok rooms that still expose stale stream URLs.",
         "Tried alternate stream URLs and skipped empty CDN responses.",
         "Resolved room IDs before country checks for manual username recordings.",
         "Validated live rooms with stream info to avoid fake recordings.",
-        "Added restricted LIVE fallback for TikTok 4003110 responses.",
-        "Added -ffmpeg-path for custom FFmpeg binaries.",
     ]
 
-    VERSION = "7.7.1"
+    VERSION = "7.8.0"
     BANNER = rf"""
 
   _____ _ _   _____    _     _    _           ___                   _         
